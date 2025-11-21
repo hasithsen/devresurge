@@ -19,7 +19,7 @@ urlpatterns = [
     path("users/", include("devresurge.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # ...
+    path("u/", include("devresurge.usercatalog.urls", namespace="usercatalog")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

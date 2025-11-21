@@ -45,7 +45,6 @@ class UserProfile(models.Model):
         default="",
         verbose_name="Lives in",
     )
-
     # Tags
     tags = models.CharField(
         max_length=255,
@@ -56,7 +55,7 @@ class UserProfile(models.Model):
     )
     # Profile picture
     profile_picture = models.ImageField(
-        upload_to="profile_pics/",
+        upload_to="userprofile_pics/",
         blank=True,
         null=True,
     )

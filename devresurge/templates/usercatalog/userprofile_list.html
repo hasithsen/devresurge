@@ -1,0 +1,25 @@
+
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}{{ block.super }} | User Profiles{% endblock %}
+
+{% block content %}
+  <h1>User Profiles</h1>
+
+  {% if user_profiles %}
+    <ul>
+      {% for profile in user_profiles %}
+        <li>
+          <!-- Link to the detail view, assuming 'profile-detail' is the URL name -->
+          <a href="{% url 'profile-detail' pk=profile.pk %}">
+            {{ profile.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No user profiles found.</p>
+  {% endif %}
+{% endblock content %}

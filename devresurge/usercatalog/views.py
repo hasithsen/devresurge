@@ -1,8 +1,10 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
+from django.urls import reverse
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
+from django.views.generic.edit import UpdateView
 
 from .forms import UserProfileForm
 from .models import DevresurgeUser
@@ -22,6 +24,25 @@ class UserProfileCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy(
+            "usercatalog:userprofile_detail",
+            kwargs={"pk": self.object.pk},
+        )
+
+
+class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = UserProfile
+    fields = [
+        "profile_picture",
+        "profilename",
+        "display_name",
+        "bio",
+        "location",
+        "tags",
+    ]
+    template_name = "usercatalog/userprofile_form.html"
+
+    def get_success_url(self):
+        return reverse(
             "usercatalog:userprofile_detail",
             kwargs={"pk": self.object.pk},
         )
@@ -59,3 +80,10 @@ class UserProfileDetailView(DetailView):
 
         context["tags_list"] = tags_list
         return context
+
+
+class UserProfileListView(LoginRequiredMixin, ListView):
+    model = UserProfile
+    context_object_name = "userprofile_list"
+    template_name = "usercatalog/userprofile_list.html"
+    paginate_by = 10
