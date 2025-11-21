@@ -25,7 +25,7 @@ class UserProfileCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy(
             "usercatalog:userprofile_detail",
-            kwargs={"pk": self.object.pk},
+            kwargs={"profilename": self.object.profilename},
         )
 
 
@@ -38,13 +38,16 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
         "bio",
         "location",
         "tags",
+        "linkedin_url",
     ]
     template_name = "usercatalog/userprofile_form.html"
+    slug_url_kwarg = "profilename"
+    slug_field = "profilename"
 
     def get_success_url(self):
         return reverse(
             "usercatalog:userprofile_detail",
-            kwargs={"pk": self.object.pk},
+            kwargs={"profilename": self.object.profilename},
         )
 
 
@@ -52,6 +55,8 @@ class UserProfileDetailView(DetailView):
     model = UserProfile
     template_name = "usercatalog/userprofile_detail.html"
     context_object_name = "userprofile"
+    slug_url_kwarg = "profilename"
+    slug_field = "profilename"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -87,3 +92,12 @@ class UserProfileListView(LoginRequiredMixin, ListView):
     context_object_name = "userprofile_list"
     template_name = "usercatalog/userprofile_list.html"
     paginate_by = 10
+
+    def get_queryset(self):
+        # select_related to avoid extra queries for username
+        qs = super().get_queryset().select_related("devresurge_user__user")
+        # prepare tags_list on each profile (split comma-separated tags)
+        for p in qs:
+            raw = getattr(p, "tags", "") or ""
+            p.tags_list = [t.strip() for t in raw.split(",") if t.strip()]
+        return qs

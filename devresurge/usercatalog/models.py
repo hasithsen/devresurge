@@ -15,7 +15,7 @@ class DevresurgeUser(models.Model):
 
 class UserProfile(models.Model):
     # Relation to DevresurgeUser
-    devresurge_user = models.ForeignKey(
+    devresurge_user = models.OneToOneField(
         "DevresurgeUser",
         on_delete=models.CASCADE,
         null=True,
@@ -58,6 +58,13 @@ class UserProfile(models.Model):
         upload_to="userprofile_pics/",
         blank=True,
         null=True,
+    )
+    linkedin_url = models.URLField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="LinkedIn",
+        help_text="Link to your LinkedIn profile",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

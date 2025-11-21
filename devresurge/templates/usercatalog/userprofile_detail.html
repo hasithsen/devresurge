@@ -38,12 +38,20 @@
             </p>
 
             {% if userprofile.bio %}
-              <p class="mb-2">{{ userprofile.bio|linebreaksbr }}</p>
+              <p class="mb-2">{{ userprofile.bio|linebreaksbr|truncatechars:255 }}</p>
             {% endif %}
 
             <div class="mb-2">
               {% if userprofile.location %}
                 <span class="me-3"><strong><i class="bi bi-geo-alt-fill"></i></strong> {{ userprofile.location }}</span>
+              {% endif %}
+
+              {% if userprofile.linkedin_url %}
+                <span class="me-3"><strong><i class="bi bi-linkedin"></i></strong>
+                  <a href="{{ userprofile.linkedin_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ userprofile.linkedin_url }}
+                  </a>
+                </span>
               {% endif %}
 
               {# Display tags prepared by the view as multiple badges with commas #}
@@ -58,12 +66,11 @@
             </div>
 
             <div class="mt-3">
-              {% if request.user.is_authenticated and userprofile.user == request.user %}
-                <a href="{% url 'usercatalog:userprofile_update' userprofile.pk %}" class="btn btn-outline-primary btn-sm">
+              {% if request.user.is_authenticated and userprofile.devresurge_user.user == request.user %}
+                <a href="{% url 'usercatalog:userprofile_update' profilename=userprofile.profilename %}" class="btn btn-outline-primary btn-sm">
                   Edit Profile
                 </a>
               {% endif %}
-              {% comment %} <a href="{% url 'usercatalog:userprofile_list' %}" class="btn btn-link btn-sm">Back to profiles</a> {% endcomment %}
             </div>
           </div>
         </div>

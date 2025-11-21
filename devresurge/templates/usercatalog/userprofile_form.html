@@ -11,6 +11,9 @@
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|crispy }}
+        {% if request.user.devresurgeuser.userprofile %}
+          <a href="{% url 'usercatalog:userprofile_detail' profilename=request.user.devresurgeuser.userprofile.profilename %}" class="btn">Cancel</a>
+        {% endif %}
         <button type="submit" class="btn btn-primary">Save</button>
       </form>
     </div>

@@ -14,6 +14,7 @@ class UserProfileForm(forms.ModelForm):
             "bio",
             "location",
             "tags",
+            "linkedin_url",
         ]
         widgets = {
             "bio": forms.Textarea(attrs={"rows": 4}),

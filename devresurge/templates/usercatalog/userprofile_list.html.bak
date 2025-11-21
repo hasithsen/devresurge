@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}{{ block.super }} | Profiles{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Profiles</h1>
+
+  {% if userprofile_list %}
+    <div class="row g-3">
+      {% for profile in userprofile_list %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <div class="card h-100 shadow-sm profile-card" role="button" tabindex="0"
+               data-detail-url="{% url 'usercatalog:userprofile_detail' profilename=profile.profilename %}">
+             <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-center mb-3">
+                {% if profile.profile_picture %}
+                  <img src="{{ profile.profile_picture.url }}"
+                       alt="{{ profile.profilename }} avatar"
+                       class="rounded-circle img-fluid"
+                       style="width:96px;height:96px;object-fit:cover;">
+                {% else %}
+                  <img src="https://via.placeholder.com/96?text=Avatar"
+                       alt="No avatar"
+                       class="rounded-circle img-fluid"
+                       style="width:96px;height:96px;object-fit:cover;">
+                {% endif %}
+              </div>
+
+              <h5 class="card-title text-center mb-1">
+                {% if profile.display_name %}
+                  {{ profile.display_name }}
+                {% else %}
+                  {{ profile.profilename }}
+                {% endif %}
+              </h5>
+
+              <p class="text-center text-muted small mb-2">
+                {% if profile.devresurge_user and profile.devresurge_user.user %}
+                  @{{ profile.devresurge_user.user.username }}
+                {% else %}
+                  &nbsp;
+                {% endif %}
+              </p>
+
+              {% if profile.location %}
+                <p class="text-center mb-2"><i class="bi bi-geo-alt-fill"></i> {{ profile.location }}</p>
+              {% endif %}
+
+              {% if profile.bio %}
+                <p class="card-text text-muted mb-3" style="min-height:3.6em;">
+                  {{ profile.bio|truncatechars:140 }}
+                </p>
+              {% else %}
+                <div class="flex-grow-1"></div>
+              {% endif %}
+
+              {% if profile.linkedin_url %}
+                <a href="{{ profile.linkedin_url }}" target="_blank" rel="noopener noreferrer">
+                  <i class="bi bi-linkedin"></i> LinkedIn
+                </a>
+              {% endif %}
+
+              {% if profile.tags_list %}
+                <p class="mb-3">
+                  <div class="mt-1">
+                    {% for tag in profile.tags_list %}
+                      <span class="badge bg-secondary me-1 mb-1">{{ tag }}</span>
+                    {% endfor %}
+                  </div>
+                </p>
+              {% endif %}
+
+              <div class="mt-auto d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-primary view-profile-btn">View</button>
+
+                {% if request.user.is_authenticated and profile.devresurge_user and profile.devresurge_user.user == request.user %}
+                  <a href="{% url 'usercatalog:userprofile_update' profilename=profile.profilename %}"
+                     class="btn btn-sm btn-outline-secondary">Edit</a>
+                {% endif %}
+              </div>
+
+              {# Hidden full data used to populate modal (keeps HTML escaping correct) #}
+              <div class="profile-data d-none">
+                <div class="pd-image">
+                  {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="" class="rounded-circle img-fluid" style="width:160px;height:160px;object-fit:cover;">
+                  {% else %}
+                    <img src="https://via.placeholder.com/160?text=Avatar" alt="" class="rounded-circle img-fluid" style="width:160px;height:160px;object-fit:cover;">
+                  {% endif %}
+                </div>
+                <div class="pd-display-name">
+                  {% if profile.display_name %}{{ profile.display_name }}{% else %}{{ profile.profilename }}{% endif %}
+                </div>
+                <div class="pd-username">
+                  {% if profile.devresurge_user and profile.devresurge_user.user %}@{{ profile.devresurge_user.user.username }}{% endif %}
+                </div>
+                <div class="pd-location">{% if profile.location %}{{ profile.location }}{% endif %}</div>
+                <div class="pd-bio">{% if profile.bio %}{{ profile.bio|linebreaksbr }}{% endif %}</div>
+                <div class="pd-tags">
+                  {% for tag in profile.tags_list %}
+                    <span class="badge bg-secondary me-1 mb-1">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+                <div class="pd-linkedin">
+                  {% if profile.linkedin_url %}
+                    <a href="{{ profile.linkedin_url }}" target="_blank" rel="noopener noreferrer">
+                      <i class="bi bi-linkedin"></i> LinkedIn
+                    </a>
+                  {% endif %}
+                </div>
+                <div class="pd-profilename">{{ profile.profilename }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {# Pagination controls #}
+    {% if is_paginated %}
+      <nav aria-label="Profiles pagination" class="mt-4">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+          {% endif %}
+
+          {# compact range of pages #}
+          {% for num in paginator.page_range %}
+            {% if paginator.num_pages > 9 %}
+              {% if num == 1 or num == paginator.num_pages or num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+                <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                  <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+              {% elif num == 2 and page_obj.number > 4 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% elif num == paginator.num_pages|add:-1 and page_obj.number < paginator.num_pages|add:-3 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
+            {% else %}
+              <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <p>No user profiles found.</p>
+  {% endif %}
+</div>
+
+{# Reusable modal for viewing full profile without leaving page #}
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-display-name"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-3">
+          <div class="modal-avatar"></div>
+          <div class="modal-details flex-fill">
+            <p class="text-muted modal-username mb-1"></p>
+            <p class="modal-location mb-2"></p>
+            <div class="modal-bio mb-3"></div>
+            <div class="modal-tags mb-2"></div>
+            <div class="modal-linkedin"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-outline-primary modal-view-full" target="_blank">Open profile</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Inline JS to populate and open modal (Bootstrap 5) #}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modalEl = document.getElementById('profileModal');
+  const bsModal = new bootstrap.Modal(modalEl);
+
+  // validate detail URLs to avoid client-side unvalidated redirects
+  function isSafeDetailUrl(url) {
+    try {
+      // allow only same-origin absolute or relative paths
+      const parsed = new URL(url, window.location.origin);
+      return parsed.origin === window.location.origin && parsed.pathname.startsWith('/');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function populateAndShow(profileCard) {
+    const data = profileCard.querySelector('.profile-data');
+    if (!data) return;
+    // fill modal parts
+    modalEl.querySelector('.modal-display-name').textContent = data.querySelector('.pd-display-name').textContent || '';
+    modalEl.querySelector('.modal-username').textContent = data.querySelector('.pd-username').textContent || '';
+    modalEl.querySelector('.modal-location').textContent = data.querySelector('.pd-location').textContent || '';
+    const bio = data.querySelector('.pd-bio').innerHTML || '';
+    modalEl.querySelector('.modal-bio').innerHTML = bio;
+    // avatar
+    const avatarContainer = modalEl.querySelector('.modal-avatar');
+    avatarContainer.innerHTML = data.querySelector('.pd-image').innerHTML || '';
+    // tags
+    const tagsContainer = modalEl.querySelector('.modal-tags');
+    tagsContainer.innerHTML = data.querySelector('.pd-tags').innerHTML || '';
+    // linkedin
+    modalEl.querySelector('.modal-linkedin').innerHTML = data.querySelector('.pd-linkedin').innerHTML || '';
+
+    // Use the server-generated URL stored on the card (safer than assembling on client).
+    const detailUrl = profileCard.dataset.detailUrl || (data.querySelector('.pd-profilename').textContent || '');
+    modalEl.querySelector('.modal-view-full').href = isSafeDetailUrl(detailUrl) ? detailUrl : '#';
+
+    bsModal.show();
+  }
+
+  // open modal on button click or whole card keyboard activation
+  document.querySelectorAll('.profile-card').forEach(card => {
+    card.addEventListener('click', function (e) {
+      // ignore clicks on internal anchors/buttons (e.g., Edit)
+      if (e.target.closest('a') || e.target.closest('button') && !e.target.classList.contains('view-profile-btn')) return;
+      populateAndShow(card);
+    });
+    // also wire the small "View" button
+    const btn = card.querySelector('.view-profile-btn');
+    if (btn) btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      populateAndShow(card);
+    });
+    // keyboard accessibility
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        populateAndShow(card);
+      }
+    });
+  });
+});
+</script>
+{% endblock content %}
