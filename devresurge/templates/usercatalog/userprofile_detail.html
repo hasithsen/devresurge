@@ -43,13 +43,13 @@
 
             <div class="mb-2">
               {% if userprofile.location %}
-                <span class="me-3"><strong>Location:</strong> {{ userprofile.location }}</span>
+                <span class="me-3"><strong><i class="bi bi-geo-alt-fill"></i></strong> {{ userprofile.location }}</span>
               {% endif %}
 
               {# Display tags prepared by the view as multiple badges with commas #}
               {% if tags_list %}
-                <div class="d-inline-d">
-                  <span class="me-3"><strong>Skills:</strong>
+                <div class="d-inline-d mt-2">
+                  <span class="me-3"><strong></strong>
                   {% for tag in tags_list %}
                     <span class="badge bg-secondary">{{ tag }}</span>{% if not forloop.last %}{% endif %}
                   {% endfor %}
