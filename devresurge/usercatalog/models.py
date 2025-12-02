@@ -62,9 +62,15 @@ class UserProfile(models.Model):
     linkedin_url = models.URLField(
         max_length=255,
         blank=True,
-        null=True,
         verbose_name="LinkedIn",
         help_text="Link to your LinkedIn profile",
+    )
+    job_titles = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Seeking job titles",
+        help_text="Enter job titles as a comma-separated list (ex: DevOps Engineer, Site Reliability Engineer, Cloud Engineer).",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
