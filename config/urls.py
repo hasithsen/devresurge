@@ -5,9 +5,19 @@ from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    # path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    # Redirect the old home path ("") to the new user catalog view
+    path(
+        "",
+        RedirectView.as_view(
+            pattern_name="usercatalog:userprofile_list",
+            permanent=True,
+        ),
+        name="home",
+    ),
     path(
         "about/",
         TemplateView.as_view(template_name="pages/about.html"),
@@ -19,7 +29,7 @@ urlpatterns = [
     path("users/", include("devresurge.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # ...
+    path("u/", include("devresurge.usercatalog.urls", namespace="usercatalog")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
