@@ -84,6 +84,32 @@ class UserProfileDetailView(DetailView):
                 tags_list = [t.strip() for t in raw.split(",") if t.strip()]
 
         context["tags_list"] = tags_list
+
+        job_titles_list = []
+        job_titles_attr = getattr(profile, "job_titles", None)
+
+        if job_titles_attr is None:
+            job_titles_list = []
+        else:
+            # If job_titles is a RelatedManager (ManyToMany) use .all()
+            all_callable = getattr(job_titles_attr, "all", None)
+            try:
+                if callable(all_callable):
+                    iterable = job_titles_attr.all()
+                    # Convert tag objects to display strings
+                    job_titles_list = [
+                        str(t).strip() for t in iterable if str(t).strip()
+                    ]
+                else:
+                    # Fallback: assume a comma-separated string
+                    raw = str(job_titles_attr)
+                    job_titles_list = [t.strip() for t in raw.split(",") if t.strip()]
+            except Exception:
+                raw = str(job_titles_attr)
+                job_titles_list = [t.strip() for t in raw.split(",") if t.strip()]
+
+        context["job_titles_list"] = job_titles_list
+
         return context
 
 
