@@ -138,3 +138,35 @@
   {% endif %}
 </div>
 {% endblock content %}
+
+{% block inline_javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Select all elements with the class 'profile-card'
+        const profileCards = document.querySelectorAll('.profile-card');
+
+        profileCards.forEach(card => {
+            // Add a click event listener to each card
+            card.addEventListener('click', function(e) {
+                // Check if the clicked element is an anchor tag or part of the 'btn' class structure
+                // We want to ignore clicks on specific action buttons inside the card
+                if (e.target.closest('a') && e.target.closest('a').classList.contains('btn')) {
+                    // Do nothing, let the button handle its own navigation
+                    return;
+                }
+                
+                // Get the URL from the data attribute
+                const detailUrl = this.getAttribute('data-detail-url');
+                
+                // Navigate to the URL if it exists
+                if (detailUrl) {
+                    window.location.href = detailUrl;
+                }
+            });
+            
+            // Add hover effect with CSS (see below)
+            card.style.cursor = 'pointer';
+        });
+    });
+</script>
+{% endblock inline_javascript %}
