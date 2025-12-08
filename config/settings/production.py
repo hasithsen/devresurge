@@ -101,11 +101,12 @@ INSTALLED_APPS += ["anymail"]
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 ANYMAIL = {
     "RESEND_API_KEY": env("RESEND_API_KEY"),
+    "RESEND_SENDER_DOMAIN": env("RESEND_DOMAIN"),
+    "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com/"),
 }
-
 
 # LOGGING
 # ------------------------------------------------------------------------------
