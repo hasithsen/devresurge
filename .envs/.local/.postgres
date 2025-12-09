@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=devresurge
+POSTGRES_USER=MXVZADtaulwSskVzPwTnGFeXbRzjtVYL
+POSTGRES_PASSWORD=pyhbf9RP7SRcN95vNSzyc4Hdrb1L9hNoZIprbprWtDVhvjDm99MHz1mS4JTnfmF1
