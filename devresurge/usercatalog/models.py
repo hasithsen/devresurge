@@ -53,13 +53,6 @@ class UserProfile(models.Model):
         verbose_name="Skills",
         help_text="Enter skills as a comma-separated list (ex: linux, bash, kubernetes).",
     )
-    github_url = models.URLField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name="GitHub",
-        help_text="Link to your GitHub profile",
-    )
     linkedin_url = models.URLField(
         max_length=255,
         blank=True,

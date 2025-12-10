@@ -33,7 +33,6 @@ class UserProfileCreateView(LoginRequiredMixin, CreateView):
 class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = UserProfile
     fields = [
-        "profile_picture",
         "profilename",
         "display_name",
         "bio",
