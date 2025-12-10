@@ -13,6 +13,7 @@ class UserProfileForm(forms.ModelForm):
             "bio",
             "location",
             "tags",
+            "github_url",
             "linkedin_url",
         ]
         widgets = {
