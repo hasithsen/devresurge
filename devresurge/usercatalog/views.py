@@ -35,7 +35,6 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
     fields = [
         "profilename",
         "display_name",
-        "bio",
         "location",
         "tags",
         "linkedin_url",

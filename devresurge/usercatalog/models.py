@@ -34,11 +34,6 @@ class UserProfile(models.Model):
         verbose_name="Profile handle",
     )
     display_name = models.CharField(max_length=255, default="")
-    bio = models.TextField(
-        blank=True,
-        default="",
-        verbose_name="About",
-    )
     location = models.CharField(
         max_length=255,
         blank=True,
