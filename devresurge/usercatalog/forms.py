@@ -8,7 +8,6 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = [
-            "profile_picture",
             "profilename",
             "display_name",
             "bio",
