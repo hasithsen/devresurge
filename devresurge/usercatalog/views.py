@@ -1,4 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
@@ -30,7 +32,7 @@ class UserProfileCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
+class UserProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = UserProfile
     fields = [
         "profilename",
@@ -47,6 +49,29 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
         return reverse(
             "usercatalog:userprofile_detail",
             kwargs={"profilename": self.object.profilename},
+        )
+
+    def test_func(self):
+        """
+        Ensures the logged-in user matches the owner of the profile.
+        """
+        profile_object = self.get_object()
+        # Check if the devresurge_user link exists before trying to access its 'user' attribute
+        if profile_object.devresurge_user:
+            profile_owner_user_object = profile_object.devresurge_user.user
+            return self.request.user == profile_owner_user_object
+        return False  # If there's no owner linked, deny access.
+
+    def handle_no_permission(self):
+        """
+        Redirects the user to the detail view of the profile they were
+        trying to edit if they do not have permission.
+        """
+        # We need the current object's profile name for the redirect URL
+        current_profile = self.get_object()
+
+        return redirect(
+            "usercatalog:userprofile_detail", profilename=current_profile.profilename
         )
 
 
