@@ -75,7 +75,7 @@
   {% if featured_profiles %}
     <div class="dr-grid dr-grid--3">
       {% for profile in featured_profiles %}
-        <a class="dr-profile-card" href="{{ profile.get_absolute_url }}" style="text-decoration: none; border-bottom: none;">
+        <a class="dr-profile-card" href="{{ profile.get_absolute_url }}" style="text-decoration: none;">
           <div class="dr-profile-card__head">
             <span class="dr-avatar">
               {% if profile.avatar %}
