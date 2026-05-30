@@ -61,7 +61,7 @@ class SocialPlatform(models.TextChoices):
 
 
 class Profile(models.Model):
-    """An IT professional's public profile."""
+    """A tech professional's public profile."""
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
