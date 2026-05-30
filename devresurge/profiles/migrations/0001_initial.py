@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name="Profile",
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("handle", models.SlugField(help_text="Your public URL, e.g. /p/your-handle/", max_length=40, unique=True, verbose_name="handle")),
+                ("handle", models.SlugField(help_text="Your public URL, e.g. /u/your-handle/", max_length=40, unique=True, verbose_name="handle")),
                 ("display_name", models.CharField(blank=True, help_text="How your name appears on your profile.", max_length=120, verbose_name="display name")),
                 ("headline", models.CharField(blank=True, help_text="A one-liner, e.g. 'Senior Backend Engineer · Python & Go'.", max_length=160, verbose_name="headline")),
                 ("bio", models.TextField(blank=True, help_text="Markdown-style text describing who you are.", verbose_name="bio")),

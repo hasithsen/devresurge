@@ -45,7 +45,7 @@ def test_tech_stack_list_parses_csv():
 
 def test_get_absolute_url_uses_handle():
     profile = ProfileFactory(handle="hello-world")
-    assert profile.get_absolute_url() == "/p/hello-world/"
+    assert profile.get_absolute_url() == "/u/hello-world/"
 
 
 def test_validate_avatar_size_rejects_oversized_files():

@@ -17,7 +17,7 @@
           {% if object.profile %}
             <p style="margin: 0; color: var(--text-muted);">
               {% trans "Public profile" %}:
-              <a href="{{ object.profile.get_absolute_url }}">/p/{{ object.profile.handle }}</a>
+              <a href="{{ object.profile.get_absolute_url }}">/u/{{ object.profile.handle }}</a>
             </p>
           {% endif %}
           {% if object == request.user %}

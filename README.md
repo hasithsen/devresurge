@@ -10,11 +10,11 @@ License: MIT
 
 ## Features
 
-- **Public profile** at `/p/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
+- **Public profile** at `/u/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
   Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
 - **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links and a
   one-click copy-share-URL chip.
-- **Profile directory** at `/p/` with search + role filter, lazy-loaded avatars, pagination.
+- **Profile directory** at `/u/` with search + role filter, lazy-loaded avatars, pagination.
 - **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
 - **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
   Theme is applied **before first paint** to avoid the flash-of-wrong-theme. Toggle always visible
@@ -23,7 +23,7 @@ License: MIT
   on signup / login / password reset, enumeration protection.
 - **Hardened avatar uploads** — 2 MB cap, allowed-extension + MIME allowlist, live client-side
   preview and validation, fallback server-side `validate_avatar_size` + `FileExtensionValidator`.
-- **`/robots.txt`** auto-served with sensible defaults (allows `/p/...` indexing, blocks `/me/`,
+- **`/robots.txt`** auto-served with sensible defaults (allows `/u/...` indexing, blocks `/me/`,
   `/accounts/` and `/admin/`).
 - **Production-ready scaffolding** — Postgres, Redis, Whitenoise, Argon2, Docker compose for local + prod.
 
@@ -46,8 +46,8 @@ Then visit <http://localhost:8000>.
 | Path                                | What it does                       |
 | ----------------------------------- | ---------------------------------- |
 | `/`                                 | Terminal landing page              |
-| `/p/`                               | Public profile directory + search  |
-| `/p/<handle>/`                      | A user's public profile            |
+| `/u/`                               | Public profile directory + search  |
+| `/u/<handle>/`                      | A user's public profile            |
 | `/me/`                              | Owner dashboard                    |
 | `/me/edit/`                         | Edit your profile                  |
 | `/me/projects/` (+ new/edit/delete) | Manage project links               |

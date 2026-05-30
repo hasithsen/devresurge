@@ -5,8 +5,8 @@ from . import views
 app_name = "profiles"
 
 urlpatterns = [
-    path("p/", views.profile_browse_view, name="browse"),
-    path("p/<slug:handle>/", views.profile_public_view, name="public"),
+    path("u/", views.profile_browse_view, name="browse"),
+    path("u/<slug:handle>/", views.profile_public_view, name="public"),
     path("me/", views.profile_dashboard_view, name="dashboard"),
     path("me/edit/", views.profile_edit_view, name="edit"),
     path("me/projects/", views.project_list_view, name="project_list"),

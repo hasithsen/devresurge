@@ -72,7 +72,7 @@ class Profile(models.Model):
         _("handle"),
         max_length=HANDLE_MAX_LENGTH,
         unique=True,
-        help_text=_("Your public URL, e.g. /p/your-handle/"),
+        help_text=_("Your public URL, e.g. /u/your-handle/"),
     )
     display_name = models.CharField(
         _("display name"),
