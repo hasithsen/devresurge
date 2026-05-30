@@ -3,136 +3,186 @@
 {% load i18n %}
 
 {% block title %}@{{ profile.handle }} — DevResurge{% endblock title %}
+{% block meta_description %}{{ profile.headline|default:profile.display_name|default:profile.handle }}{% if profile.location %} · {{ profile.location }}{% endif %}{% endblock meta_description %}
+{% block og_type %}profile{% endblock og_type %}
+{% block og_title %}{{ profile.display_name|default:profile.handle }} — DevResurge{% endblock og_title %}
+{% block og_description %}{{ profile.headline|default:profile.bio|truncatewords:30 }}{% endblock og_description %}
+{% block twitter_title %}{{ profile.display_name|default:profile.handle }} — DevResurge{% endblock twitter_title %}
+{% block twitter_description %}{{ profile.headline|default:profile.bio|truncatewords:30 }}{% endblock twitter_description %}
+
+{% block extra_head %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}" />
+  {% if not profile.is_public %}
+    <meta name="robots" content="noindex, nofollow" />
+  {% endif %}
+  {% if profile.avatar %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ profile.avatar.url }}" />
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ profile.avatar.url }}" />
+    <meta name="twitter:card" content="summary" />
+  {% endif %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "{{ profile.display_name|default:profile.handle|escapejs }}",
+      "alternateName": "{{ profile.handle|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}",
+      "description": "{{ profile.headline|escapejs }}",
+      "jobTitle": "{{ profile.get_primary_role_display|escapejs }}"
+      {% if profile.location %}, "address": {"@type": "PostalAddress", "addressLocality": "{{ profile.location|escapejs }}"}{% endif %}
+      {% if profile.avatar %}, "image": "{{ request.scheme }}://{{ request.get_host }}{{ profile.avatar.url }}"{% endif %}
+    }
+  </script>
+{% endblock extra_head %}
 
 {% block content %}
-  <article class="dr-panel">
-    <header class="dr-panel__header">
-      <span class="dr-dots"><span></span><span></span><span></span></span>
-      <span class="dr-panel__title">~/p/{{ profile.handle }}</span>
-      {% if request.user.is_authenticated and profile.user_id == request.user.pk %}
-        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:edit' %}">edit</a>
-      {% endif %}
-    </header>
-    <div class="dr-panel__body dr-stack-lg">
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'home' %}">~</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{% url 'profiles:browse' %}">profiles</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>@{{ profile.handle }}</span>
+    </nav>
 
-      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami</span></p>
+    <article class="dr-panel">
+      <header class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">~/p/{{ profile.handle }}</span>
+        {% if request.user.is_authenticated and profile.user_id == request.user.pk %}
+          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:edit' %}">edit</a>
+        {% endif %}
+      </header>
+      <div class="dr-panel__body dr-stack-lg">
 
-      <div class="dr-profile-hero">
-        <span class="dr-avatar dr-avatar--lg">
-          {% if profile.avatar %}
-            <img src="{{ profile.avatar.url }}" alt="" />
-          {% else %}
-            {{ profile.initials }}
-          {% endif %}
-        </span>
-        <div class="dr-profile-hero__meta">
-          <h1 style="margin: 0;">{{ profile.display_name|default:profile.handle }}</h1>
-          <div class="dr-handle">{{ profile.handle }}</div>
-          {% if profile.headline %}
-            <p style="margin: 0; color: var(--text-muted);">{{ profile.headline }}</p>
-          {% endif %}
-          <div class="dr-meta">
-            <span><strong>{{ profile.get_primary_role_display }}</strong></span>
-            {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
-            {% if profile.pronouns %}<span>· {{ profile.pronouns }}</span>{% endif %}
-            {% if profile.years_experience %}
-              <span>· {{ profile.years_experience }} yr{{ profile.years_experience|pluralize }}</span>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami</span></p>
+
+        <div class="dr-profile-hero">
+          <span class="dr-avatar dr-avatar--lg" aria-hidden="true">
+            {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="" />
+            {% else %}
+              {{ profile.initials }}
             {% endif %}
-            {% if profile.available_for_hire %}
-              <span class="dr-tag">available for hire</span>
+          </span>
+          <div class="dr-profile-hero__meta">
+            <h1 style="margin: 0;">{{ profile.display_name|default:profile.handle }}</h1>
+            <div class="dr-handle">{{ profile.handle }}</div>
+            {% if profile.headline %}
+              <p style="margin: 0; color: var(--text-muted);">{{ profile.headline }}</p>
             {% endif %}
+            <div class="dr-meta">
+              <span><strong>{{ profile.get_primary_role_display }}</strong></span>
+              {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
+              {% if profile.years_experience %}
+                <span>· {{ profile.years_experience }} yr{{ profile.years_experience|pluralize }}</span>
+              {% endif %}
+              {% if profile.available_for_hire %}
+                <span class="dr-tag">{% trans "available for hire" %}</span>
+              {% endif %}
+            </div>
           </div>
         </div>
-      </div>
 
-      {% if profile.tech_stack_list %}
-        <div>
-          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat stack.txt</span></p>
-          <div class="dr-tags">
-            {% for tag in profile.tech_stack_list %}
-              <span class="dr-tag">{{ tag }}</span>
-            {% endfor %}
+        {% if profile.tech_stack_list %}
+          <div>
+            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat stack.txt</span></p>
+            <div class="dr-tags">
+              {% for tag in profile.tech_stack_list %}
+                <a class="dr-tag" href="{% url 'profiles:browse' %}?q={{ tag|urlencode }}">{{ tag }}</a>
+              {% endfor %}
+            </div>
           </div>
-        </div>
-      {% endif %}
+        {% endif %}
 
-      {% if profile.bio %}
+        {% if profile.bio %}
+          <div>
+            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat about.md</span></p>
+            <div class="dr-block" style="white-space: pre-wrap;">{{ profile.bio }}</div>
+          </div>
+        {% endif %}
+
         <div>
-          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat about.md</span></p>
-          <div class="dr-block" style="white-space: pre-wrap;">{{ profile.bio }}</div>
-        </div>
-      {% endif %}
-
-      <div>
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
-        {% if profile.projects.all %}
-          <div class="dr-grid dr-grid--2">
-            {% for project in profile.projects.all %}
-              <div class="dr-project">
-                <div class="dr-project__title">
-                  {% if project.is_featured %}<span class="dr-star" aria-hidden="true">★</span>{% endif %}
-                  <h3>{{ project.title }}</h3>
-                </div>
-                {% if project.description %}
-                  <p style="margin: 0.4rem 0; color: var(--text-muted);">{{ project.description }}</p>
-                {% endif %}
-                {% if project.tech_stack_list %}
-                  <div class="dr-tags" style="margin: 0.5rem 0;">
-                    {% for tag in project.tech_stack_list %}
-                      <span class="dr-tag dr-tag--ghost">{{ tag }}</span>
-                    {% endfor %}
+          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
+          {% if profile.projects.all %}
+            <div class="dr-grid dr-grid--2">
+              {% for project in profile.projects.all %}
+                <div class="dr-project">
+                  <div class="dr-project__title">
+                    {% if project.is_featured %}<span class="dr-star" aria-hidden="true">★</span>{% endif %}
+                    <h3>{{ project.title }}</h3>
                   </div>
-                {% endif %}
-                <div class="dr-project__links">
-                  {% if project.url %}<a href="{{ project.url }}" rel="noopener">live ↗</a>{% endif %}
-                  {% if project.repo_url %}<a href="{{ project.repo_url }}" rel="noopener">repo ↗</a>{% endif %}
+                  {% if project.description %}
+                    <p style="margin: 0.4rem 0; color: var(--text-muted);">{{ project.description }}</p>
+                  {% endif %}
+                  {% if project.tech_stack_list %}
+                    <div class="dr-tags" style="margin: 0.5rem 0;">
+                      {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="dr-project__links">
+                    {% if project.url %}<a href="{{ project.url }}" rel="noopener nofollow ugc" target="_blank">live ↗</a>{% endif %}
+                    {% if project.repo_url %}<a href="{{ project.repo_url }}" rel="noopener nofollow ugc" target="_blank">repo ↗</a>{% endif %}
+                  </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="dr-empty">No projects listed yet.</div>
-        {% endif %}
-      </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="dr-empty">{% trans "No projects listed yet." %}</div>
+          {% endif %}
+        </div>
 
-      <div>
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
-        {% if profile.social_links.all or profile.website_url or profile.show_email %}
-          <ul class="dr-social-list">
-            {% if profile.website_url %}
-              <li class="dr-list-row">
-                <div class="dr-list-row__main">
-                  <div class="dr-list-row__title">website</div>
-                  <span class="dr-list-row__url">{{ profile.website_url }}</span>
-                </div>
-                <a class="dr-btn dr-btn--sm" href="{{ profile.website_url }}" rel="noopener">open ↗</a>
-              </li>
-            {% endif %}
-            {% if profile.show_email and profile.user.email %}
-              <li class="dr-list-row">
-                <div class="dr-list-row__main">
-                  <div class="dr-list-row__title">email</div>
-                  <span class="dr-list-row__url">{{ profile.user.email }}</span>
-                </div>
-                <a class="dr-btn dr-btn--sm" href="mailto:{{ profile.user.email }}">mail ↗</a>
-              </li>
-            {% endif %}
-            {% for link in profile.social_links.all %}
-              <li class="dr-list-row">
-                <div class="dr-list-row__main">
-                  <div class="dr-list-row__title">{{ link.display_label }}</div>
-                  <span class="dr-list-row__url">{{ link.url }}</span>
-                </div>
-                <a class="dr-btn dr-btn--sm" href="{{ link.url }}" rel="noopener">open ↗</a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <div class="dr-empty">No links yet.</div>
-        {% endif %}
-      </div>
+        <div>
+          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
+          {% if profile.social_links.all or profile.website_url or profile.show_email %}
+            <ul class="dr-social-list">
+              {% if profile.website_url %}
+                <li class="dr-list-row">
+                  <div class="dr-list-row__main">
+                    <div class="dr-list-row__title">website</div>
+                    <span class="dr-list-row__url">{{ profile.website_url }}</span>
+                  </div>
+                  <a class="dr-btn dr-btn--sm" href="{{ profile.website_url }}" rel="noopener nofollow" target="_blank">open ↗</a>
+                </li>
+              {% endif %}
+              {% if profile.show_email and profile.user.email %}
+                <li class="dr-list-row">
+                  <div class="dr-list-row__main">
+                    <div class="dr-list-row__title">email</div>
+                    <span class="dr-list-row__url">{{ profile.user.email }}</span>
+                  </div>
+                  <a class="dr-btn dr-btn--sm" href="mailto:{{ profile.user.email }}">mail ↗</a>
+                </li>
+              {% endif %}
+              {% for link in profile.social_links.all %}
+                <li class="dr-list-row">
+                  <div class="dr-list-row__main">
+                    <div class="dr-list-row__title">{{ link.display_label }}</div>
+                    <span class="dr-list-row__url">{{ link.url }}</span>
+                  </div>
+                  <a class="dr-btn dr-btn--sm" href="{{ link.url }}" rel="noopener nofollow" target="_blank">open ↗</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="dr-empty">{% trans "No links yet." %}</div>
+          {% endif %}
+        </div>
 
-      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">exit</span></p>
-    </div>
-  </article>
+        <div class="dr-share-row" style="margin-top: 0.5rem;">
+          <span style="color: var(--text-dim); font-size: 0.85rem;">share</span>
+          <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
+          <button type="button"
+                  class="dr-copy"
+                  data-copy-from="#dr-share-url"
+                  aria-label="{% translate 'Copy profile URL' %}">
+            <span class="dr-copy__icon" aria-hidden="true"></span>
+            <span data-copy-label>copy</span>
+          </button>
+        </div>
+
+        <p class="dr-cli" style="margin-top: 1rem;"><span class="dr-prompt"></span> <span class="cmd">exit</span></p>
+      </div>
+    </article>
+  </section>
 {% endblock content %}

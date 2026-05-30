@@ -103,6 +103,8 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 LOGIN_REDIRECT_URL = "profiles:dashboard"
+# https://docs.djangoproject.com/en/dev/ref/settings/#logout-redirect-url
+LOGOUT_REDIRECT_URL = "home"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 
@@ -272,6 +274,20 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+# Account hardening — production defaults.
+ACCOUNT_RATE_LIMITS = {
+    "change_password": "5/m/user",
+    "manage_email": "10/m/user",
+    "reset_password": "5/m/ip,5/m/key",
+    "reset_password_from_key": "5/m/ip",
+    "reset_password_email": "5/m/ip",
+    "signup": "20/m/ip",
+    "login": "5/m/ip,5/m/user",
+    "login_failed": "10/10m/ip,5/10m/user",
+    "confirm_email": "1/3m/key",
+}
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_PREVENT_ENUMERATION = True
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ADAPTER = "devresurge.users.adapters.AccountAdapter"
 # https://docs.allauth.org/en/latest/account/forms.html

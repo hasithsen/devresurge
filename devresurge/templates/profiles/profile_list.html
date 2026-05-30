@@ -3,85 +3,98 @@
 {% load i18n %}
 
 {% block title %}Profiles — DevResurge{% endblock title %}
+{% block meta_description %}Browse public developer profiles on DevResurge.{% endblock meta_description %}
 
 {% block content %}
-  <header class="dr-stack" style="margin-bottom: 1.25rem;">
-    <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls -la /p/</span></p>
-    <h1 style="margin: 0;">developers / {{ paginator.count }}</h1>
-    <p style="margin: 0; color: var(--text-muted);">
-      Browse public profiles. Filter by role or grep the stack.
-    </p>
-  </header>
+  <section class="dr-page">
+    <header class="dr-stack" style="margin-bottom: 1.5rem;">
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls -la /p/</span></p>
+      <h1 style="margin: 0;">developers <span style="color: var(--text-dim);">/ {{ paginator.count }}</span></h1>
+      <p style="margin: 0; color: var(--text-muted);">
+        {% trans "Browse public profiles. Filter by role or grep the stack." %}
+      </p>
+    </header>
 
-  <form class="dr-search" method="get" action="">
-    <input class="dr-input dr-search__input"
-           type="search"
-           name="q"
-           value="{{ q }}"
-           placeholder="grep python | aws | colombo…"
-           aria-label="{% translate 'Search profiles' %}" />
-    <select class="dr-select" name="role" aria-label="{% translate 'Role filter' %}">
-      <option value="">all roles</option>
-      {% for value, label in roles %}
-        <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    <button class="dr-btn dr-btn--primary" type="submit">run</button>
-    {% if q or role %}
-      <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">reset</a>
-    {% endif %}
-  </form>
+    <form class="dr-search" method="get" action="" role="search">
+      <input class="dr-input dr-search__input"
+             type="search"
+             name="q"
+             value="{{ q }}"
+             placeholder="grep python | aws | colombo…"
+             aria-label="{% translate 'Search profiles' %}" />
+      <select class="dr-select" name="role" aria-label="{% translate 'Role filter' %}">
+        <option value="">{% trans "all roles" %}</option>
+        {% for value, label in roles %}
+          <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="dr-btn dr-btn--primary" type="submit">run</button>
+      {% if q or role %}
+        <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">reset</a>
+      {% endif %}
+    </form>
 
-  {% if profiles %}
-    <div class="dr-grid dr-grid--3">
-      {% for profile in profiles %}
-        <a class="dr-profile-card" href="{{ profile.get_absolute_url }}" style="text-decoration: none; border-bottom: none;">
-          <div class="dr-profile-card__head">
-            <span class="dr-avatar">
-              {% if profile.avatar %}
-                <img src="{{ profile.avatar.url }}" alt="" />
-              {% else %}
-                {{ profile.initials }}
-              {% endif %}
-            </span>
-            <div>
-              <div class="dr-profile-card__name">{{ profile.display_name|default:profile.handle }}</div>
-              <div class="dr-profile-card__handle">@{{ profile.handle }}</div>
+    {% if profiles %}
+      <div class="dr-grid dr-grid--3">
+        {% for profile in profiles %}
+          <a class="dr-profile-card"
+             href="{{ profile.get_absolute_url }}"
+             style="text-decoration: none; border-bottom: none;">
+            <div class="dr-profile-card__head">
+              <span class="dr-avatar">
+                {% if profile.avatar %}
+                  <img src="{{ profile.avatar.url }}" alt="" loading="lazy" />
+                {% else %}
+                  {{ profile.initials }}
+                {% endif %}
+              </span>
+              <div>
+                <div class="dr-profile-card__name">{{ profile.display_name|default:profile.handle }}</div>
+                <div class="dr-profile-card__handle">@{{ profile.handle }}</div>
+              </div>
             </div>
-          </div>
-          {% if profile.headline %}
-            <p class="dr-profile-card__headline">{{ profile.headline }}</p>
-          {% endif %}
-          <div class="dr-meta">
-            <span><strong>{{ profile.get_primary_role_display }}</strong></span>
-            {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
-          </div>
-          {% if profile.tech_stack_list %}
-            <div class="dr-tags">
-              {% for tag in profile.tech_stack_list|slice:":5" %}
-                <span class="dr-tag">{{ tag }}</span>
-              {% endfor %}
+            {% if profile.headline %}
+              <p class="dr-profile-card__headline">{{ profile.headline }}</p>
+            {% endif %}
+            <div class="dr-meta">
+              <span><strong>{{ profile.get_primary_role_display }}</strong></span>
+              {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
+              {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">hireable</strong></span>{% endif %}
             </div>
-          {% endif %}
-        </a>
-      {% endfor %}
-    </div>
+            {% if profile.tech_stack_list %}
+              <div class="dr-tags">
+                {% for tag in profile.tech_stack_list|slice:":5" %}
+                  <span class="dr-tag">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </div>
 
-    {% if is_paginated %}
-      <nav class="dr-pager" aria-label="{% translate 'Pagination' %}">
-        {% if page_obj.has_previous %}
-          <a class="dr-btn dr-btn--sm" href="?{% if q %}q={{ q }}&{% endif %}{% if role %}role={{ role }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
+      {% if is_paginated %}
+        <nav class="dr-pager" aria-label="{% translate 'Pagination' %}">
+          {% if page_obj.has_previous %}
+            <a class="dr-btn dr-btn--sm"
+               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
+          {% endif %}
+          <span class="current">page {{ page_obj.number }} / {{ paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a class="dr-btn dr-btn--sm"
+               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="dr-empty">
+        <div class="dr-emoji">∅</div>
+        <p>
+          {% blocktranslate with q=q|default:"*" %}No profiles match <code>{{ q }}</code>.{% endblocktranslate %}
+        </p>
+        {% if q or role %}
+          <a class="dr-btn dr-btn--ghost dr-btn--sm" href="{% url 'profiles:browse' %}">reset filters</a>
         {% endif %}
-        <span class="current">page {{ page_obj.number }} / {{ paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-          <a class="dr-btn dr-btn--sm" href="?{% if q %}q={{ q }}&{% endif %}{% if role %}role={{ role }}&{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
-        {% endif %}
-      </nav>
+      </div>
     {% endif %}
-  {% else %}
-    <div class="dr-empty">
-      <div class="dr-emoji">∅</div>
-      <p>No profiles match <code>{{ q|default:"*" }}</code>.</p>
-    </div>
-  {% endif %}
+  </section>
 {% endblock content %}

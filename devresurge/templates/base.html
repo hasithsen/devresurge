@@ -7,11 +7,20 @@
     <title>
       {% block title %}DevResurge — IT profiles{% endblock title %}
     </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="DevResurge — terminal-styled developer profiles." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="{% block meta_description %}DevResurge — terminal-styled developer profiles for the IT crowd.{% endblock meta_description %}" />
     <meta name="author" content="Hasith Sen" />
     <meta name="theme-color" content="#0b0f0d" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)" />
+    <meta property="og:site_name" content="DevResurge" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}" />
+    <meta property="og:title" content="{% block og_title %}DevResurge — IT profiles{% endblock og_title %}" />
+    <meta property="og:description" content="{% block og_description %}Terminal-styled developer profiles for the IT crowd.{% endblock og_description %}" />
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{% block twitter_title %}DevResurge — IT profiles{% endblock twitter_title %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}Terminal-styled developer profiles for the IT crowd.{% endblock twitter_description %}" />
+    {% block extra_head %}{% endblock extra_head %}
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -50,18 +59,33 @@
               <span class="dr-cursor" aria-hidden="true"></span>
             </a>
 
-            <button class="dr-nav__toggle"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="dr-nav-menu"
-                    data-nav-toggle>
-              <span class="sr-only">{% translate "Toggle navigation" %}</span>
-              <span aria-hidden="true">≡</span>
-            </button>
+            <div class="dr-nav__actions">
+              <button type="button"
+                      class="dr-iconbtn"
+                      data-theme-toggle
+                      aria-pressed="false"
+                      title="{% translate 'Toggle color theme' %}">
+                <span aria-hidden="true">◐</span>
+                <span class="sr-only">
+                  {% translate 'Switch to' %}
+                  <span data-theme-label>light</span>
+                </span>
+              </button>
+
+              <button class="dr-nav__toggle"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="dr-nav-menu"
+                      data-nav-toggle>
+                <span class="sr-only">{% translate "Toggle navigation" %}</span>
+                <span aria-hidden="true">≡</span>
+              </button>
+            </div>
 
             <ul class="dr-nav__links" id="dr-nav-menu" data-nav-menu>
               <li>
-                <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>~/home</a>
+                <a href="{% url 'home' %}"
+                   {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>~/home</a>
               </li>
               <li>
                 <a href="{% url 'profiles:browse' %}"
@@ -89,14 +113,6 @@
                   <a id="log-in-link" href="{% url 'account_login' %}">$ login</a>
                 </li>
               {% endif %}
-              <li>
-                <button type="button" data-theme-toggle aria-pressed="false"
-                        title="{% translate 'Toggle color theme' %}">
-                  <span aria-hidden="true">◐</span>
-                  <span class="sr-only">{% translate 'Switch to' %}</span>
-                  <span data-theme-label>light</span>
-                </button>
-              </li>
             </ul>
           </div>
         </header>
@@ -104,11 +120,20 @@
         <main class="dr-main">
           <div class="dr-container">
             {% if messages %}
-              {% for message in messages %}
-                <div class="dr-alert {% if message.tags %}dr-alert--{{ message.tags }}{% endif %}">
-                  <span class="dr-prompt"></span> {{ message }}
-                </div>
-              {% endfor %}
+              <div class="dr-stack" role="status" aria-live="polite">
+                {% for message in messages %}
+                  <div class="dr-alert {% if message.tags %}dr-alert--{{ message.tags }}{% endif %}"
+                       {% if message.tags == 'success' or message.tags == 'info' %}data-autohide="6000"{% endif %}>
+                    <span class="dr-alert__body">
+                      <span class="dr-prompt"></span> {{ message }}
+                    </span>
+                    <button type="button"
+                            class="dr-alert__close"
+                            data-dismiss-alert
+                            aria-label="{% translate 'Dismiss' %}">×</button>
+                  </div>
+                {% endfor %}
+              </div>
             {% endif %}
             {% block main %}
               {% block content %}{% endblock content %}

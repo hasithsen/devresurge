@@ -1,11 +1,36 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}
-  {% block head_title %}
-  {% endblock head_title %}
+  {% block head_title %}{% trans "Account" %}{% endblock head_title %} — DevResurge
 {% endblock title %}
 
 {% block main %}
-  {% block content %}
-  {% endblock content %}
+  <section class="dr-page">
+    <div class="dr-narrow dr-narrow--wide">
+      <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+        <a href="{% url 'profiles:dashboard' %}">~/me</a>
+        <span class="dr-crumb__sep">/</span>
+        <span>account</span>
+      </nav>
+
+      <h1 style="margin-bottom: 0.5rem;">{% trans "Account settings" %}</h1>
+      <p style="color: var(--text-muted); margin-top: 0;">
+        {% trans "Manage how you sign in, secure your account and contact preferences." %}
+      </p>
+
+      <nav class="dr-subnav" aria-label="{% translate 'Account sections' %}">
+        <a href="{% url 'account_email' %}"
+           {% if request.resolver_match.url_name == 'account_email' %}aria-current="page"{% endif %}>email</a>
+        <a href="{% url 'account_change_password' %}"
+           {% if 'password' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>password</a>
+        <a href="{% url 'mfa_index' %}"
+           {% if 'mfa' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>mfa</a>
+        <a href="{% url 'account_logout' %}">logout</a>
+      </nav>
+
+      {% block content %}{% endblock content %}
+    </div>
+  </section>
 {% endblock main %}

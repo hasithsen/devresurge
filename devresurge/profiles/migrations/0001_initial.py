@@ -4,6 +4,8 @@ from django.db import models
 import django.core.validators
 import django.db.models.deletion
 
+import devresurge.profiles.models
+
 
 class Migration(migrations.Migration):
 
@@ -46,7 +48,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("location", models.CharField(blank=True, max_length=120, verbose_name="location")),
-                ("pronouns", models.CharField(blank=True, max_length=40, verbose_name="pronouns")),
                 (
                     "years_experience",
                     models.PositiveSmallIntegerField(
@@ -59,7 +60,22 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("tech_stack", models.CharField(blank=True, help_text="Comma-separated, e.g. 'python, django, postgres, aws'.", max_length=512, verbose_name="tech stack")),
-                ("avatar", models.ImageField(blank=True, null=True, upload_to="avatars/", verbose_name="avatar")),
+                (
+                    "avatar",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to="avatars/",
+                        verbose_name="avatar",
+                        help_text="Square image works best. Max 2 MB. JPG, PNG, WEBP or GIF.",
+                        validators=[
+                            devresurge.profiles.models.validate_avatar_size,
+                            django.core.validators.FileExtensionValidator(
+                                allowed_extensions=["jpg", "jpeg", "png", "webp", "gif"],
+                            ),
+                        ],
+                    ),
+                ),
                 ("website_url", models.URLField(blank=True, max_length=300, verbose_name="website")),
                 ("show_email", models.BooleanField(default=False, verbose_name="show email publicly")),
                 ("available_for_hire", models.BooleanField(default=False, verbose_name="available for hire")),

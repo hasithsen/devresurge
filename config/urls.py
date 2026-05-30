@@ -1,12 +1,21 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
+from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
 from devresurge.profiles.views import home_view
+
+
+@cache_control(max_age=60 * 60 * 24, public=True)
+def robots_txt(_request):
+    body = "User-agent: *\nDisallow: /me/\nDisallow: /accounts/\nDisallow: /admin/\nAllow: /\n"
+    return HttpResponse(body, content_type="text/plain")
+
 
 urlpatterns = [
     path("", home_view, name="home"),
@@ -15,6 +24,7 @@ urlpatterns = [
         TemplateView.as_view(template_name="pages/about.html"),
         name="about",
     ),
+    path("robots.txt", robots_txt, name="robots"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

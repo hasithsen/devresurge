@@ -1,47 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}~/me/projects{% endblock title %}
+{% load i18n %}
+
+{% block title %}~/me/projects — DevResurge{% endblock title %}
 
 {% block content %}
-  <header style="display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-    <div>
-      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
-      <h1 style="margin: 0;">projects</h1>
-    </div>
-    <div style="margin-left: auto;">
-      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:project_create' %}">+ new project</a>
-      <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:dashboard' %}">back</a>
-    </div>
-  </header>
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>projects</span>
+    </nav>
 
-  {% if projects %}
-    <ul class="dr-link-list">
-      {% for project in projects %}
-        <li class="dr-list-row">
-          <div class="dr-list-row__main">
-            <div class="dr-list-row__title">
-              {% if project.is_featured %}★ {% endif %}{{ project.title }}
-            </div>
-            <span class="dr-list-row__url">
-              {% if project.url %}{{ project.url }}{% elif project.repo_url %}{{ project.repo_url }}{% endif %}
-            </span>
-            {% if project.tech_stack_list %}
-              <div class="dr-tags" style="margin-top: 0.35rem;">
-                {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+    <header style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
+        <h1 style="margin: 0;">{% trans "projects" %}</h1>
+      </div>
+      <div class="dr-btn-row" style="margin-left: auto;">
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:project_create' %}">+ {% trans "new project" %}</a>
+      </div>
+    </header>
+
+    {% if projects %}
+      <ul class="dr-link-list">
+        {% for project in projects %}
+          <li class="dr-list-row">
+            <div class="dr-list-row__main">
+              <div class="dr-list-row__title">
+                {% if project.is_featured %}★ {% endif %}{{ project.title }}
               </div>
-            {% endif %}
-          </div>
-          <div class="dr-btn-row">
-            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:project_update' project.pk %}">edit</a>
-            <a class="dr-btn dr-btn--sm dr-btn--danger" href="{% url 'profiles:project_delete' project.pk %}">rm</a>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <div class="dr-empty">
-      <div class="dr-emoji">∅</div>
-      <p>No projects yet — <a href="{% url 'profiles:project_create' %}">add your first</a>.</p>
-    </div>
-  {% endif %}
+              <span class="dr-list-row__url">
+                {% if project.url %}{{ project.url }}{% elif project.repo_url %}{{ project.repo_url }}{% endif %}
+              </span>
+              {% if project.tech_stack_list %}
+                <div class="dr-tags" style="margin-top: 0.35rem;">
+                  {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="dr-btn-row">
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:project_update' project.pk %}">edit</a>
+              <a class="dr-btn dr-btn--sm dr-btn--danger" href="{% url 'profiles:project_delete' project.pk %}">rm</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty">
+        <div class="dr-emoji">∅</div>
+        <p>{% trans "No projects yet." %} <a href="{% url 'profiles:project_create' %}">{% trans "Add your first." %}</a></p>
+      </div>
+    {% endif %}
+  </section>
 {% endblock content %}

@@ -1,3 +1,13 @@
-{% load crispy_forms_tags %}
-
-{{ attrs.form|crispy }}
+{# Render an entire Django form using our terminal field styling. #}
+{% for field in attrs.form %}
+  {% if field.is_hidden %}
+    {{ field }}
+  {% else %}
+    {% include "profiles/_field.html" with field=field %}
+  {% endif %}
+{% endfor %}
+{% if attrs.form.non_field_errors %}
+  <ul class="dr-errors" style="margin-top: 0.5rem;">
+    {% for error in attrs.form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+  </ul>
+{% endif %}

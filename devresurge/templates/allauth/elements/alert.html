@@ -1,7 +1,13 @@
 {% load i18n %}
 {% load allauth %}
 
-<div class="alert alert-error">
-  {% slot message %}
-{% endslot %}
+<div class="dr-alert
+  {% if 'success' in attrs.tags %}{% elif 'warning' in attrs.tags %}dr-alert--warning{% elif 'danger' in attrs.tags or 'error' in attrs.tags %}dr-alert--error{% else %}dr-alert--info{% endif %}">
+  <span class="dr-alert__body">
+    <span class="dr-prompt"></span> {% slot message %}{% endslot %}
+  </span>
+  <button type="button"
+          class="dr-alert__close"
+          data-dismiss-alert
+          aria-label="{% translate 'Dismiss' %}">×</button>
 </div>

@@ -3,8 +3,10 @@
 {% load i18n %}
 
 {% block title %}DevResurge — terminal profiles for IT professionals{% endblock title %}
+{% block meta_description %}DevResurge — a minimal terminal-styled home for developer profiles. Spin up your handle, link your projects, share with one URL.{% endblock meta_description %}
 
 {% block content %}
+<div class="dr-page" style="padding-top: 0.5rem;">
   <section class="dr-hero">
     <div class="dr-hero__inner">
       <div>
@@ -109,4 +111,5 @@
       <p>No profiles yet. Be the first to <a href="{% url 'account_signup' %}">spin one up</a>.</p>
     </div>
   {% endif %}
+</div>
 {% endblock content %}

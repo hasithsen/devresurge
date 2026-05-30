@@ -11,12 +11,20 @@ License: MIT
 ## Features
 
 - **Public profile** at `/p/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
-- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links.
-- **Profile directory** at `/p/` with search + role filter and pagination.
+  Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
+- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links and a
+  one-click copy-share-URL chip.
+- **Profile directory** at `/p/` with search + role filter, lazy-loaded avatars, pagination.
 - **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
 - **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
-  Theme is applied **before first paint** to avoid the flash-of-wrong-theme.
-- **Auth out of the box** — email login, email verification, MFA via `django-allauth`.
+  Theme is applied **before first paint** to avoid the flash-of-wrong-theme. Toggle always visible
+  in the navbar (no need to open the mobile menu first).
+- **Auth out of the box** — email login, email verification, MFA via `django-allauth`, rate limits
+  on signup / login / password reset, enumeration protection.
+- **Hardened avatar uploads** — 2 MB cap, allowed-extension + MIME allowlist, live client-side
+  preview and validation, fallback server-side `validate_avatar_size` + `FileExtensionValidator`.
+- **`/robots.txt`** auto-served with sensible defaults (allows `/p/...` indexing, blocks `/me/`,
+  `/accounts/` and `/admin/`).
 - **Production-ready scaffolding** — Postgres, Redis, Whitenoise, Argon2, Docker compose for local + prod.
 
 ## Settings
@@ -45,6 +53,7 @@ Then visit <http://localhost:8000>.
 | `/me/projects/` (+ new/edit/delete) | Manage project links               |
 | `/me/links/` (+ new/edit/delete)    | Manage social / website links      |
 | `/admin/`                           | Django admin                       |
+| `/robots.txt`                       | Crawler rules                      |
 
 ## Basic Commands
 

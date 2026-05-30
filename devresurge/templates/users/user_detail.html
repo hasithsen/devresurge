@@ -5,29 +5,33 @@
 {% block title %}{{ object.name|default:object.email }} — DevResurge{% endblock title %}
 
 {% block content %}
-  <article class="dr-panel">
-    <header class="dr-panel__header">
-      <span class="dr-dots"><span></span><span></span><span></span></span>
-      <span class="dr-panel__title">~/users/{{ object.pk }}</span>
-    </header>
-    <div class="dr-panel__body dr-stack">
-      <h1 style="margin: 0;">{{ object.name|default:object.email }}</h1>
-      {% if object.profile %}
-        <p style="margin: 0; color: var(--text-muted);">
-          Public profile:
-          <a href="{{ object.profile.get_absolute_url }}">/p/{{ object.profile.handle }}</a>
-        </p>
-      {% endif %}
-      {% if object == request.user %}
-        <div class="dr-btn-row">
-          <a class="dr-btn dr-btn--primary" href="{% url 'profiles:dashboard' %}">
-            {% translate "Open dashboard" %}
-          </a>
-          <a class="dr-btn" href="{% url 'users:update' %}">{% translate "Edit name" %}</a>
-          <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">{% translate "Email" %}</a>
-          <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">{% translate "MFA" %}</a>
+  <section class="dr-page">
+    <div class="dr-narrow dr-narrow--wide">
+      <article class="dr-panel">
+        <header class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">~/users/{{ object.pk }}</span>
+        </header>
+        <div class="dr-panel__body dr-stack">
+          <h1 style="margin: 0;">{{ object.name|default:object.email }}</h1>
+          {% if object.profile %}
+            <p style="margin: 0; color: var(--text-muted);">
+              {% trans "Public profile" %}:
+              <a href="{{ object.profile.get_absolute_url }}">/p/{{ object.profile.handle }}</a>
+            </p>
+          {% endif %}
+          {% if object == request.user %}
+            <div class="dr-btn-row">
+              <a class="dr-btn dr-btn--primary" href="{% url 'profiles:dashboard' %}">
+                {% trans "Open dashboard" %}
+              </a>
+              <a class="dr-btn" href="{% url 'users:update' %}">{% trans "Edit name" %}</a>
+              <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">{% trans "Email" %}</a>
+              <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">{% trans "MFA" %}</a>
+            </div>
+          {% endif %}
         </div>
-      {% endif %}
+      </article>
     </div>
-  </article>
+  </section>
 {% endblock content %}

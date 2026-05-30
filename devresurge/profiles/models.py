@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,6 +13,19 @@ from slugify import slugify
 
 HANDLE_MAX_LENGTH = 40
 HANDLE_MIN_LENGTH = 2
+
+MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MiB
+ALLOWED_AVATAR_EXTENSIONS = ("jpg", "jpeg", "png", "webp", "gif")
+
+
+def validate_avatar_size(value) -> None:
+    """Reject avatar uploads larger than `MAX_AVATAR_BYTES`."""
+    size = getattr(value, "size", None)
+    if size is not None and size > MAX_AVATAR_BYTES:
+        err = _("Avatar must be %(max)d MB or smaller.") % {
+            "max": MAX_AVATAR_BYTES // (1024 * 1024),
+        }
+        raise ValidationError(err)
 
 
 class PrimaryRole(models.TextChoices):
@@ -83,7 +98,6 @@ class Profile(models.Model):
         default=PrimaryRole.OTHER,
     )
     location = models.CharField(_("location"), max_length=120, blank=True)
-    pronouns = models.CharField(_("pronouns"), max_length=40, blank=True)
     years_experience = models.PositiveSmallIntegerField(
         _("years of experience"),
         default=0,
@@ -100,6 +114,13 @@ class Profile(models.Model):
         upload_to="avatars/",
         blank=True,
         null=True,
+        help_text=_(
+            "Square image works best. Max 2 MB. JPG, PNG, WEBP or GIF.",
+        ),
+        validators=[
+            validate_avatar_size,
+            FileExtensionValidator(allowed_extensions=list(ALLOWED_AVATAR_EXTENSIONS)),
+        ],
     )
     website_url = models.URLField(_("website"), max_length=300, blank=True)
     show_email = models.BooleanField(_("show email publicly"), default=False)
@@ -124,7 +145,14 @@ class Profile(models.Model):
 
     @property
     def tech_stack_list(self) -> list[str]:
-        return [chunk.strip() for chunk in self.tech_stack.split(",") if chunk.strip()]
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in self.tech_stack.split(","):
+            tag = raw.strip().lower()
+            if tag and tag not in seen:
+                seen.add(tag)
+                out.append(tag)
+        return out
 
     @property
     def initials(self) -> str:
@@ -195,7 +223,14 @@ class ProjectLink(models.Model):
 
     @property
     def tech_stack_list(self) -> list[str]:
-        return [chunk.strip() for chunk in self.tech_stack.split(",") if chunk.strip()]
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in self.tech_stack.split(","):
+            tag = raw.strip().lower()
+            if tag and tag not in seen:
+                seen.add(tag)
+                out.append(tag)
+        return out
 
 
 class SocialLink(models.Model):

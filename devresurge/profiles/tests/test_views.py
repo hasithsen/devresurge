@@ -74,7 +74,6 @@ def test_edit_profile_persists_changes(client):
             "primary_role": "backend",
             "bio": "I write servers.",
             "location": "Colombo",
-            "pronouns": "they/them",
             "years_experience": 5,
             "tech_stack": "python, django",
             "website_url": "",
