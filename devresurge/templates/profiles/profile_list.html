@@ -9,7 +9,7 @@
   <section class="dr-page">
     <header class="dr-stack" style="margin-bottom: 1.5rem;">
       <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls -la /u/</span></p>
-      <h1 style="margin: 0;">developers <span style="color: var(--text-dim);">/ {{ paginator.count }}</span></h1>
+      <h1 style="margin: 0;">engineers <span style="color: var(--text-dim);">/ {{ paginator.count }}</span></h1>
       <p style="margin: 0; color: var(--text-muted);">
         {% trans "Browse public profiles. Filter by role or grep the stack." %}
       </p>
@@ -62,11 +62,14 @@
               {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">hireable</strong></span>{% endif %}
             </div>
             {% if profile.tech_stack_list %}
-              <div class="dr-tags">
-                {% for tag in profile.tech_stack_list|slice:":5" %}
-                  <span class="dr-tag">{{ tag }}</span>
-                {% endfor %}
-              </div>
+            <div class="dr-tags">
+              {% for tag in profile.tech_stack_list|slice:":4" %}
+                <span class="dr-tag">{{ tag }}</span>
+              {% endfor %}
+              {% if profile.tech_stack_list|length > 4 %}
+                <span class="dr-tag dr-tag--ghost">+{{ profile.tech_stack_list|length|add:"-4" }}</span>
+              {% endif %}
+            </div>
             {% endif %}
           </a>
         {% endfor %}
