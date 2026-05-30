@@ -275,6 +275,8 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # Account hardening — production defaults.
+# Anonymous flows must not use `/user` scopes. allauth evaluates these before
+# authentication and raises ImproperlyConfigured if a user scope is requested.
 ACCOUNT_RATE_LIMITS = {
     "change_password": "5/m/user",
     "manage_email": "10/m/user",
@@ -282,8 +284,8 @@ ACCOUNT_RATE_LIMITS = {
     "reset_password_from_key": "5/m/ip",
     "reset_password_email": "5/m/ip",
     "signup": "20/m/ip",
-    "login": "5/m/ip,5/m/user",
-    "login_failed": "10/10m/ip,5/10m/user",
+    "login": "30/m/ip",
+    "login_failed": "10/10m/ip",
     "confirm_email": "1/3m/key",
 }
 ACCOUNT_SESSION_REMEMBER = True

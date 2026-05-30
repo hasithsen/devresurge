@@ -17,7 +17,7 @@
     <meta property="og:title" content="{% block og_title %}DevResurge — IT profiles{% endblock og_title %}" />
     <meta property="og:description" content="{% block og_description %}Terminal-styled developer profiles for the IT crowd.{% endblock og_description %}" />
     <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="{% block twitter_card %}summary{% endblock twitter_card %}" />
     <meta name="twitter:title" content="{% block twitter_title %}DevResurge — IT profiles{% endblock twitter_title %}" />
     <meta name="twitter:description" content="{% block twitter_description %}Terminal-styled developer profiles for the IT crowd.{% endblock twitter_description %}" />
     {% block extra_head %}{% endblock extra_head %}
