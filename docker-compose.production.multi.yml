@@ -1,0 +1,73 @@
+# devresurge: production Compose for multi-app host (no Traefik, no host Nginx).
+# Run from this app's project root. Proxy runs separately (deployment/nginx-proxy).
+# Container names (devresurge_django, devresurge_nginx) must match nginx-proxy/conf.d/devresurge.conf.
+
+name: devresurge
+
+volumes:
+  devresurge_postgres_data: {}
+  devresurge_postgres_data_backups: {}
+  devresurge_django_media: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: devresurge_production_django
+    container_name: devresurge_django
+    volumes:
+      - devresurge_django_media:/app/devresurge/media
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    command: /start
+    networks:
+      - default
+      - proxy
+    deploy:
+      resources:
+        limits:
+          memory: 1024M   # Hard limit of RAM
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: devresurge_production_postgres
+    container_name: devresurge_postgres
+    volumes:
+      - devresurge_postgres_data:/var/lib/postgresql/18/docker
+      - devresurge_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.production/.postgres
+    networks:
+      - default
+
+  redis:
+    image: docker.io/redis:7.2
+    container_name: devresurge_redis
+    networks:
+      - default
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+    image: devresurge_production_nginx
+    container_name: devresurge_nginx
+    depends_on:
+      - django
+    volumes:
+      - devresurge_django_media:/usr/share/nginx/media:ro
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: nginx_proxy_network
