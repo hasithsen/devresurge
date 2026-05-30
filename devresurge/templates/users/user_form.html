@@ -2,30 +2,24 @@
 
 {% load crispy_forms_tags %}
 
-{% block title %}
+{% block title %}{% if user.name %}{{ user.name }}{% else %}Edit name{% endif %} — DevResurge{% endblock title %}
 
-
-  {{ user.name }}
-
-
-{% endblock title %}
 {% block content %}
-  <h1>
-  
-  
-    {{ user.name }}
-  
-  
-</h1>
-<form class="form-horizontal"
-      method="post"
-      action="{% url 'users:update' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  <div class="control-group">
-    <div class="controls">
-      <button type="submit" class="btn btn-primary">Update</button>
+  <article class="dr-panel">
+    <header class="dr-panel__header">
+      <span class="dr-dots"><span></span><span></span><span></span></span>
+      <span class="dr-panel__title">~/users/update</span>
+    </header>
+    <div class="dr-panel__body">
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">vim name.txt</span></p>
+      <form method="post" action="{% url 'users:update' %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="dr-btn-row">
+          <button type="submit" class="dr-btn dr-btn--primary">save</button>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:dashboard' %}">cancel</a>
+        </div>
+      </form>
     </div>
-  </div>
-</form>
+  </article>
 {% endblock content %}

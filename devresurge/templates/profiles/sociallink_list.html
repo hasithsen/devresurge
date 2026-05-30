@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}~/me/links{% endblock title %}
+
+{% block content %}
+  <header style="display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+    <div>
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
+      <h1 style="margin: 0;">social links</h1>
+    </div>
+    <div style="margin-left: auto;">
+      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:link_create' %}">+ new link</a>
+      <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:dashboard' %}">back</a>
+    </div>
+  </header>
+
+  {% if links %}
+    <ul class="dr-link-list">
+      {% for link in links %}
+        <li class="dr-list-row">
+          <div class="dr-list-row__main">
+            <div class="dr-list-row__title">{{ link.get_platform_display }}{% if link.label %} · {{ link.label }}{% endif %}</div>
+            <span class="dr-list-row__url">{{ link.url }}</span>
+          </div>
+          <div class="dr-btn-row">
+            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_update' link.pk %}">edit</a>
+            <a class="dr-btn dr-btn--sm dr-btn--danger" href="{% url 'profiles:link_delete' link.pk %}">rm</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="dr-empty">
+      <div class="dr-emoji">∅</div>
+      <p>No links yet — <a href="{% url 'profiles:link_create' %}">add one</a>.</p>
+    </div>
+  {% endif %}
+{% endblock content %}

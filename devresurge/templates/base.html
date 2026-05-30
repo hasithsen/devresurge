@@ -1,4 +1,3 @@
-
 {% load static i18n %}<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -6,136 +5,128 @@
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>
-      {% block title %}
-      DevResurge
-    {% endblock title %}
-  </title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-        content="DevResurge Webapp" />
-  <meta name="author"
-        content="Hasith Sen" />
-  <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
-  {% block css %}
-    <!-- Latest compiled and minified Bootstrap CSS -->
+      {% block title %}DevResurge — IT profiles{% endblock title %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DevResurge — terminal-styled developer profiles." />
+    <meta name="author" content="Hasith Sen" />
+    <meta name="theme-color" content="#0b0f0d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f6f2" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
-          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
-          crossorigin="anonymous"
-          referrerpolicy="no-referrer" />
-<!-- Your stuff: Third-party CSS libraries go here -->
-<!-- This file stores project-specific CSS -->
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+    {% block css %}
+      <link href="{% static 'css/project.css' %}" rel="stylesheet" />
+    {% endblock css %}
+    <script>
+      (function () {
+        try {
+          var stored = window.localStorage.getItem("devresurge:theme");
+          var theme = (stored === "light" || stored === "dark")
+            ? stored
+            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (_) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+    {% block javascript %}
+      <script defer src="{% static 'js/project.js' %}"></script>
+    {% endblock javascript %}
+  </head>
+  <body class="{% block bodyclass %}{% endblock bodyclass %}">
+    {% block body %}
+      <div class="dr-shell">
+        <header class="dr-nav">
+          <div class="dr-container dr-nav__inner">
+            <a class="dr-nav__brand" href="{% url 'home' %}">
+              <span class="dr-prompt"></span>
+              <span>devresurge</span>
+              <span class="dr-cursor" aria-hidden="true"></span>
+            </a>
 
-  
-  <link href="{% static 'css/project.css' %}" rel="stylesheet" />
+            <button class="dr-nav__toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="dr-nav-menu"
+                    data-nav-toggle>
+              <span class="sr-only">{% translate "Toggle navigation" %}</span>
+              <span aria-hidden="true">≡</span>
+            </button>
 
-
-{% endblock css %}
-<!-- Le javascript
-    ================================================== -->
-{# Placed at the top of the document so pages load faster with defer #}
-{% block javascript %}
-
-
-<!-- Bootstrap JS -->
-<script defer
-        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"
-        integrity="sha512-1/RvZTcCDEUjY/CypiMz+iqqtaoQfAITmNSJY17Myp4Ms5mdxPS5UV7iOfdZoxcGhzFbOm6sntTKJppjvuhg4g=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<!-- Your stuff: Third-party javascript libraries go here -->
-
-
-<!-- place project specific Javascript in this file -->
-
-  
-  <script defer src="{% static 'js/project.js' %}"></script>
-
-
-{% endblock javascript %}
-</head>
-<body class="{% block bodyclass %}{% endblock bodyclass %}">
-  {% block body %}
-  <div class="mb-1">
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-      <div class="container-fluid">
-        <button class="navbar-toggler navbar-toggler-right"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="{% url 'home' %}">DevResurge</a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
-            </li>
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link"
-                   href="{% url 'users:detail' request.user.pk %}">{% translate "My Profile" %}</a>
+            <ul class="dr-nav__links" id="dr-nav-menu" data-nav-menu>
+              <li>
+                <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>~/home</a>
               </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+              <li>
+                <a href="{% url 'profiles:browse' %}"
+                   {% if 'browse' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/profiles</a>
               </li>
-            {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+              <li>
+                <a href="{% url 'about' %}"
+                   {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>~/about</a>
+              </li>
+              {% if request.user.is_authenticated %}
+                <li>
+                  <a href="{% url 'profiles:dashboard' %}"
+                     {% if 'dashboard' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/me</a>
+                </li>
+                <li>
+                  <a href="{% url 'account_logout' %}">$ logout</a>
+                </li>
+              {% else %}
+                {% if ACCOUNT_ALLOW_REGISTRATION %}
+                  <li>
+                    <a id="sign-up-link" href="{% url 'account_signup' %}">$ signup</a>
+                  </li>
+                {% endif %}
+                <li>
+                  <a id="log-in-link" href="{% url 'account_login' %}">$ login</a>
                 </li>
               {% endif %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+              <li>
+                <button type="button" data-theme-toggle aria-pressed="false"
+                        title="{% translate 'Toggle color theme' %}">
+                  <span aria-hidden="true">◐</span>
+                  <span class="sr-only">{% translate 'Switch to' %}</span>
+                  <span data-theme-label>light</span>
+                </button>
               </li>
-            {% endif %}
-          </ul>
-        </div>
-      </div>
-    </nav>
-  </div>
-  <div class="container">
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-          {{ message }}
-          <button type="button"
-                  class="btn-close"
-                  data-bs-dismiss="alert"
-                  aria-label="Close"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-    {% block main %}
-      {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
-    {% endblock main %}
+            </ul>
+          </div>
+        </header>
 
-  </div>
-  {% endblock body %}
-  <!-- /container -->
-  {% block modal %}
-  {% endblock modal %}
-  {% block inline_javascript %}
-    {% comment %}
-    Script tags with only code, no src (defer by default). To run
-    with a "defer" so that you run inline code:
-    <script>
-      window.addEventListener('DOMContentLoaded', () => {
-        /* Run whatever you want */
-      });
-    </script>
-    {% endcomment %}
-  {% endblock inline_javascript %}
-</body>
+        <main class="dr-main">
+          <div class="dr-container">
+            {% if messages %}
+              {% for message in messages %}
+                <div class="dr-alert {% if message.tags %}dr-alert--{{ message.tags }}{% endif %}">
+                  <span class="dr-prompt"></span> {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+            {% block main %}
+              {% block content %}{% endblock content %}
+            {% endblock main %}
+          </div>
+        </main>
+
+        <footer class="dr-footer">
+          <div class="dr-container">
+            <span class="dr-prompt"></span> exit 0 ·
+            <a href="{% url 'about' %}">about</a> ·
+            <a href="https://github.com/" rel="noopener">source</a> ·
+            built with <code>django</code>
+          </div>
+        </footer>
+      </div>
+    {% endblock body %}
+    {% block modal %}{% endblock modal %}
+    {% block inline_javascript %}{% endblock inline_javascript %}
+  </body>
 </html>

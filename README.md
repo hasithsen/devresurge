@@ -1,15 +1,50 @@
 # DevResurge
 
-DevResurge Webapp
+Terminal-styled developer profiles for the IT crowd. Spin up a public profile, list
+your stack, attach projects, link your socials.
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 License: MIT
 
+## Features
+
+- **Public profile** at `/p/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
+- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links.
+- **Profile directory** at `/p/` with search + role filter and pagination.
+- **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
+- **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
+  Theme is applied **before first paint** to avoid the flash-of-wrong-theme.
+- **Auth out of the box** — email login, email verification, MFA via `django-allauth`.
+- **Production-ready scaffolding** — Postgres, Redis, Whitenoise, Argon2, Docker compose for local + prod.
+
 ## Settings
 
 Moved to [settings](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
+
+## Quickstart
+
+```bash
+docker compose -f docker-compose.local.yml up --build
+docker compose -f docker-compose.local.yml run --rm django python manage.py migrate
+docker compose -f docker-compose.local.yml run --rm django python manage.py createsuperuser
+```
+
+Then visit <http://localhost:8000>.
+
+## Routes
+
+| Path                                | What it does                       |
+| ----------------------------------- | ---------------------------------- |
+| `/`                                 | Terminal landing page              |
+| `/p/`                               | Public profile directory + search  |
+| `/p/<handle>/`                      | A user's public profile            |
+| `/me/`                              | Owner dashboard                    |
+| `/me/edit/`                         | Edit your profile                  |
+| `/me/projects/` (+ new/edit/delete) | Manage project links               |
+| `/me/links/` (+ new/edit/delete)    | Manage social / website links      |
+| `/admin/`                           | Django admin                       |
 
 ## Basic Commands
 

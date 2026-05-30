@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}edit profile — DevResurge{% endblock title %}
+
+{% block content %}
+  <article class="dr-panel">
+    <header class="dr-panel__header">
+      <span class="dr-dots"><span></span><span></span><span></span></span>
+      <span class="dr-panel__title">~/me/edit</span>
+    </header>
+    <div class="dr-panel__body">
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">vim profile.yaml</span></p>
+
+      {% if form.non_field_errors %}
+        <div class="dr-alert dr-alert--error">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="dr-grid dr-grid--2">
+          {% include "profiles/_field.html" with field=form.handle %}
+          {% include "profiles/_field.html" with field=form.display_name %}
+        </div>
+
+        {% include "profiles/_field.html" with field=form.headline %}
+
+        <div class="dr-grid dr-grid--2">
+          {% include "profiles/_field.html" with field=form.primary_role %}
+          {% include "profiles/_field.html" with field=form.years_experience %}
+        </div>
+
+        {% include "profiles/_field.html" with field=form.bio %}
+
+        <div class="dr-grid dr-grid--2">
+          {% include "profiles/_field.html" with field=form.location %}
+          {% include "profiles/_field.html" with field=form.pronouns %}
+        </div>
+
+        {% include "profiles/_field.html" with field=form.tech_stack %}
+
+        <div class="dr-grid dr-grid--2">
+          {% include "profiles/_field.html" with field=form.website_url %}
+          {% include "profiles/_field.html" with field=form.avatar %}
+        </div>
+
+        <div class="dr-grid dr-grid--3">
+          {% include "profiles/_field.html" with field=form.show_email %}
+          {% include "profiles/_field.html" with field=form.available_for_hire %}
+          {% include "profiles/_field.html" with field=form.is_public %}
+        </div>
+
+        <div class="dr-btn-row" style="margin-top: 1rem;">
+          <button type="submit" class="dr-btn dr-btn--primary">save</button>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:dashboard' %}">cancel</a>
+        </div>
+      </form>
+    </div>
+  </article>
+{% endblock content %}

@@ -1,0 +1,22 @@
+{# Render a single bound form field with terminal styling. #}
+{% spaceless %}
+  <div class="dr-field">
+    {% if field.field.widget.input_type == "checkbox" %}
+      <label class="dr-check" for="{{ field.id_for_label }}">
+        {{ field }}
+        <span>{{ field.label }}</span>
+      </label>
+    {% else %}
+      <label class="dr-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
+    {% if field.help_text %}
+      <div class="dr-helptext">{{ field.help_text|safe }}</div>
+    {% endif %}
+    {% if field.errors %}
+      <ul class="dr-errors">
+        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% endspaceless %}

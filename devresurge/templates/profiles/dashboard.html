@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/me — DevResurge{% endblock title %}
+
+{% block content %}
+  <header class="dr-stack" style="margin-bottom: 1rem;">
+    <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami &amp;&amp; pwd</span></p>
+    <h1 style="margin: 0;">@{{ profile.handle }}</h1>
+    <p style="margin: 0; color: var(--text-muted);">
+      Public URL: <a href="{{ profile.get_absolute_url }}">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</a>
+    </p>
+  </header>
+
+  <section class="dr-grid dr-grid--3">
+    <div class="dr-panel">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">profile.yaml</span>
+      </div>
+      <div class="dr-panel__body dr-stack">
+        <p style="margin: 0;">Headline, bio, stack and avatar.</p>
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">edit profile</a>
+      </div>
+    </div>
+
+    <div class="dr-panel">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">projects/</span>
+      </div>
+      <div class="dr-panel__body dr-stack">
+        <p style="margin: 0;">{{ profile.projects.count }} project{{ profile.projects.count|pluralize }} listed.</p>
+        <div class="dr-btn-row">
+          <a class="dr-btn" href="{% url 'profiles:project_list' %}">manage</a>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:project_create' %}">+ new</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dr-panel">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">links.json</span>
+      </div>
+      <div class="dr-panel__body dr-stack">
+        <p style="margin: 0;">{{ profile.social_links.count }} link{{ profile.social_links.count|pluralize }} added.</p>
+        <div class="dr-btn-row">
+          <a class="dr-btn" href="{% url 'profiles:link_list' %}">manage</a>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:link_create' %}">+ new</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="dr-section-title"><span class="dr-prompt"></span> account</h2>
+  <div class="dr-btn-row">
+    <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">email</a>
+    <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">mfa</a>
+    <a class="dr-btn dr-btn--ghost" href="{% url 'account_change_password' %}">password</a>
+    <a class="dr-btn dr-btn--danger" href="{% url 'account_logout' %}">logout</a>
+  </div>
+{% endblock content %}
