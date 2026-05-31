@@ -11,10 +11,12 @@ urlpatterns = [
     path("me/edit/", views.profile_edit_view, name="edit"),
     path("me/projects/", views.project_list_view, name="project_list"),
     path("me/projects/new/", views.project_create_view, name="project_create"),
+    path("me/projects/reorder/", views.project_reorder_view, name="project_reorder"),
     path("me/projects/<int:pk>/edit/", views.project_update_view, name="project_update"),
     path("me/projects/<int:pk>/delete/", views.project_delete_view, name="project_delete"),
     path("me/links/", views.link_list_view, name="link_list"),
     path("me/links/new/", views.link_create_view, name="link_create"),
+    path("me/links/reorder/", views.link_reorder_view, name="link_reorder"),
     path("me/links/<int:pk>/edit/", views.link_update_view, name="link_update"),
     path("me/links/<int:pk>/delete/", views.link_delete_view, name="link_delete"),
 ]

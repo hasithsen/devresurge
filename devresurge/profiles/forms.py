@@ -103,6 +103,7 @@ class ProfileForm(forms.ModelForm):
 class ProjectLinkForm(forms.ModelForm):
     class Meta:
         model = ProjectLink
+        # `order` is managed via drag-and-drop on the list page, not the form.
         fields = (
             "title",
             "description",
@@ -110,7 +111,6 @@ class ProjectLinkForm(forms.ModelForm):
             "repo_url",
             "tech_stack",
             "is_featured",
-            "order",
         )
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3, "placeholder": "What it does, in one breath."}),
@@ -128,7 +128,8 @@ class ProjectLinkForm(forms.ModelForm):
 class SocialLinkForm(forms.ModelForm):
     class Meta:
         model = SocialLink
-        fields = ("platform", "label", "url", "order")
+        # `order` is managed via drag-and-drop on the list page, not the form.
+        fields = ("platform", "label", "url")
         widgets = {
             "url": forms.TextInput(attrs={"placeholder": "https://github.com/your-handle"}),
             "label": forms.TextInput(attrs={"placeholder": "Optional display name"}),

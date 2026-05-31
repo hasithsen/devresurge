@@ -43,10 +43,10 @@
               {% include "profiles/_field.html" with field=form.repo_url %}
             </div>
             {% include "profiles/_field.html" with field=form.tech_stack %}
-            <div class="dr-grid dr-grid--2">
-              {% include "profiles/_field.html" with field=form.is_featured %}
-              {% include "profiles/_field.html" with field=form.order %}
-            </div>
+            {% include "profiles/_field.html" with field=form.is_featured %}
+            <p class="dr-helptext" style="margin-top: -0.5rem;">
+              {% trans "Drag rows on the projects list to change order." %}
+            </p>
 
             <div class="dr-btn-row" style="margin-top: 1rem;">
               <button type="submit" class="dr-btn dr-btn--primary">{% trans "save" %}</button>

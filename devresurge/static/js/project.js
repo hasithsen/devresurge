@@ -45,27 +45,67 @@
 
   /* ----- Mobile nav ---------------------------------------------------- */
   function initNav() {
+    var nav = document.querySelector(".dr-nav");
     var toggle = document.querySelector("[data-nav-toggle]");
     var menu = document.querySelector("[data-nav-menu]");
     if (!toggle || !menu) return;
 
-    function close() {
-      menu.classList.remove("is-open");
-      toggle.setAttribute("aria-expanded", "false");
+    function measure() {
+      if (!nav) return;
+      var h = Math.round(nav.getBoundingClientRect().height) || 56;
+      document.documentElement.style.setProperty("--dr-nav-h", h + "px");
+    }
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    if ("ResizeObserver" in window && nav) {
+      try { new ResizeObserver(measure).observe(nav); } catch (_) {}
     }
 
-    toggle.addEventListener("click", function () {
-      var open = menu.classList.toggle("is-open");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    function close() {
+      if (!menu.classList.contains("is-open")) return;
+      menu.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+      document.body.classList.remove("dr-nav-open");
+    }
+
+    function open() {
+      measure();
+      menu.classList.add("is-open");
+      toggle.setAttribute("aria-expanded", "true");
+      document.body.classList.add("dr-nav-open");
+    }
+
+    toggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      if (menu.classList.contains("is-open")) close();
+      else open();
     });
+
     document.addEventListener("click", function (event) {
       if (!menu.classList.contains("is-open")) return;
       if (menu.contains(event.target) || toggle.contains(event.target)) return;
       close();
     });
+
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") close();
+      if (event.key === "Escape") {
+        close();
+        toggle.focus();
+      }
     });
+
+    // Auto-close when navigating to a menu link (esp. anchor links on the same
+    // page — otherwise the open menu would sit on top of the new section).
+    menu.addEventListener("click", function (event) {
+      var target = event.target.closest("a");
+      if (target) close();
+    });
+
+    // If the viewport grows past mobile, ensure the menu state is clean.
+    var mql = window.matchMedia("(min-width: 721px)");
+    var onMq = function (e) { if (e.matches) close(); };
+    if (mql.addEventListener) mql.addEventListener("change", onMq);
+    else if (mql.addListener) mql.addListener(onMq);
   }
 
   /* ----- Dismissible alerts ------------------------------------------- */
@@ -208,6 +248,184 @@
     });
   }
 
+  /* ----- Sortable lists (drag to reorder, touch + mouse) -------------- */
+  var DRAG_THRESHOLD_PX = 6;
+
+  function csrfToken() {
+    var input = document.querySelector("input[name=csrfmiddlewaretoken]");
+    if (input && input.value) return input.value;
+    var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function flashStatus(list, text, kind) {
+    var slot =
+      (list.parentNode && list.parentNode.querySelector("[data-sortable-status]")) ||
+      document.querySelector("[data-sortable-status]");
+    if (!slot) return;
+    slot.textContent = text;
+    slot.className = "dr-sortable__status" + (kind ? " is-" + kind : "");
+    if (slot._timer) window.clearTimeout(slot._timer);
+    slot._timer = window.setTimeout(function () {
+      slot.textContent = "";
+      slot.className = "dr-sortable__status";
+    }, 2200);
+  }
+
+  function commitOrder(list) {
+    var url = list.getAttribute("data-sortable-url");
+    if (!url) return;
+    var ids = Array.prototype.map.call(
+      list.querySelectorAll("[data-sortable-item]"),
+      function (el) { return parseInt(el.getAttribute("data-id"), 10); }
+    ).filter(function (n) { return !isNaN(n); });
+    list.setAttribute("data-saving", "");
+    flashStatus(list, "saving…", null);
+    fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken(),
+        "X-Requested-With": "XMLHttpRequest",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ ids: ids })
+    }).then(function (r) {
+      list.removeAttribute("data-saving");
+      if (r.ok) flashStatus(list, "order saved", "ok");
+      else flashStatus(list, "save failed (" + r.status + ")", "err");
+    }).catch(function () {
+      list.removeAttribute("data-saving");
+      flashStatus(list, "save failed", "err");
+    });
+  }
+
+  function findInsertTarget(list, draggedItem, clientY) {
+    var siblings = Array.prototype.filter.call(list.children, function (el) {
+      return el !== draggedItem && el.hasAttribute && el.hasAttribute("data-sortable-item");
+    });
+    for (var i = 0; i < siblings.length; i++) {
+      var rect = siblings[i].getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) return siblings[i];
+    }
+    return null; /* append to end */
+  }
+
+  function setupSortableItem(list, item) {
+    var handle = item.querySelector("[data-sortable-handle]");
+    if (!handle) return;
+
+    handle.addEventListener("pointerdown", function (e) {
+      // Mouse: only left button. Touch / pen: always.
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      startDrag(e, list, item, handle);
+    });
+
+    // Prevent the handle button from submitting any enclosing form.
+    handle.addEventListener("click", function (e) { e.preventDefault(); });
+  }
+
+  function startDrag(e, list, item, handle) {
+    e.preventDefault();
+    var pointerId = e.pointerId;
+    var rect = item.getBoundingClientRect();
+    var offsetX = e.clientX - rect.left;
+    var offsetY = e.clientY - rect.top;
+    var startY = e.clientY;
+    var startX = e.clientX;
+    var dragging = false;
+
+    var placeholder = document.createElement("li");
+    placeholder.className = "dr-sortable__placeholder";
+    placeholder.style.height = rect.height + "px";
+    placeholder.style.margin = window.getComputedStyle(item).margin;
+
+    var originalStyles = {
+      position: item.style.position,
+      top: item.style.top,
+      left: item.style.left,
+      width: item.style.width,
+      zIndex: item.style.zIndex,
+      pointerEvents: item.style.pointerEvents
+    };
+
+    function beginGhost() {
+      dragging = true;
+      item.classList.add("is-dragging");
+      handle.style.cursor = "grabbing";
+      item.style.position = "fixed";
+      item.style.zIndex = "9999";
+      item.style.width = rect.width + "px";
+      item.style.left = (e.clientX - offsetX) + "px";
+      item.style.top = (e.clientY - offsetY) + "px";
+      item.style.pointerEvents = "none";
+      if (item.nextSibling) {
+        item.parentNode.insertBefore(placeholder, item.nextSibling);
+      } else {
+        item.parentNode.appendChild(placeholder);
+      }
+      try { handle.setPointerCapture(pointerId); } catch (_) {}
+    }
+
+    function onMove(ev) {
+      if (ev.pointerId !== pointerId) return;
+      if (!dragging) {
+        var dx = Math.abs(ev.clientX - startX);
+        var dy = Math.abs(ev.clientY - startY);
+        if (Math.max(dx, dy) < DRAG_THRESHOLD_PX) return;
+        beginGhost();
+      }
+      ev.preventDefault();
+      item.style.left = (ev.clientX - offsetX) + "px";
+      item.style.top = (ev.clientY - offsetY) + "px";
+
+      var target = findInsertTarget(list, item, ev.clientY);
+      if (target) list.insertBefore(placeholder, target);
+      else list.appendChild(placeholder);
+    }
+
+    function cleanupItem() {
+      item.style.position = originalStyles.position;
+      item.style.top = originalStyles.top;
+      item.style.left = originalStyles.left;
+      item.style.width = originalStyles.width;
+      item.style.zIndex = originalStyles.zIndex;
+      item.style.pointerEvents = originalStyles.pointerEvents;
+      item.classList.remove("is-dragging");
+      handle.style.cursor = "";
+    }
+
+    function onUp(ev) {
+      if (ev.pointerId !== pointerId) return;
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+      try { handle.releasePointerCapture(pointerId); } catch (_) {}
+
+      if (!dragging) return;
+
+      if (placeholder.parentNode) {
+        placeholder.parentNode.insertBefore(item, placeholder);
+        placeholder.parentNode.removeChild(placeholder);
+      }
+      cleanupItem();
+      commitOrder(list);
+    }
+
+    document.addEventListener("pointermove", onMove, { passive: false });
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+  }
+
+  function initSortable() {
+    document.querySelectorAll("[data-sortable]").forEach(function (list) {
+      list.querySelectorAll("[data-sortable-item]").forEach(function (item) {
+        setupSortableItem(list, item);
+      });
+    });
+  }
+
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -223,5 +441,6 @@
     initCopyButtons();
     initAvatarPreview();
     initAutoFade();
+    initSortable();
   });
 })();

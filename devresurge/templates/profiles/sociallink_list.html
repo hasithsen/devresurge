@@ -12,27 +12,51 @@
       <span>links</span>
     </nav>
 
-    <header style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+    <header class="dr-page__head">
       <div>
         <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
         <h1 style="margin: 0;">{% trans "social links" %}</h1>
       </div>
-      <div class="dr-btn-row" style="margin-left: auto;">
+      <div class="dr-btn-row dr-page__head-actions">
         <a class="dr-btn dr-btn--primary" href="{% url 'profiles:link_create' %}">+ {% trans "new link" %}</a>
       </div>
     </header>
 
     {% if links %}
-      <ul class="dr-link-list">
+      {% csrf_token %}
+      <p class="dr-helptext" id="dr-links-help">
+        {% trans "Tip: drag the ≡ handle to reorder. Tap a card to edit." %}
+        <span class="dr-sortable__status" data-sortable-status aria-live="polite"></span>
+      </p>
+      <ul class="dr-link-list dr-sortable"
+          data-sortable
+          data-sortable-url="{% url 'profiles:link_reorder' %}"
+          aria-describedby="dr-links-help">
         {% for link in links %}
-          <li class="dr-list-row">
-            <div class="dr-list-row__main">
-              <div class="dr-list-row__title">{{ link.get_platform_display }}{% if link.label %} · {{ link.label }}{% endif %}</div>
-              <span class="dr-list-row__url">{{ link.url }}</span>
-            </div>
-            <div class="dr-btn-row">
-              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_update' link.pk %}">edit</a>
-              <a class="dr-btn dr-btn--sm dr-btn--danger" href="{% url 'profiles:link_delete' link.pk %}">rm</a>
+          <li class="dr-list-row dr-list-row--card"
+              data-sortable-item
+              data-id="{{ link.pk }}">
+            <button type="button"
+                    class="dr-sortable__handle"
+                    data-sortable-handle
+                    aria-label="{% blocktranslate with label=link.display_label %}Drag to reorder “{{ label }}”{% endblocktranslate %}"
+                    title="{% translate 'Drag to reorder' %}">
+              <span aria-hidden="true">≡</span>
+            </button>
+            <a class="dr-list-row__link"
+               href="{% url 'profiles:link_update' link.pk %}"
+               aria-label="{% blocktranslate with label=link.display_label %}Edit “{{ label }}”{% endblocktranslate %}">
+              <div class="dr-list-row__main">
+                <div class="dr-list-row__title">
+                  {{ link.get_platform_display }}{% if link.label %} · {{ link.label }}{% endif %}
+                </div>
+                <span class="dr-list-row__url">{{ link.url }}</span>
+              </div>
+            </a>
+            <div class="dr-btn-row dr-list-row__actions">
+              <a class="dr-btn dr-btn--sm dr-btn--danger"
+                 href="{% url 'profiles:link_delete' link.pk %}"
+                 aria-label="{% blocktranslate with label=link.display_label %}Delete “{{ label }}”{% endblocktranslate %}">rm</a>
             </div>
           </li>
         {% endfor %}

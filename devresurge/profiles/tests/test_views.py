@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from http import HTTPStatus
 
 import pytest
@@ -8,6 +9,8 @@ from django.urls import reverse
 from devresurge.profiles.models import ProjectLink
 from devresurge.profiles.models import SocialLink
 from devresurge.profiles.tests.factories import ProfileFactory
+from devresurge.profiles.tests.factories import ProjectLinkFactory
+from devresurge.profiles.tests.factories import SocialLinkFactory
 from devresurge.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -152,3 +155,106 @@ def test_social_link_email_is_normalized_to_mailto(client):
     assert response.status_code == HTTPStatus.FOUND
     link = SocialLink.objects.get(profile__user=user, platform="email")
     assert link.url == "mailto:hi@example.com"
+
+
+# ---------------------------------------------------------------------------
+# Drag-and-drop reorder endpoints
+# ---------------------------------------------------------------------------
+
+
+def test_project_reorder_requires_login(client):
+    response = client.post(
+        reverse("profiles:project_reorder"),
+        data=json.dumps({"ids": [1, 2]}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.FOUND
+
+
+def test_project_reorder_rejects_get(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.get(reverse("profiles:project_reorder"))
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+
+
+def test_project_reorder_persists_new_order(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    a = ProjectLinkFactory(profile=profile, title="A", order=0)
+    b = ProjectLinkFactory(profile=profile, title="B", order=1)
+    c = ProjectLinkFactory(profile=profile, title="C", order=2)
+
+    response = client.post(
+        reverse("profiles:project_reorder"),
+        data=json.dumps({"ids": [c.pk, a.pk, b.pk]}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.OK
+    payload = response.json()
+    assert payload["ok"] is True
+    assert payload["updated"] == 3
+
+    titles = list(profile.projects.order_by("order").values_list("title", flat=True))
+    assert titles == ["C", "A", "B"]
+
+
+def test_project_reorder_ignores_foreign_ids(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    mine = ProjectLinkFactory(profile=profile, title="Mine", order=0)
+
+    other_user = UserFactory()
+    foreign = ProjectLinkFactory(profile=other_user.profile, title="Theirs", order=5)
+
+    response = client.post(
+        reverse("profiles:project_reorder"),
+        data=json.dumps({"ids": [foreign.pk, mine.pk]}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.OK
+    foreign.refresh_from_db()
+    mine.refresh_from_db()
+    assert foreign.order == 5
+    assert mine.order == 0
+
+
+def test_link_reorder_persists_new_order(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    a = SocialLinkFactory(profile=profile, platform="github", url="https://g/a", order=0)
+    b = SocialLinkFactory(profile=profile, platform="gitlab", url="https://g/b", order=1)
+
+    response = client.post(
+        reverse("profiles:link_reorder"),
+        data=json.dumps({"ids": [b.pk, a.pk]}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.OK
+    ordered = list(profile.social_links.order_by("order").values_list("pk", flat=True))
+    assert ordered == [b.pk, a.pk]
+
+
+def test_reorder_handles_garbage_payload(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.post(
+        reverse("profiles:project_reorder"),
+        data="not json at all",
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_reorder_requires_ids_list(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.post(
+        reverse("profiles:project_reorder"),
+        data=json.dumps({"nope": "wat"}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST

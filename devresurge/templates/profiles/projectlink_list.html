@@ -12,36 +12,60 @@
       <span>projects</span>
     </nav>
 
-    <header style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+    <header class="dr-page__head">
       <div>
         <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
         <h1 style="margin: 0;">{% trans "projects" %}</h1>
       </div>
-      <div class="dr-btn-row" style="margin-left: auto;">
+      <div class="dr-btn-row dr-page__head-actions">
         <a class="dr-btn dr-btn--primary" href="{% url 'profiles:project_create' %}">+ {% trans "new project" %}</a>
       </div>
     </header>
 
     {% if projects %}
-      <ul class="dr-link-list">
+      {% csrf_token %}
+      <p class="dr-helptext" id="dr-projects-help">
+        {% trans "Tip: drag the ≡ handle to reorder. Tap a card to edit." %}
+        <span class="dr-sortable__status" data-sortable-status aria-live="polite"></span>
+      </p>
+      <ul class="dr-link-list dr-sortable"
+          data-sortable
+          data-sortable-url="{% url 'profiles:project_reorder' %}"
+          aria-describedby="dr-projects-help">
         {% for project in projects %}
-          <li class="dr-list-row">
-            <div class="dr-list-row__main">
-              <div class="dr-list-row__title">
-                {% if project.is_featured %}★ {% endif %}{{ project.title }}
-              </div>
-              <span class="dr-list-row__url">
-                {% if project.url %}{{ project.url }}{% elif project.repo_url %}{{ project.repo_url }}{% endif %}
-              </span>
-              {% if project.tech_stack_list %}
-                <div class="dr-tags" style="margin-top: 0.35rem;">
-                  {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+          <li class="dr-list-row dr-list-row--card"
+              data-sortable-item
+              data-id="{{ project.pk }}">
+            <button type="button"
+                    class="dr-sortable__handle"
+                    data-sortable-handle
+                    aria-label="{% blocktranslate with title=project.title %}Drag to reorder “{{ title }}”{% endblocktranslate %}"
+                    title="{% translate 'Drag to reorder' %}">
+              <span aria-hidden="true">≡</span>
+            </button>
+            <a class="dr-list-row__link"
+               href="{% url 'profiles:project_update' project.pk %}"
+               aria-label="{% blocktranslate with title=project.title %}Edit “{{ title }}”{% endblocktranslate %}">
+              <div class="dr-list-row__main">
+                <div class="dr-list-row__title">
+                  {% if project.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}{{ project.title }}
                 </div>
-              {% endif %}
-            </div>
-            <div class="dr-btn-row">
-              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:project_update' project.pk %}">edit</a>
-              <a class="dr-btn dr-btn--sm dr-btn--danger" href="{% url 'profiles:project_delete' project.pk %}">rm</a>
+                {% if project.url or project.repo_url %}
+                  <span class="dr-list-row__url">
+                    {% if project.url %}{{ project.url }}{% else %}{{ project.repo_url }}{% endif %}
+                  </span>
+                {% endif %}
+                {% if project.tech_stack_list %}
+                  <div class="dr-tags" style="margin-top: 0.35rem;">
+                    {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </a>
+            <div class="dr-btn-row dr-list-row__actions">
+              <a class="dr-btn dr-btn--sm dr-btn--danger"
+                 href="{% url 'profiles:project_delete' project.pk %}"
+                 aria-label="{% blocktranslate with title=project.title %}Delete “{{ title }}”{% endblocktranslate %}">rm</a>
             </div>
           </li>
         {% endfor %}

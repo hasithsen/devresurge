@@ -38,7 +38,9 @@
               {% include "profiles/_field.html" with field=form.label %}
             </div>
             {% include "profiles/_field.html" with field=form.url %}
-            {% include "profiles/_field.html" with field=form.order %}
+            <p class="dr-helptext" style="margin-top: -0.25rem;">
+              {% trans "Drag rows on the links list to change order." %}
+            </p>
 
             <div class="dr-btn-row" style="margin-top: 1rem;">
               <button type="submit" class="dr-btn dr-btn--primary">{% trans "save" %}</button>

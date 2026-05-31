@@ -106,24 +106,45 @@
           {% if profile.projects.all %}
             <div class="dr-grid dr-grid--2">
               {% for project in profile.projects.all %}
-                <div class="dr-project">
-                  <div class="dr-project__title">
-                    {% if project.is_featured %}<span class="dr-star" aria-hidden="true">★</span>{% endif %}
-                    <h3>{{ project.title }}</h3>
-                  </div>
-                  {% if project.description %}
-                    <p style="margin: 0.4rem 0; color: var(--text-muted);">{{ project.description }}</p>
-                  {% endif %}
-                  {% if project.tech_stack_list %}
-                    <div class="dr-tags" style="margin: 0.5rem 0;">
-                      {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                {% with primary=project.url|default:project.repo_url %}
+                  <article class="dr-project{% if primary %} dr-project--clickable{% endif %}">
+                    {% if primary %}
+                      <a class="dr-project__link"
+                         href="{{ primary }}"
+                         rel="noopener nofollow ugc"
+                         target="_blank"
+                         aria-label="{% blocktranslate with title=project.title %}Open project “{{ title }}”{% endblocktranslate %}">
+                        <span class="sr-only">{{ project.title }}</span>
+                      </a>
+                    {% endif %}
+                    <div class="dr-project__body">
+                      <div class="dr-project__title">
+                        {% if project.is_featured %}<span class="dr-star" aria-hidden="true">★</span>{% endif %}
+                        <h3>{{ project.title }}</h3>
+                      </div>
+                      {% if project.description %}
+                        <p class="dr-project__desc">{{ project.description }}</p>
+                      {% endif %}
+                      {% if project.tech_stack_list %}
+                        <div class="dr-tags">
+                          {% for tag in project.tech_stack_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                        </div>
+                      {% endif %}
+                      {% if project.url and project.repo_url %}
+                        <div class="dr-project__links">
+                          <a href="{{ project.url }}" rel="noopener nofollow ugc" target="_blank">live ↗</a>
+                          <a href="{{ project.repo_url }}" rel="noopener nofollow ugc" target="_blank">repo ↗</a>
+                        </div>
+                      {% elif project.url or project.repo_url %}
+                        <div class="dr-project__links">
+                          <span class="dr-project__cta">
+                            {% if project.url %}live ↗{% else %}repo ↗{% endif %}
+                          </span>
+                        </div>
+                      {% endif %}
                     </div>
-                  {% endif %}
-                  <div class="dr-project__links">
-                    {% if project.url %}<a href="{{ project.url }}" rel="noopener nofollow ugc" target="_blank">live ↗</a>{% endif %}
-                    {% if project.repo_url %}<a href="{{ project.repo_url }}" rel="noopener nofollow ugc" target="_blank">repo ↗</a>{% endif %}
-                  </div>
-                </div>
+                  </article>
+                {% endwith %}
               {% endfor %}
             </div>
           {% else %}
@@ -136,30 +157,42 @@
           {% if profile.social_links.all or profile.website_url or profile.show_email %}
             <ul class="dr-social-list">
               {% if profile.website_url %}
-                <li class="dr-list-row">
-                  <div class="dr-list-row__main">
-                    <div class="dr-list-row__title">website</div>
-                    <span class="dr-list-row__url">{{ profile.website_url }}</span>
-                  </div>
-                  <a class="dr-btn dr-btn--sm" href="{{ profile.website_url }}" rel="noopener nofollow" target="_blank">open ↗</a>
+                <li class="dr-list-row dr-list-row--card">
+                  <a class="dr-list-row__link"
+                     href="{{ profile.website_url }}"
+                     rel="noopener nofollow"
+                     target="_blank">
+                    <div class="dr-list-row__main">
+                      <div class="dr-list-row__title">website</div>
+                      <span class="dr-list-row__url">{{ profile.website_url }}</span>
+                    </div>
+                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                  </a>
                 </li>
               {% endif %}
               {% if profile.show_email and profile.user.email %}
-                <li class="dr-list-row">
-                  <div class="dr-list-row__main">
-                    <div class="dr-list-row__title">email</div>
-                    <span class="dr-list-row__url">{{ profile.user.email }}</span>
-                  </div>
-                  <a class="dr-btn dr-btn--sm" href="mailto:{{ profile.user.email }}">mail ↗</a>
+                <li class="dr-list-row dr-list-row--card">
+                  <a class="dr-list-row__link" href="mailto:{{ profile.user.email }}">
+                    <div class="dr-list-row__main">
+                      <div class="dr-list-row__title">email</div>
+                      <span class="dr-list-row__url">{{ profile.user.email }}</span>
+                    </div>
+                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                  </a>
                 </li>
               {% endif %}
               {% for link in profile.social_links.all %}
-                <li class="dr-list-row">
-                  <div class="dr-list-row__main">
-                    <div class="dr-list-row__title">{{ link.display_label }}</div>
-                    <span class="dr-list-row__url">{{ link.url }}</span>
-                  </div>
-                  <a class="dr-btn dr-btn--sm" href="{{ link.url }}" rel="noopener nofollow" target="_blank">open ↗</a>
+                <li class="dr-list-row dr-list-row--card">
+                  <a class="dr-list-row__link"
+                     href="{{ link.url }}"
+                     rel="noopener nofollow"
+                     {% if link.platform != 'email' %}target="_blank"{% endif %}>
+                    <div class="dr-list-row__main">
+                      <div class="dr-list-row__title">{{ link.display_label }}</div>
+                      <span class="dr-list-row__url">{{ link.url }}</span>
+                    </div>
+                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                  </a>
                 </li>
               {% endfor %}
             </ul>

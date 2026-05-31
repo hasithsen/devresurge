@@ -216,7 +216,9 @@ class ProjectLink(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ("-is_featured", "order", "-created_at")
+        # `order` is the user-controlled rank (drag-and-drop on the list page).
+        # `is_featured` is a visual badge, not a layout override.
+        ordering = ("order", "-created_at")
 
     def __str__(self) -> str:
         return self.title

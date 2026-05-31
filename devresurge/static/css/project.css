@@ -106,6 +106,11 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Defense-in-depth: nothing should ever cause a horizontal scrollbar on
+     the document. `clip` keeps `position: sticky` working (unlike `hidden`),
+     with `hidden` as a fallback for older engines. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -124,7 +129,14 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
+
+img,
+svg,
+video,
+canvas,
+iframe { max-width: 100%; height: auto; }
 
 ::selection {
   background: var(--selection-bg);
@@ -246,8 +258,9 @@ code {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  padding: 0.6rem 0;
   position: relative;
+  min-width: 0;
 }
 
 .dr-nav__actions {
@@ -255,14 +268,15 @@ code {
   align-items: center;
   gap: 0.4rem;
   margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .dr-iconbtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 1px solid var(--border);
   background: var(--bg-elev);
@@ -271,6 +285,7 @@ code {
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 1rem;
+  flex: 0 0 auto;
   transition: color 120ms var(--ease), border-color 120ms var(--ease),
     background-color 120ms var(--ease);
 }
@@ -290,6 +305,8 @@ code {
   color: var(--text);
   border: none;
   white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .dr-nav__brand .dr-prompt {
@@ -348,16 +365,29 @@ code {
 
 .dr-nav__toggle {
   display: none;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   background: var(--bg-elev);
   color: var(--text);
   padding: 0;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  flex: 0 0 auto;
+  transition: color 120ms var(--ease), border-color 120ms var(--ease),
+    background-color 120ms var(--ease);
+}
+
+.dr-nav__toggle:hover,
+.dr-nav__toggle[aria-expanded="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-elev-2);
 }
 
 @media (min-width: 721px) {
@@ -374,31 +404,57 @@ code {
 
 @media (max-width: 720px) {
   .dr-nav__toggle { display: inline-flex; }
+
   .dr-nav__links {
-    position: absolute;
-    inset: 100% 0 auto 0;
+    /* Anchor under the entire navbar so the dropdown spans full viewport
+       width regardless of where the toggle sits inside `.dr-nav__inner`. */
+    position: fixed;
+    top: var(--dr-nav-h, 56px);
+    left: 0;
+    right: 0;
+    z-index: 60;
     flex-direction: column;
     align-items: stretch;
-    gap: 0;
+    gap: 0.15rem;
     background: var(--bg-elev);
+    border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    padding: 0.5rem 1.25rem 1rem;
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem 1rem 0.75rem;
     margin: 0;
+    max-height: calc(100dvh - var(--dr-nav-h, 56px));
+    overflow-y: auto;
     transform-origin: top;
-    transform: scaleY(0);
+    transform: translateY(-8px);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: transform 160ms var(--ease), opacity 160ms var(--ease);
+    transition: transform 160ms var(--ease), opacity 160ms var(--ease),
+      visibility 0s linear 160ms;
   }
+
   .dr-nav__links.is-open {
-    transform: scaleY(1);
+    transform: translateY(0);
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
+    transition: transform 160ms var(--ease), opacity 160ms var(--ease),
+      visibility 0s linear 0s;
   }
+
   .dr-nav__links a,
   .dr-nav__links button {
     width: 100%;
     text-align: left;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.98rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .dr-nav__links a[aria-current="page"] {
+    border-color: color-mix(in oklab, var(--accent) 40%, transparent);
   }
 }
 
@@ -514,9 +570,13 @@ code {
 .dr-panel__header .dr-dots span:nth-child(3) { background: var(--accent); }
 
 .dr-panel__title {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--font-mono);
   color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dr-panel__body { padding: 1.1rem 1.1rem; }
@@ -525,6 +585,15 @@ code {
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr;
+}
+
+/* Grid items have `min-width: auto` by default — that means the column
+   stretches to fit the intrinsic min-content of the child, which can blow
+   out the viewport when the child holds long unbreakable text or a `<pre>`
+   block. Force columns to obey the track size. */
+.dr-grid > *,
+.dr-hero__inner > * {
+  min-width: 0;
 }
 
 @media (min-width: 720px) {
@@ -592,15 +661,22 @@ code {
 }
 
 .dr-hero h1 {
-  font-size: clamp(1.8rem, 1.4rem + 2.4vw, 2.8rem);
+  font-size: clamp(1.6rem, 1.2rem + 2.4vw, 2.8rem);
   margin-bottom: 0.35em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dr-hero p.dr-lede {
   color: var(--text-muted);
   max-width: 56ch;
   margin-bottom: 1.4rem;
+  overflow-wrap: anywhere;
 }
+
+.dr-hero__terminal { min-width: 0; }
+
+.dr-hero__terminal .dr-panel { min-width: 0; }
 
 .dr-hero__terminal pre {
   margin: 0;
@@ -611,7 +687,10 @@ code {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  /* Long terminal lines scroll within the pre instead of expanding the grid
+     track and pushing the viewport horizontally. */
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .dr-hero__terminal pre .ok { color: var(--accent); }
@@ -622,9 +701,11 @@ code {
 
 .dr-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.6rem;
 }
+
+.dr-stats > * { min-width: 0; }
 
 .dr-stat {
   border: 1px solid var(--border);
@@ -667,6 +748,19 @@ code {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+.dr-profile-card__head > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dr-profile-card__name,
+.dr-profile-card__handle,
+.dr-profile-card__headline {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dr-avatar {
@@ -718,6 +812,7 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .dr-tag {
@@ -729,6 +824,9 @@ code {
   border-radius: 999px;
   font-size: 0.76rem;
   letter-spacing: 0.02em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dr-tag--ghost {
@@ -948,12 +1046,23 @@ form ul.errorlist li::before {
 
 .dr-profile-hero {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 1rem 1.25rem;
   align-items: center;
 }
 
-.dr-profile-hero__meta { display: grid; gap: 0.4rem; }
+.dr-profile-hero__meta {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.dr-profile-hero h1,
+.dr-profile-hero p,
+.dr-profile-hero .dr-handle {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 .dr-handle {
   color: var(--text-dim);
@@ -963,10 +1072,44 @@ form ul.errorlist li::before {
 .dr-handle::before { content: "@"; color: var(--accent); }
 
 .dr-project {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-elev);
-  padding: 1rem;
+  padding: 0;
+  transition: border-color 140ms var(--ease), transform 140ms var(--ease),
+    background-color 140ms var(--ease);
+}
+
+.dr-project__body { padding: 1rem; display: block; }
+
+.dr-project--clickable:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.dr-project--clickable:focus-within {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Stretched-link pattern: an absolutely-positioned anchor sits on top of the
+   card and captures clicks from anywhere not covered by an inner link/button.
+   Real inner anchors (live ↗ / repo ↗) escape the overlay via z-index. */
+.dr-project__link {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border-bottom: none;
+  text-decoration: none;
+  z-index: 1;
+}
+
+.dr-project__links a,
+.dr-project__links button {
+  position: relative;
+  z-index: 2;
 }
 
 .dr-project__title {
@@ -976,15 +1119,114 @@ form ul.errorlist li::before {
   flex-wrap: wrap;
 }
 
-.dr-project__title h3 { margin: 0; font-size: 1.05rem; }
+.dr-project__title h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
 
 .dr-project__title .dr-star { color: var(--warn); }
 
+.dr-project__desc {
+  margin: 0.4rem 0;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .dr-project__links {
+  margin-top: 0.6rem;
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.4rem 0.75rem;
   font-size: 0.85rem;
+}
+
+.dr-project__cta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dr-project--clickable:hover .dr-project__cta { color: var(--accent-strong); }
+
+/* Sortable lists ---------------------------------------------------------- */
+
+.dr-sortable[data-saving] { opacity: 0.85; }
+
+.dr-sortable__handle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  margin: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.dr-sortable__handle:hover,
+.dr-sortable__handle:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dr-sortable__handle:active { cursor: grabbing; }
+
+.dr-list-row.is-dragging {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+  z-index: 10;
+}
+
+.dr-sortable__placeholder {
+  list-style: none;
+  border: 1px dashed var(--border-strong);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  opacity: 0.6;
+}
+
+.dr-sortable__status {
+  display: inline-block;
+  margin-left: 0.5ch;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  min-height: 1em;
+}
+
+.dr-sortable__status.is-ok { color: var(--accent); }
+.dr-sortable__status.is-err { color: var(--error); }
+
+/* Shared page header layout (list pages) --------------------------------- */
+
+.dr-page__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.dr-page__head-actions {
+  margin-left: auto;
+}
+
+@media (max-width: 520px) {
+  .dr-page__head-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+  .dr-page__head-actions .dr-btn { flex: 1 1 auto; }
 }
 
 .dr-social-list,
@@ -1007,7 +1249,7 @@ form ul.errorlist li::before {
   border-radius: var(--radius-sm);
 }
 
-.dr-list-row__main { min-width: 0; }
+.dr-list-row__main { min-width: 0; flex: 1 1 auto; }
 .dr-list-row__title { color: var(--text); font-weight: 600; }
 .dr-list-row__url {
   color: var(--text-muted);
@@ -1017,6 +1259,59 @@ form ul.errorlist li::before {
   white-space: nowrap;
   display: block;
   max-width: 100%;
+}
+
+/* Clickable card-style row (sortable lists + public social rows). */
+.dr-list-row--card {
+  padding: 0;
+  transition: border-color 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.dr-list-row--card:hover {
+  border-color: var(--accent);
+}
+
+.dr-list-row__link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: none;
+  border-radius: inherit;
+}
+
+.dr-list-row__link:hover,
+.dr-list-row__link:focus-visible {
+  color: inherit;
+}
+
+.dr-list-row__link:hover .dr-list-row__title {
+  color: var(--accent);
+}
+
+.dr-list-row__chev {
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.dr-list-row__link:hover .dr-list-row__chev {
+  color: var(--accent);
+}
+
+.dr-list-row__actions {
+  padding: 0.55rem 0.7rem 0.55rem 0;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.dr-list-row--card .dr-sortable__handle {
+  margin-left: 0.4rem;
 }
 
 .dr-empty {
@@ -1438,6 +1733,64 @@ a.dr-tag {
 a.dr-tag:hover {
   background: color-mix(in oklab, var(--accent) 24%, transparent);
   color: var(--accent-strong);
+}
+
+/* Mobile polish ----------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  body { font-size: 14.5px; }
+
+  .dr-container { padding: 0 1rem; }
+  .dr-hero { padding: 1.5rem 0 0.5rem; }
+  .dr-hero__terminal pre { font-size: 0.78rem; padding: 0.8rem 0.9rem; }
+
+  .dr-profile-hero {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .dr-profile-hero .dr-avatar--lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.2rem;
+  }
+
+  .dr-avatar-uploader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dr-avatar-uploader .dr-avatar--lg { align-self: flex-start; }
+
+  .dr-share-row code { font-size: 0.78rem; }
+
+  .dr-panel__body { padding: 0.85rem 0.85rem; }
+
+  .dr-list-row { padding: 0.55rem 0.65rem; }
+  .dr-list-row--card { padding: 0; }
+  .dr-list-row__link { padding: 0.6rem 0.7rem; gap: 0.5rem; }
+  .dr-list-row__actions { padding: 0.5rem 0.6rem 0.5rem 0; }
+  .dr-list-row__title { font-size: 0.95rem; word-break: break-word; overflow-wrap: anywhere; }
+  .dr-list-row__url { font-size: 0.8rem; }
+}
+
+/* Ensure interactive controls meet a comfortable 40px tap target. */
+.dr-btn { min-height: 40px; }
+.dr-btn--sm { min-height: 32px; }
+.dr-iconbtn { min-height: 40px; min-width: 40px; }
+
+/* Long links inside profile bio / project descriptions should wrap, not blow
+   out the layout on narrow viewports. */
+.dr-block,
+.dr-project__desc,
+.dr-list-row__url {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.dr-list-row__url {
+  /* Re-apply ellipsis only when we explicitly want single-line truncation. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (prefers-reduced-motion: reduce) {

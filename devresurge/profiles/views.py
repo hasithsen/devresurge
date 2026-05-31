@@ -1,15 +1,26 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 from typing import Any
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db import transaction
+from django.db.models import Case
+from django.db.models import IntegerField
 from django.db.models import Q
+from django.db.models import Value
+from django.db.models import When
 from django.http import Http404
+from django.http import HttpRequest
+from django.http import HttpResponse
+from django.http import JsonResponse
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView
 from django.views.generic import DeleteView
 from django.views.generic import DetailView
@@ -235,6 +246,62 @@ class SocialLinkDeleteView(_OwnerScopedMixin, DeleteView):
     success_url = reverse_lazy("profiles:link_list")
 
 
+# ---------------------------------------------------------------------------
+# Reorder endpoints (used by drag-and-drop in the list templates)
+# ---------------------------------------------------------------------------
+
+
+def _reorder(request: HttpRequest, model: Any) -> HttpResponse:
+    """Apply a new `order` to caller-owned `model` rows.
+
+    Body: ``{"ids": [3, 1, 2]}`` — the new order, top → bottom.
+    Only ids actually owned by the requester's profile are touched, which both
+    enforces authorization and silently drops stale ids the client may submit.
+    """
+    try:
+        payload = json.loads(request.body or b"{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "invalid json"}, status=400)
+
+    raw_ids = payload.get("ids")
+    if not isinstance(raw_ids, list):
+        return JsonResponse({"ok": False, "error": "ids must be a list"}, status=400)
+
+    ids: list[int] = []
+    for value in raw_ids:
+        try:
+            ids.append(int(value))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "ids must be integers"}, status=400)
+
+    profile = _get_or_create_profile(request.user)
+    owned_qs = model.objects.filter(profile=profile, pk__in=ids)
+    owned_ids = set(owned_qs.values_list("pk", flat=True))
+    ordered = [pk for pk in ids if pk in owned_ids]
+
+    if not ordered:
+        return JsonResponse({"ok": True, "updated": 0})
+
+    whens = [When(pk=pk, then=Value(idx)) for idx, pk in enumerate(ordered)]
+    with transaction.atomic():
+        model.objects.filter(pk__in=ordered).update(
+            order=Case(*whens, default=Value(0), output_field=IntegerField()),
+        )
+    return JsonResponse({"ok": True, "updated": len(ordered)})
+
+
+@login_required
+@require_POST
+def project_reorder_view(request: HttpRequest) -> HttpResponse:
+    return _reorder(request, ProjectLink)
+
+
+@login_required
+@require_POST
+def link_reorder_view(request: HttpRequest) -> HttpResponse:
+    return _reorder(request, SocialLink)
+
+
 # Function aliases (cookiecutter convention)
 home_view = HomeView.as_view()
 profile_browse_view = ProfileBrowseView.as_view()
@@ -249,3 +316,4 @@ link_list_view = SocialLinkListView.as_view()
 link_create_view = SocialLinkCreateView.as_view()
 link_update_view = SocialLinkUpdateView.as_view()
 link_delete_view = SocialLinkDeleteView.as_view()
+# `project_reorder_view` and `link_reorder_view` are already module-level functions.
