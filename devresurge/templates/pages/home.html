@@ -92,6 +92,11 @@
           {% if profile.headline %}
             <p class="dr-profile-card__headline">{{ profile.headline }}</p>
           {% endif %}
+          <div class="dr-meta">
+            <span><strong>{{ profile.get_primary_role_display }}</strong></span>
+            {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
+            {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">hireable</strong></span>{% endif %}
+          </div>
           {% if profile.tech_stack_list %}
             <div class="dr-tags">
               {% for tag in profile.tech_stack_list|slice:":4" %}
