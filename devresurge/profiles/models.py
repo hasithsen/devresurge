@@ -124,7 +124,7 @@ class Profile(models.Model):
     )
     website_url = models.URLField(_("website"), max_length=300, blank=True)
     show_email = models.BooleanField(_("show email publicly"), default=False)
-    available_for_hire = models.BooleanField(_("available for hire"), default=False)
+    available_for_hire = models.BooleanField(_("open to work"), default=False)
     is_public = models.BooleanField(_("publicly listed"), default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
