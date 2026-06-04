@@ -1,6 +1,8 @@
 from django.contrib import admin
 
+from .models import LinkClick
 from .models import Profile
+from .models import ProfileView
 from .models import ProjectLink
 from .models import SocialLink
 
@@ -47,3 +49,38 @@ class SocialLinkAdmin(admin.ModelAdmin):
     list_display = ("profile", "platform", "label", "url")
     list_filter = ("platform",)
     search_fields = ("profile__handle", "label", "url")
+
+
+@admin.register(ProfileView)
+class ProfileViewAdmin(admin.ModelAdmin):
+    list_display = ("profile", "created_at", "is_unique", "referrer")
+    list_filter = ("is_unique", "created_at")
+    search_fields = ("profile__handle", "referrer")
+    readonly_fields = ("profile", "visitor_hash", "referrer", "is_unique", "created_at")
+    date_hierarchy = "created_at"
+
+    def has_add_permission(self, request) -> bool:  # noqa: ARG002
+        # Analytics rows are created by the app, never by hand.
+        return False
+
+
+@admin.register(LinkClick)
+class LinkClickAdmin(admin.ModelAdmin):
+    list_display = ("profile", "kind", "label", "destination", "created_at")
+    list_filter = ("kind", "created_at")
+    search_fields = ("profile__handle", "label", "destination")
+    readonly_fields = (
+        "profile",
+        "kind",
+        "target_id",
+        "label",
+        "destination",
+        "visitor_hash",
+        "created_at",
+    )
+    date_hierarchy = "created_at"
+
+    def has_add_permission(self, request) -> bool:  # noqa: ARG002
+        # Click rows are created by the beacon endpoint, never by hand.
+        return False
+

@@ -426,6 +426,73 @@
     });
   }
 
+  // ---- Outbound link-click tracking (beacon) --------------------------------
+
+  function initLinkTracking() {
+    var scope = document.querySelector("[data-track-scope]");
+    if (!scope) {
+      return;
+    }
+    var url = scope.getAttribute("data-track-url");
+    var handle = scope.getAttribute("data-track-handle");
+    if (!url || !handle) {
+      return;
+    }
+
+    function send(el) {
+      var kind = el.getAttribute("data-track-kind");
+      if (!kind) {
+        return;
+      }
+      var payload = { handle: handle, kind: kind };
+      var id = el.getAttribute("data-track-id");
+      if (id) {
+        payload.id = parseInt(id, 10);
+      }
+      var field = el.getAttribute("data-track-field");
+      if (field) {
+        payload.field = field;
+      }
+      var body = JSON.stringify(payload);
+      // sendBeacon survives the page navigation that the click triggers.
+      try {
+        if (navigator.sendBeacon) {
+          var blob = new Blob([body], { type: "application/json" });
+          if (navigator.sendBeacon(url, blob)) {
+            return;
+          }
+        }
+      } catch (err) {
+        /* fall through to fetch */
+      }
+      try {
+        fetch(url, {
+          method: "POST",
+          body: body,
+          keepalive: true,
+          credentials: "omit",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        /* tracking is best-effort */
+      }
+    }
+
+    function onActivate(event) {
+      var el = event.target.closest("[data-track-kind]");
+      if (el && scope.contains(el)) {
+        send(el);
+      }
+    }
+
+    scope.addEventListener("click", onActivate);
+    scope.addEventListener("auxclick", function (event) {
+      if (event.button === 1) {
+        onActivate(event);
+      }
+    });
+  }
+
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -442,5 +509,6 @@
     initAvatarPreview();
     initAutoFade();
     initSortable();
+    initLinkTracking();
   });
 })();

@@ -80,6 +80,26 @@
           </div>
         </div>
       </div>
+
+      <div class="dr-panel">
+        <div class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">analytics.log</span>
+        </div>
+        <div class="dr-panel__body dr-stack">
+          <p style="margin: 0;">
+            {% blocktranslate count counter=views_30d %}
+              {{ counter }} view in the last 30 days.
+            {% plural %}
+              {{ counter }} views in the last 30 days.
+            {% endblocktranslate %}
+          </p>
+          <div class="dr-btn-row">
+            <a class="dr-btn" href="{% url 'profiles:analytics' %}">open</a>
+            <a class="dr-btn dr-btn--ghost" href="{{ profile.get_absolute_url }}">view ↗</a>
+          </div>
+        </div>
+      </div>
     </section>
 
     {% if not profile.is_public %}

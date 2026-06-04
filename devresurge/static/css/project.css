@@ -1356,6 +1356,201 @@ form ul.errorlist li::before {
   border-radius: var(--radius-sm);
 }
 
+/* Analytics ------------------------------------------------------------- */
+
+.dr-analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+.dr-analytics-kpis > * { min-width: 0; }
+
+.dr-kpi {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  padding: 0.85rem 0.95rem;
+  min-width: 0;
+}
+
+.dr-kpi__label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-transform: lowercase;
+  letter-spacing: 0.03em;
+}
+
+.dr-kpi__value {
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.8rem);
+  color: var(--accent);
+  margin-top: 0.15rem;
+  line-height: 1.1;
+}
+
+.dr-kpi__sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+/* Range selector (segmented control) */
+.dr-range {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: var(--radius-sm);
+}
+
+.dr-range a {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  border-bottom: none;
+  font-size: 0.85rem;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dr-range a:hover {
+  color: var(--text);
+  background: var(--bg-elev-2);
+}
+
+.dr-range a[aria-current="page"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+}
+
+/* Bar chart (pure CSS, no JS) */
+.dr-chart-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.25rem;
+}
+
+.dr-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 180px;
+  min-width: 100%;
+}
+
+.dr-chart__col {
+  flex: 1 0 6px;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  min-width: 4px;
+}
+
+.dr-chart__bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+  transition: height 200ms var(--ease), background-color 120ms var(--ease);
+}
+
+.dr-chart__col:hover .dr-chart__bar { background: var(--accent); }
+
+.dr-chart__bar--zero {
+  background: var(--border);
+  min-height: 2px;
+}
+
+.dr-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.dr-chart-axis__peak { color: var(--text-muted); }
+
+/* Referrer breakdown */
+.dr-ref-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dr-ref { display: grid; gap: 0.3rem; min-width: 0; }
+
+.dr-ref__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.dr-ref__host {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.dr-ref__host--muted { color: var(--text-muted); }
+
+.dr-ref__count {
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.dr-ref__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-elev-2);
+  overflow: hidden;
+}
+
+.dr-ref__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.dr-ref__bar > span.dr-ref__bar--ghost {
+  background: var(--border-strong);
+}
+
+/* Outbound link clicks row ---------------------------------------------- */
+
+.dr-click__id {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dr-click__kind {
+  flex: 0 0 auto;
+  text-transform: lowercase;
+}
+
+.dr-click__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.dr-click__label .dr-ref__host--muted { margin-left: 0.35rem; }
+
 /* Legacy allauth classes ------------------------------------------------- */
 
 .alert {
@@ -1770,6 +1965,11 @@ a.dr-tag:hover {
   .dr-list-row__actions { padding: 0.5rem 0.6rem 0.5rem 0; }
   .dr-list-row__title { font-size: 0.95rem; word-break: break-word; overflow-wrap: anywhere; }
   .dr-list-row__url { font-size: 0.8rem; }
+
+  .dr-analytics-kpis { grid-template-columns: repeat(2, 1fr); }
+  .dr-chart { height: 140px; }
+  .dr-range { width: 100%; justify-content: space-between; }
+  .dr-range a { flex: 1 1 auto; justify-content: center; }
 }
 
 /* Ensure interactive controls meet a comfortable 40px tap target. */

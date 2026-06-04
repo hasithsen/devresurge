@@ -44,7 +44,10 @@
       <span>@{{ profile.handle }}</span>
     </nav>
 
-    <article class="dr-panel">
+    <article class="dr-panel"
+             data-track-scope
+             data-track-handle="{{ profile.handle }}"
+             data-track-url="{% url 'profiles:link_click' %}">
       <header class="dr-panel__header">
         <span class="dr-dots"><span></span><span></span><span></span></span>
         <span class="dr-panel__title">~/u/{{ profile.handle }}</span>
@@ -113,6 +116,9 @@
                          href="{{ primary }}"
                          rel="noopener nofollow ugc"
                          target="_blank"
+                         data-track-kind="project"
+                         data-track-id="{{ project.pk }}"
+                         data-track-field="primary"
                          aria-label="{% blocktranslate with title=project.title %}Open project “{{ title }}”{% endblocktranslate %}">
                         <span class="sr-only">{{ project.title }}</span>
                       </a>
@@ -132,8 +138,10 @@
                       {% endif %}
                       {% if project.url and project.repo_url %}
                         <div class="dr-project__links">
-                          <a href="{{ project.url }}" rel="noopener nofollow ugc" target="_blank">live ↗</a>
-                          <a href="{{ project.repo_url }}" rel="noopener nofollow ugc" target="_blank">repo ↗</a>
+                          <a href="{{ project.url }}" rel="noopener nofollow ugc" target="_blank"
+                             data-track-kind="project" data-track-id="{{ project.pk }}" data-track-field="url">live ↗</a>
+                          <a href="{{ project.repo_url }}" rel="noopener nofollow ugc" target="_blank"
+                             data-track-kind="project" data-track-id="{{ project.pk }}" data-track-field="repo">repo ↗</a>
                         </div>
                       {% elif project.url or project.repo_url %}
                         <div class="dr-project__links">
@@ -161,7 +169,8 @@
                   <a class="dr-list-row__link"
                      href="{{ profile.website_url }}"
                      rel="noopener nofollow"
-                     target="_blank">
+                     target="_blank"
+                     data-track-kind="website">
                     <div class="dr-list-row__main">
                       <div class="dr-list-row__title">website</div>
                       <span class="dr-list-row__url">{{ profile.website_url }}</span>
@@ -172,7 +181,8 @@
               {% endif %}
               {% if profile.show_email and profile.user.email %}
                 <li class="dr-list-row dr-list-row--card">
-                  <a class="dr-list-row__link" href="mailto:{{ profile.user.email }}">
+                  <a class="dr-list-row__link" href="mailto:{{ profile.user.email }}"
+                     data-track-kind="email">
                     <div class="dr-list-row__main">
                       <div class="dr-list-row__title">email</div>
                       <span class="dr-list-row__url">{{ profile.user.email }}</span>
@@ -186,6 +196,8 @@
                   <a class="dr-list-row__link"
                      href="{{ link.url }}"
                      rel="noopener nofollow"
+                     data-track-kind="social"
+                     data-track-id="{{ link.pk }}"
                      {% if link.platform != 'email' %}target="_blank"{% endif %}>
                     <div class="dr-list-row__main">
                       <div class="dr-list-row__title">{{ link.display_label }}</div>

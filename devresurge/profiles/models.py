@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
@@ -7,6 +9,7 @@ from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from slugify import slugify
 
@@ -16,6 +19,9 @@ HANDLE_MIN_LENGTH = 2
 
 MAX_AVATAR_BYTES = 2 * 1024 * 1024  # 2 MiB
 ALLOWED_AVATAR_EXTENSIONS = ("jpg", "jpeg", "png", "webp", "gif")
+
+# How long raw analytics events are kept before pruning.
+ANALYTICS_RETENTION_DAYS = 90
 
 
 def validate_avatar_size(value) -> None:
@@ -273,3 +279,158 @@ class SocialLink(models.Model):
     @property
     def display_label(self) -> str:
         return self.label or self.get_platform_display()
+
+
+class AnalyticsEventQuerySet(models.QuerySet):
+    """Shared query helpers for the time-bucketed analytics event logs."""
+
+    def for_profile(self, profile) -> AnalyticsEventQuerySet:
+        return self.filter(profile=profile)
+
+    def within_days(self, days: int) -> AnalyticsEventQuerySet:
+        """Events from the last `days` calendar days (inclusive of today)."""
+        start = timezone.localdate() - timedelta(days=days - 1)
+        return self.filter(created_at__date__gte=start)
+
+    def older_than(self, days: int) -> AnalyticsEventQuerySet:
+        cutoff = timezone.now() - timedelta(days=days)
+        return self.filter(created_at__lt=cutoff)
+
+
+class PrunableEventMixin:
+    """Mixin giving analytics models a shared retention window + `prune`.
+
+    Concrete models must expose an `objects` manager built from
+    `AnalyticsEventQuerySet` (so `older_than` is available).
+    """
+
+    RETENTION_DAYS = ANALYTICS_RETENTION_DAYS
+
+    @classmethod
+    def prune(cls, days: int | None = None) -> int:
+        """Delete events older than the retention window. Returns rows removed."""
+        days = cls.RETENTION_DAYS if days is None else days
+        deleted, _ = cls.objects.older_than(days).delete()
+        return deleted
+
+
+class ProfileView(PrunableEventMixin, models.Model):
+    """A single visit to a public profile page.
+
+    Stored as privacy-preserving event rows — we keep a salted, irreversible
+    `visitor_hash` (never a raw IP) so we can count unique visitors without
+    retaining personal data. Rows older than `RETENTION_DAYS` are pruned by the
+    `prune_analytics` management command (see `prune`).
+    """
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="views",
+    )
+    visitor_hash = models.CharField(
+        _("visitor hash"),
+        max_length=64,
+        db_index=True,
+        help_text=_("Salted SHA-256 of IP + user agent. Not reversible."),
+    )
+    referrer = models.CharField(
+        _("referrer host"),
+        max_length=255,
+        blank=True,
+        help_text=_("Host the visitor arrived from, e.g. 'news.ycombinator.com'."),
+    )
+    is_unique = models.BooleanField(
+        _("first view of day"),
+        default=False,
+        help_text=_("True if this visitor's first view of this profile that day."),
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    objects = AnalyticsEventQuerySet.as_manager()
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _("profile view")
+        verbose_name_plural = _("profile views")
+        indexes = [
+            models.Index(
+                fields=["profile", "created_at"],
+                name="profiles_pv_prof_created_idx",
+            ),
+            models.Index(
+                fields=["profile", "visitor_hash"],
+                name="profiles_pv_prof_visitor_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"view of {self.profile_id} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class LinkKind(models.TextChoices):
+    PROJECT = "project", _("Project")
+    SOCIAL = "social", _("Social")
+    WEBSITE = "website", _("Website")
+    EMAIL = "email", _("Email")
+
+
+class LinkClick(PrunableEventMixin, models.Model):
+    """An outbound click on a link shown on a public profile.
+
+    Recorded via a CSRF-exempt beacon endpoint (see `views.link_click_view`).
+    `label` / `destination` are snapshots so stats survive the underlying
+    project/social link being edited or deleted. Shares the 90-day retention
+    window and `prune` with `ProfileView`.
+    """
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="link_clicks",
+    )
+    kind = models.CharField(
+        _("link kind"),
+        max_length=20,
+        choices=LinkKind.choices,
+    )
+    target_id = models.PositiveBigIntegerField(
+        _("target id"),
+        null=True,
+        blank=True,
+        help_text=_("PK of the clicked ProjectLink/SocialLink, if applicable."),
+    )
+    label = models.CharField(_("label"), max_length=160, blank=True)
+    destination = models.CharField(
+        _("destination host"),
+        max_length=255,
+        blank=True,
+        help_text=_("Host the click leads to, e.g. 'github.com'."),
+    )
+    visitor_hash = models.CharField(
+        _("visitor hash"),
+        max_length=64,
+        db_index=True,
+        help_text=_("Salted SHA-256 of IP + user agent. Not reversible."),
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    objects = AnalyticsEventQuerySet.as_manager()
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _("link click")
+        verbose_name_plural = _("link clicks")
+        indexes = [
+            models.Index(
+                fields=["profile", "created_at"],
+                name="profiles_lc_prof_created_idx",
+            ),
+            models.Index(
+                fields=["profile", "kind"],
+                name="profiles_lc_prof_kind_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.kind} click on {self.profile_id} @ {self.created_at:%Y-%m-%d}"

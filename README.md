@@ -14,6 +14,13 @@ License: MIT
   Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
 - **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links and a
   one-click copy-share-URL chip.
+- **Privacy-first analytics** at `/me/analytics/` — daily views, unique visitors, busiest day,
+  referrer breakdown and **outbound link clicks** over a 7/30/90-day window, rendered as a
+  dependency-free CSS bar chart. Visitors are tracked via a salted, irreversible fingerprint
+  (never a raw IP); owner/bot hits are excluded. Link clicks are captured by a lightweight
+  `navigator.sendBeacon` POST to `/c/`; the server derives the label/destination from its own
+  records so payloads can't be spoofed. Events auto-expire after a **90-day retention window**
+  (see `prune_analytics`).
 - **Profile directory** at `/u/` with search + role filter, lazy-loaded avatars, pagination.
 - **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
 - **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
@@ -48,8 +55,10 @@ Then visit <http://localhost:8000>.
 | `/`                                 | Terminal landing page              |
 | `/u/`                               | Public profile directory + search  |
 | `/u/<handle>/`                      | A user's public profile            |
+| `/c/`                               | Link-click beacon (POST)           |
 | `/me/`                              | Owner dashboard                    |
 | `/me/edit/`                         | Edit your profile                  |
+| `/me/analytics/`                    | Views + link-click analytics (90d) |
 | `/me/projects/` (+ new/edit/delete) | Manage project links               |
 | `/me/links/` (+ new/edit/delete)    | Manage social / website links      |
 | `/admin/`                           | Django admin                       |
@@ -66,6 +75,18 @@ Then visit <http://localhost:8000>.
       uv run python manage.py createsuperuser
 
 For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
+
+### Analytics retention
+
+Analytics events — both profile views and outbound link clicks — are kept for 90
+days. Prune expired events on a schedule (cron, Celery beat, or a systemd timer),
+e.g. daily:
+
+    uv run python manage.py prune_analytics
+
+Use `--days N` to override the window or `--dry-run` to preview what would be
+deleted. The command prunes every analytics model and reports a per-model and
+total count.
 
 ### Type checks
 
