@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError
+from django.db import transaction
 
 from devresurge.profiles.forms import ProfileForm
 from devresurge.profiles.models import MAX_AVATAR_BYTES
@@ -12,6 +14,22 @@ from devresurge.profiles.tests.factories import ProfileFactory
 from devresurge.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
+
+
+def _profile_form_data(**overrides) -> dict:
+    data = {
+        "handle": "valid-handle",
+        "display_name": "X",
+        "headline": "",
+        "primary_role": "other",
+        "bio": "",
+        "location": "",
+        "years_experience": 0,
+        "tech_stack": "",
+        "website_url": "",
+    }
+    data.update(overrides)
+    return data
 
 
 def test_profile_created_on_user_signup():
@@ -46,6 +64,60 @@ def test_tech_stack_list_parses_csv():
 def test_get_absolute_url_uses_handle():
     profile = ProfileFactory(handle="hello-world")
     assert profile.get_absolute_url() == "/u/hello-world/"
+
+
+# ---------------------------------------------------------------------------
+# Case-insensitive handles
+# ---------------------------------------------------------------------------
+
+
+def test_normalize_handle_lowercases_and_strips():
+    assert Profile.normalize_handle("  AdaLovelace  ") == "adalovelace"
+    assert Profile.normalize_handle(None) == ""
+
+
+def test_handle_is_lowercased_on_save():
+    profile = ProfileFactory(handle="MixedCase")
+    assert profile.handle == "mixedcase"
+    profile.refresh_from_db()
+    assert profile.handle == "mixedcase"
+
+
+def test_handle_case_insensitive_uniqueness_enforced_in_db():
+    ProfileFactory(handle="Ada")
+    with pytest.raises(IntegrityError), transaction.atomic():
+        ProfileFactory(handle="ada")
+
+
+def test_auto_generated_handle_avoids_case_variant_collision():
+    ProfileFactory(handle="Taken")
+    other = ProfileFactory(handle="")
+    other.display_name = "TAKEN"
+    other.handle = ""
+    other.save()
+    assert other.handle != "taken"
+    assert other.handle.startswith("taken")
+
+
+def test_form_rejects_case_variant_of_existing_handle():
+    ProfileFactory(handle="ada")
+    user = UserFactory()
+    form = ProfileForm(
+        data=_profile_form_data(handle="ADA"),
+        instance=user.profile,
+    )
+    assert not form.is_valid()
+    assert "handle" in form.errors
+
+
+def test_form_normalizes_handle_to_lowercase():
+    user = UserFactory()
+    form = ProfileForm(
+        data=_profile_form_data(handle="CamelCase"),
+        instance=user.profile,
+    )
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["handle"] == "camelcase"
 
 
 def test_validate_avatar_size_rejects_oversized_files():

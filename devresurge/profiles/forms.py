@@ -94,7 +94,7 @@ class ProfileForm(forms.ModelForm):
                 "hi": HANDLE_MAX_LENGTH,
             }
             raise ValidationError(err)
-        if Profile.objects.exclude(pk=self.instance.pk).filter(handle=normalized).exists():
+        if Profile.objects.exclude(pk=self.instance.pk).filter(handle__iexact=normalized).exists():
             err = _("That handle is already taken.")
             raise ValidationError(err)
         return normalized

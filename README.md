@@ -12,6 +12,8 @@ License: MIT
 
 - **Public profile** at `/u/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
   Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
+  Handles are **case-insensitive**: they're stored lowercase, uniqueness is enforced at the DB
+  with a `Lower("handle")` constraint, and `/u/Ada/` 301-redirects to the canonical `/u/ada/`.
 - **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links and a
   one-click copy-share-URL chip.
 - **Privacy-first analytics** at `/me/analytics/` — daily views, unique visitors, busiest day,

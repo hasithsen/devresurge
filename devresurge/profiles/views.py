@@ -26,6 +26,7 @@ from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -236,7 +237,7 @@ def link_click_view(request: HttpRequest) -> HttpResponse:
     if not isinstance(payload, dict):
         return HttpResponseBadRequest("invalid payload")
 
-    handle = (payload.get("handle") or "").strip()
+    handle = Profile.normalize_handle(payload.get("handle"))
     kind = (payload.get("kind") or "").strip()
     if not handle or kind not in LinkKind.values:
         return HttpResponseBadRequest("missing or invalid fields")
@@ -360,7 +361,16 @@ class ProfilePublicView(DetailView):
         )
 
     def get_object(self, queryset: QuerySet[Profile] | None = None) -> Profile:
-        obj = super().get_object(queryset=queryset)
+        # Handles are case-insensitive: match on the canonical lowercase form,
+        # which uses the SlugField's btree index (no per-row UPPER()).
+        if queryset is None:
+            queryset = self.get_queryset()
+        handle = Profile.normalize_handle(self.kwargs.get(self.slug_url_kwarg, ""))
+        try:
+            obj = queryset.get(handle=handle)
+        except Profile.DoesNotExist as exc:
+            err = _("No profile found for this handle.")
+            raise Http404(err) from exc
         owner_viewing = self.request.user.is_authenticated and obj.user_id == self.request.user.pk
         if not obj.is_public and not owner_viewing:
             err = _("This profile is private.")
@@ -368,10 +378,16 @@ class ProfilePublicView(DetailView):
         return obj
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        response = super().get(request, *args, **kwargs)
+        self.object = self.get_object()
+        # Redirect non-canonical (e.g. mixed-case) URLs to the lowercase form
+        # so each profile has a single canonical address.
+        requested = kwargs.get(self.slug_url_kwarg, "")
+        if requested != self.object.handle:
+            return redirect("profiles:public", handle=self.object.handle, permanent=True)
+        context = self.get_context_data(object=self.object)
         # Only public, non-owner GET hits reach here (private → 404 above).
         record_profile_view(request, self.object)
-        return response
+        return self.render_to_response(context)
 
 
 class ProfileDashboardView(LoginRequiredMixin, DetailView):

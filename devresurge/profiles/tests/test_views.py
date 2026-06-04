@@ -51,6 +51,31 @@ def test_public_profile_view_404s_when_private_and_not_owner(client):
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
+def test_public_profile_canonical_url_renders_directly(client):
+    ProfileFactory(is_public=True, handle="ada")
+    response = client.get("/u/ada/")
+    assert response.status_code == HTTPStatus.OK
+
+
+def test_public_profile_mixed_case_redirects_to_canonical(client):
+    ProfileFactory(is_public=True, handle="ada")
+    response = client.get("/u/ADA/")
+    assert response.status_code == HTTPStatus.MOVED_PERMANENTLY
+    assert response.headers["Location"] == "/u/ada/"
+
+
+def test_public_profile_mixed_case_resolves_when_followed(client):
+    ProfileFactory(is_public=True, handle="ada", display_name="Ada L.")
+    response = client.get("/u/Ada/", follow=True)
+    assert response.status_code == HTTPStatus.OK
+    assert b"Ada L." in response.content
+
+
+def test_public_profile_unknown_handle_404s(client):
+    response = client.get("/u/nobody-here/")
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
 def test_dashboard_requires_login(client):
     response = client.get(reverse("profiles:dashboard"))
     assert response.status_code == HTTPStatus.FOUND

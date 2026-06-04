@@ -8,6 +8,7 @@ from django.core.validators import FileExtensionValidator
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -77,7 +78,9 @@ class Profile(models.Model):
     handle = models.SlugField(
         _("handle"),
         max_length=HANDLE_MAX_LENGTH,
-        unique=True,
+        # Uniqueness is enforced case-insensitively at the DB via a
+        # `Lower("handle")` UniqueConstraint (see Meta.constraints). The
+        # SlugField's default db_index keeps exact (lowercased) lookups fast.
         help_text=_("Your public URL, e.g. /u/your-handle/"),
     )
     display_name = models.CharField(
@@ -138,6 +141,13 @@ class Profile(models.Model):
 
     class Meta:
         ordering = ("-updated_at",)
+        constraints = [
+            models.UniqueConstraint(
+                Lower("handle"),
+                name="profiles_handle_ci_unique",
+                violation_error_message=_("That handle is already taken."),
+            ),
+        ]
         indexes = [
             models.Index(fields=["primary_role"], name="profiles_primary_role_idx"),
             models.Index(fields=["is_public"], name="profiles_is_public_idx"),
@@ -170,6 +180,15 @@ class Profile(models.Model):
             return parts[0][:2].upper()
         return (parts[0][0] + parts[-1][0]).upper()
 
+    @staticmethod
+    def normalize_handle(value: str | None) -> str:
+        """Canonical form of a handle — lowercased and trimmed.
+
+        Handles are case-insensitive: we store and compare the lowercase form
+        so `/u/Ada/` and `/u/ada/` always resolve to the same profile.
+        """
+        return (value or "").strip().lower()
+
     def ensure_handle(self) -> None:
         """Populate `handle` from a sensible source if it is empty."""
         if self.handle:
@@ -183,7 +202,7 @@ class Profile(models.Model):
         base = candidate
         suffix = 1
         existing = Profile.objects.exclude(pk=self.pk)
-        while existing.filter(handle=candidate).exists():
+        while existing.filter(handle__iexact=candidate).exists():
             suffix += 1
             tail = f"-{suffix}"
             candidate = f"{base[: HANDLE_MAX_LENGTH - len(tail)]}{tail}"
@@ -191,6 +210,8 @@ class Profile(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         self.ensure_handle()
+        # Canonicalise to lowercase regardless of entry path (form, admin, ORM).
+        self.handle = self.normalize_handle(self.handle)
         super().save(*args, **kwargs)
 
 
