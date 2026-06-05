@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.translation import gettext
 
 from .models import NotificationKind
 
@@ -22,6 +23,16 @@ _TEMPLATES = {
     NotificationKind.CONNECTION_REQUEST: "connections/email/connection_request",
     NotificationKind.CONNECTION_ACCEPTED: "connections/email/connection_accepted",
 }
+
+
+def _public_name(user) -> str:
+    """Public label for a user — display name or `@handle`, never the email."""
+    if user is None:
+        return gettext("a member")
+    profile = getattr(user, "profile", None)
+    if profile is not None:
+        return profile.public_name
+    return gettext("a member")
 
 
 def _absolute(request: HttpRequest | None, path: str) -> str:
@@ -52,19 +63,13 @@ def send_notification_email(
     if template_base is None:
         return False
 
+    # Public labels only — never leak either party's email into message bodies.
     actor = notification.actor
-    actor_name = ""
-    if actor is not None:
-        actor_profile = getattr(actor, "profile", None)
-        actor_name = (
-            (actor_profile.display_name if actor_profile else "")
-            or actor.name
-            or actor.email
-        )
+    actor_name = _public_name(actor)
 
     context = {
         "recipient": recipient,
-        "recipient_name": recipient.name or recipient.email,
+        "recipient_name": _public_name(recipient),
         "actor": actor,
         "actor_name": actor_name,
         "notification": notification,

@@ -171,6 +171,15 @@ class Profile(models.Model):
         return out
 
     @property
+    def public_name(self) -> str:
+        """Public-facing label for this user.
+
+        Prefers the chosen display name, falling back to the public `@handle`.
+        Deliberately never exposes the account email address.
+        """
+        return self.display_name or f"@{self.handle}"
+
+    @property
     def initials(self) -> str:
         name = (self.display_name or self.handle or "?").strip()
         parts = [p for p in name.split() if p]

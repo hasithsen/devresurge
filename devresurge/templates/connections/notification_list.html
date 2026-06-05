@@ -36,7 +36,7 @@
             </span>
             <div class="dr-notif__main">
               <p class="dr-notif__text">
-                {% with actor_name=n.actor.profile.display_name|default:n.actor.name|default:n.actor.email %}
+                {% with actor_name=n.actor.profile.public_name|default:_("a member") %}
                   {% if n.actor.profile.handle %}
                     <a href="{% url 'profiles:public' n.actor.profile.handle %}"><strong>{{ actor_name }}</strong></a>
                   {% else %}

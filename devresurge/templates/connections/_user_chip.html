@@ -8,7 +8,7 @@
     {% endif %}
   </span>
   <span class="dr-conn__meta">
-    {% with name=u.profile.display_name|default:u.name|default:u.email %}
+    {% with name=u.profile.public_name|default:_("a member") %}
       {% if u.profile.handle %}
         <a class="dr-conn__name" href="{% url 'profiles:public' u.profile.handle %}">{{ name }}</a>
         <span class="dr-conn__handle">/u/{{ u.profile.handle }}</span>

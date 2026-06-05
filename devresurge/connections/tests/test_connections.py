@@ -270,6 +270,76 @@ def test_settings_page_toggles_email_preference(client):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Privacy: never expose emails in connection features
+# ---------------------------------------------------------------------------
+
+
+def test_notification_email_uses_public_name_not_email(client):
+    me = UserFactory()
+    me.profile.display_name = "Ada Lovelace"
+    me.profile.save()
+    target = UserFactory()
+    client.force_login(me)
+
+    client.post(reverse("connections:request", args=[target.pk]))
+
+    msg = mail.outbox[0]
+    rendered = msg.subject + msg.body + "".join(alt[0] for alt in msg.alternatives)
+    assert "Ada Lovelace" in rendered
+    # Neither party's email address may appear in the message body/subject.
+    assert me.email not in rendered
+    assert target.email not in rendered
+
+
+def test_inbox_does_not_expose_actor_email(client):
+    requester = UserFactory()
+    requester.profile.display_name = "Grace Hopper"
+    requester.profile.save()
+    me = UserFactory()
+    conn = ConnectionFactory(requester=requester, addressee=me)
+    NotificationFactory(
+        recipient=me,
+        actor=requester,
+        kind=NotificationKind.CONNECTION_REQUEST,
+        connection=conn,
+    )
+    client.force_login(me)
+
+    content = client.get(reverse("connections:notifications")).content.decode()
+    assert "Grace Hopper" in content
+    assert requester.email not in content
+
+
+def test_network_page_does_not_expose_email(client):
+    me = UserFactory()
+    other = UserFactory()
+    other.profile.display_name = "Linus T"
+    other.profile.save()
+    ConnectionFactory(requester=me, addressee=other, status=ConnectionStatus.ACCEPTED)
+    client.force_login(me)
+
+    content = client.get(reverse("connections:list")).content.decode()
+    assert "Linus T" in content
+    assert other.email not in content
+
+
+def test_request_message_falls_back_to_handle(client):
+    me = UserFactory()
+    target = UserFactory()
+    target.profile.display_name = ""
+    target.profile.save()
+    client.force_login(me)
+
+    response = client.post(
+        reverse("connections:request", args=[target.pk]),
+        follow=True,
+    )
+    content = response.content.decode()
+    assert f"@{target.profile.handle}" in content
+    assert target.email not in content
+
+
 def test_profile_shows_connect_state(client):
     me = UserFactory()
     other = UserFactory()

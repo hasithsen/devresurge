@@ -203,10 +203,11 @@ def _mark_request_notifications_read(user, connection: Connection) -> None:
 
 
 def _display(user) -> str:
+    """Public label for a user — never exposes their email address."""
     profile = getattr(user, "profile", None)
-    if profile and profile.display_name:
-        return profile.display_name
-    return user.name or user.email
+    if profile is not None:
+        return profile.public_name
+    return _("a member")
 
 
 class ConnectionListView(LoginRequiredMixin, ListView):
