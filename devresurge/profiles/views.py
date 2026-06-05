@@ -40,6 +40,8 @@ from django.views.generic import ListView
 from django.views.generic import TemplateView
 from django.views.generic import UpdateView
 
+from devresurge.connections.models import Connection
+
 from .forms import ProfileForm
 from .forms import ProjectLinkForm
 from .forms import SocialLinkForm
@@ -388,6 +390,25 @@ class ProfilePublicView(DetailView):
         # Only public, non-owner GET hits reach here (private → 404 above).
         record_profile_view(request, self.object)
         return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        viewer = self.request.user
+        profile = self.object
+        can_connect = viewer.is_authenticated and viewer.pk != profile.user_id
+        connection = None
+        state = "none"
+        if can_connect:
+            connection = Connection.between(viewer, profile.user)
+            if connection is not None:
+                if connection.is_accepted:
+                    state = "connected"
+                elif connection.is_pending:
+                    state = "outgoing" if connection.requester_id == viewer.pk else "incoming"
+        ctx["can_connect"] = can_connect
+        ctx["connection"] = connection
+        ctx["connect_state"] = state
+        return ctx
 
 
 class ProfileDashboardView(LoginRequiredMixin, DetailView):

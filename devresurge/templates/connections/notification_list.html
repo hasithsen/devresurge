@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/notifications — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>notifications</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">tail -f notifications.log</span></p>
+        <h1 style="margin: 0;">{% trans "notifications" %}</h1>
+      </div>
+      <div class="dr-page__head-actions">
+        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
+        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'users:settings' %}">{% trans "settings" %}</a>
+      </div>
+    </header>
+
+    {% if notifications %}
+      <ul class="dr-notif-list">
+        {% for n in notifications %}
+          <li class="dr-notif{% if n.id in unread_ids %} dr-notif--unread{% endif %}">
+            <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+              {% if n.actor.profile.avatar %}
+                <img src="{{ n.actor.profile.avatar.url }}" alt="" />
+              {% else %}
+                {{ n.actor.profile.initials|default:"?" }}
+              {% endif %}
+            </span>
+            <div class="dr-notif__main">
+              <p class="dr-notif__text">
+                {% with actor_name=n.actor.profile.display_name|default:n.actor.name|default:n.actor.email %}
+                  {% if n.actor.profile.handle %}
+                    <a href="{% url 'profiles:public' n.actor.profile.handle %}"><strong>{{ actor_name }}</strong></a>
+                  {% else %}
+                    <strong>{{ actor_name }}</strong>
+                  {% endif %}
+                  {% if n.kind == 'connection_request' %}
+                    {% trans "wants to connect with you." %}
+                  {% elif n.kind == 'connection_accepted' %}
+                    {% trans "accepted your connection request." %}
+                  {% endif %}
+                {% endwith %}
+                {% if n.id in unread_ids %}<span class="dr-pill dr-pill--new">{% trans "new" %}</span>{% endif %}
+              </p>
+              <p class="dr-notif__time">{% blocktranslate with ago=n.created_at|timesince %}{{ ago }} ago{% endblocktranslate %}</p>
+
+              {% if n.kind == 'connection_request' and n.connection and n.connection.status == 'pending' and n.connection.addressee_id == request.user.pk %}
+                <div class="dr-btn-row dr-notif__actions">
+                  <form method="post" action="{% url 'connections:accept' n.connection.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept" %}</button>
+                  </form>
+                  <form method="post" action="{% url 'connections:decline' n.connection.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "Decline" %}</button>
+                  </form>
+                </div>
+              {% elif n.kind == 'connection_accepted' and n.actor.profile.handle %}
+                <div class="dr-btn-row dr-notif__actions">
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost"
+                     href="{% url 'profiles:public' n.actor.profile.handle %}">{% trans "View profile" %}</a>
+                </div>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if is_paginated %}
+        <nav class="dr-pager" aria-label="{% translate 'Pagination' %}">
+          {% if page_obj.has_previous %}
+            <a class="dr-btn dr-btn--sm" href="?page={{ page_obj.previous_page_number }}">← {% trans "newer" %}</a>
+          {% endif %}
+          <span class="dr-pager__status">{% blocktranslate with num=page_obj.number total=page_obj.paginator.num_pages %}page {{ num }} of {{ total }}{% endblocktranslate %}</span>
+          {% if page_obj.has_next %}
+            <a class="dr-btn dr-btn--sm" href="?page={{ page_obj.next_page_number }}">{% trans "older" %} →</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="dr-empty" style="margin-top: 1.25rem;">
+        <div class="dr-emoji">∅</div>
+        <p>{% trans "No notifications yet. When someone connects with you, it'll show up here." %}</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

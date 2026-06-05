@@ -13,7 +13,15 @@ from devresurge.profiles.views import home_view
 
 @cache_control(max_age=60 * 60 * 24, public=True)
 def robots_txt(_request):
-    body = "User-agent: *\nDisallow: /me/\nDisallow: /accounts/\nDisallow: /admin/\nAllow: /\n"
+    body = (
+        "User-agent: *\n"
+        "Disallow: /me/\n"
+        "Disallow: /accounts/\n"
+        "Disallow: /admin/\n"
+        "Disallow: /connections/\n"
+        "Disallow: /users/\n"
+        "Allow: /\n"
+    )
     return HttpResponse(body, content_type="text/plain")
 
 
@@ -30,6 +38,8 @@ urlpatterns = [
     # User management
     path("users/", include("devresurge.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
+    # Connections + notifications
+    path("connections/", include("devresurge.connections.urls", namespace="connections")),
     # Profiles app (public + private CRUD)
     path("", include("devresurge.profiles.urls", namespace="profiles")),
     # Media files

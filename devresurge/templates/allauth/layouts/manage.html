@@ -25,6 +25,8 @@
            {% if request.resolver_match.url_name == 'account_email' %}aria-current="page"{% endif %}>email</a>
         <a href="{% url 'account_change_password' %}"
            {% if 'password' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>password</a>
+        <a href="{% url 'users:settings' %}"
+           {% if request.resolver_match.url_name == 'settings' %}aria-current="page"{% endif %}>notifications</a>
         <a href="{% url 'mfa_index' %}"
            {% if 'mfa' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>mfa</a>
         <a href="{% url 'account_logout' %}">logout</a>

@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "devresurge.users",
     "devresurge.profiles",
+    "devresurge.connections",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -188,6 +189,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "devresurge.users.context_processors.allauth_settings",
+                "devresurge.connections.context_processors.notifications",
             ],
         },
     },

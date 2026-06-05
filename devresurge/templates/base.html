@@ -101,6 +101,15 @@
                      {% if 'dashboard' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/me</a>
                 </li>
                 <li>
+                  <a class="dr-nav__notif" href="{% url 'connections:notifications' %}"
+                     {% if request.resolver_match.namespace == 'connections' %}aria-current="page"{% endif %}>
+                    ~/inbox
+                    {% if unread_notification_count %}
+                      <span class="dr-badge" aria-label="{% blocktranslate count counter=unread_notification_count %}{{ counter }} unread notification{% plural %}{{ counter }} unread notifications{% endblocktranslate %}">{{ unread_notification_count }}</span>
+                    {% endif %}
+                  </a>
+                </li>
+                <li>
                   <a href="{% url 'account_logout' %}">$ logout</a>
                 </li>
               {% else %}

@@ -53,6 +53,28 @@
         <span class="dr-panel__title">~/u/{{ profile.handle }}</span>
         {% if request.user.is_authenticated and profile.user_id == request.user.pk %}
           <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:edit' %}">edit</a>
+        {% elif can_connect %}
+          {% if connect_state == 'connected' %}
+            <span class="dr-pill dr-pill--ok">{% trans "connected" %}</span>
+          {% elif connect_state == 'outgoing' %}
+            <form method="post" action="{% url 'connections:cancel' connection.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "Cancel request" %}</button>
+            </form>
+          {% elif connect_state == 'incoming' %}
+            <form method="post" action="{% url 'connections:accept' connection.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept request" %}</button>
+            </form>
+          {% else %}
+            <form method="post" action="{% url 'connections:request' profile.user_id %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</button>
+            </form>
+          {% endif %}
         {% endif %}
       </header>
       <div class="dr-panel__body dr-stack-lg">

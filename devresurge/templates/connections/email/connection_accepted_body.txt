@@ -1,0 +1,10 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate %}Hi {{ recipient_name }},
+
+{{ actor_name }} accepted your connection request on {{ site_name }}. You're now connected.
+
+See your connections:
+{{ connections_url }}
+{% endblocktranslate %}
+{% blocktranslate %}You're receiving this because email notifications are on. Manage your preferences:
+{{ settings_url }}{% endblocktranslate %}
+{% endautoescape %}

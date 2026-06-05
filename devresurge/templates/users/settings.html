@@ -1,0 +1,39 @@
+{% extends "allauth/layouts/manage.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Notifications" %}{% endblock head_title %}
+
+{% block content %}
+  <article class="dr-panel">
+    <header class="dr-panel__header">
+      <span class="dr-dots"><span></span><span></span><span></span></span>
+      <span class="dr-panel__title">notifications.conf</span>
+    </header>
+    <div class="dr-panel__body dr-stack">
+      <form method="post" action="{% url 'users:settings' %}" class="dr-stack">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="dr-alert dr-alert--error">
+            <span class="dr-alert__body">{{ form.non_field_errors }}</span>
+          </div>
+        {% endif %}
+
+        <label class="dr-toggle-row" for="{{ form.email_notifications.id_for_label }}">
+          {{ form.email_notifications }}
+          <span class="dr-toggle-row__text">
+            <span class="dr-toggle-row__title">{{ form.email_notifications.label }}</span>
+            <span class="dr-toggle-row__help">{{ form.email_notifications.help_text }}</span>
+          </span>
+        </label>
+        {% if form.email_notifications.errors %}
+          <p class="dr-field-error">{{ form.email_notifications.errors }}</p>
+        {% endif %}
+
+        <div class="dr-btn-row">
+          <button type="submit" class="dr-btn dr-btn--primary">{% trans "Save settings" %}</button>
+        </div>
+      </form>
+    </div>
+  </article>
+{% endblock content %}

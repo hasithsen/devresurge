@@ -23,6 +23,12 @@ License: MIT
   `navigator.sendBeacon` POST to `/c/`; the server derives the label/destination from its own
   records so payloads can't be spoofed. Events auto-expire after a **90-day retention window**
   (see `prune_analytics`).
+- **Connections & notifications** — logged-in users send connection requests from any profile; the
+  recipient accepts/declines from an in-app inbox at `/connections/notifications/` (with an unread
+  badge in the navbar). Accepting links both users and notifies the requester. Each request/accept
+  also triggers an email, which every user can turn off under account settings → notifications
+  (`/users/~settings/`). Connections are an undirected pair with a DB-level uniqueness + no-self-link
+  guard.
 - **Profile directory** at `/u/` with search + role filter, lazy-loaded avatars, pagination.
 - **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
 - **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
@@ -58,6 +64,9 @@ Then visit <http://localhost:8000>.
 | `/u/`                               | Public profile directory + search  |
 | `/u/<handle>/`                      | A user's public profile            |
 | `/c/`                               | Link-click beacon (POST)           |
+| `/connections/`                     | Your network + pending requests    |
+| `/connections/notifications/`       | In-app notification inbox          |
+| `/users/~settings/`                 | Notification (email) preferences   |
 | `/me/`                              | Owner dashboard                    |
 | `/me/edit/`                         | Edit your profile                  |
 | `/me/analytics/`                    | Views + link-click analytics (90d) |

@@ -1,0 +1,20 @@
+{% load i18n %}
+<div class="dr-conn__user">
+  <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+    {% if u.profile.avatar %}
+      <img src="{{ u.profile.avatar.url }}" alt="" />
+    {% else %}
+      {{ u.profile.initials|default:"?" }}
+    {% endif %}
+  </span>
+  <span class="dr-conn__meta">
+    {% with name=u.profile.display_name|default:u.name|default:u.email %}
+      {% if u.profile.handle %}
+        <a class="dr-conn__name" href="{% url 'profiles:public' u.profile.handle %}">{{ name }}</a>
+        <span class="dr-conn__handle">/u/{{ u.profile.handle }}</span>
+      {% else %}
+        <span class="dr-conn__name">{{ name }}</span>
+      {% endif %}
+    {% endwith %}
+  </span>
+</div>

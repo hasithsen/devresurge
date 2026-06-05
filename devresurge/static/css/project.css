@@ -2003,3 +2003,180 @@ a.dr-tag:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* Connections & notifications ------------------------------------------- */
+
+.dr-avatar--sm {
+  width: 36px;
+  height: 36px;
+  font-size: 0.8rem;
+}
+
+/* Navbar unread badge */
+.dr-nav__notif {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dr-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Small status pills */
+.dr-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.dr-pill--new {
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.dr-pill--ok {
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.dr-pager__status {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Notification inbox */
+.dr-notif-list,
+.dr-conn-list {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.dr-conn-list { margin-top: 0; }
+
+.dr-notif,
+.dr-conn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.dr-conn { align-items: center; justify-content: space-between; }
+
+.dr-notif--unread {
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+}
+
+.dr-notif__main { flex: 1 1 auto; min-width: 0; }
+
+.dr-notif__text {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dr-notif__text a { color: var(--accent); text-decoration: none; }
+.dr-notif__text a:hover { text-decoration: underline; }
+
+.dr-notif__time {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.dr-notif__actions,
+.dr-conn__actions { margin-top: 0.5rem; flex-wrap: wrap; }
+
+.dr-conn__actions { margin-top: 0; align-items: center; }
+
+.dr-notif__actions form,
+.dr-conn__actions form { display: inline; margin: 0; }
+
+/* Connection user chip */
+.dr-conn__user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.dr-conn__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dr-conn__name {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dr-conn__name:hover { color: var(--accent); }
+
+.dr-conn__handle {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Notification settings toggle */
+.dr-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.dr-toggle-row input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+}
+
+.dr-toggle-row__text { display: flex; flex-direction: column; gap: 0.2rem; }
+.dr-toggle-row__title { color: var(--text); font-weight: 600; }
+.dr-toggle-row__help { color: var(--text-muted); font-size: 0.85rem; }
+
+.dr-field-error { color: var(--danger, #ef4444); font-size: 0.85rem; margin: 0; }
+
+@media (max-width: 560px) {
+  .dr-conn { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+  .dr-conn__actions { justify-content: flex-start; }
+}

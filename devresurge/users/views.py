@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse
+from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView
 from django.views.generic import RedirectView
 from django.views.generic import UpdateView
 
+from devresurge.users.forms import NotificationSettingsForm
 from devresurge.users.models import User
 
 if TYPE_CHECKING:
@@ -50,3 +52,20 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+
+class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """Per-user notification preferences (email opt-in/out)."""
+
+    model = User
+    form_class = NotificationSettingsForm
+    template_name = "users/settings.html"
+    success_message = _("Notification settings updated.")
+    success_url = reverse_lazy("users:settings")
+
+    def get_object(self, queryset: QuerySet | None = None) -> User:
+        assert self.request.user.is_authenticated  # type guard
+        return self.request.user
+
+
+user_settings_view = UserSettingsView.as_view()

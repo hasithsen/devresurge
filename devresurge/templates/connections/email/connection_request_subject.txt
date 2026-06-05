@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktranslate %}{{ actor_name }} wants to connect with you on {{ site_name }}{% endblocktranslate %}

@@ -2,6 +2,7 @@
 from typing import ClassVar
 
 from django.contrib.auth.models import AbstractUser
+from django.db.models import BooleanField
 from django.db.models import CharField
 from django.db.models import EmailField
 from django.urls import reverse
@@ -23,6 +24,11 @@ class User(AbstractUser):
     last_name = None  # type: ignore[assignment]
     email = EmailField(_("email address"), unique=True)
     username = None  # type: ignore[assignment]
+    email_notifications = BooleanField(
+        _("email notifications"),
+        default=True,
+        help_text=_("Receive emails about connection requests and activity."),
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
