@@ -191,3 +191,73 @@ def test_profile_form_rejects_unsupported_image_mime():
     )
     assert not form.is_valid()
     assert "avatar" in form.errors
+
+
+def test_readiness_scores_incomplete_profile():
+    profile = ProfileFactory(
+        display_name="",
+        headline="",
+        bio="",
+        tech_stack="",
+        website_url="",
+        is_public=False,
+        avatar=None,
+    )
+    readiness = profile.readiness()
+    assert readiness["complete"] is False
+    assert readiness["done"] < readiness["total"]
+    keys = {c["key"] for c in readiness["checks"] if not c["done"]}
+    assert "display_name" in keys
+    assert "public" in keys
+
+
+def test_readiness_complete_when_fully_filled():
+    # Minimal valid 1×1 PNG so ImageField/Pillow accepts the avatar.
+    png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01"
+        b"\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    profile = ProfileFactory(
+        display_name="Full Dev",
+        headline="Ships things",
+        bio="About me",
+        tech_stack="python",
+        website_url="https://example.com",
+        is_public=True,
+    )
+    profile.avatar.save(
+        "a.png",
+        SimpleUploadedFile("a.png", png, content_type="image/png"),
+        save=True,
+    )
+    from devresurge.profiles.tests.factories import ProjectLinkFactory
+    from devresurge.profiles.tests.factories import SocialLinkFactory
+
+    ProjectLinkFactory(profile=profile)
+    SocialLinkFactory(profile=profile)
+    readiness = profile.readiness()
+    assert readiness["complete"] is True
+    assert readiness["pct"] == 100
+
+
+def test_to_readme_markdown_includes_core_sections():
+    profile = ProfileFactory(
+        display_name="Ada",
+        headline="Mathematician",
+        bio="First programmer.",
+        tech_stack="math, analysis",
+        available_for_hire=True,
+        location="London",
+    )
+    from devresurge.profiles.tests.factories import ProjectLinkFactory
+
+    ProjectLinkFactory(profile=profile, title="Analytical Engine", is_featured=True)
+    md = profile.to_readme_markdown(base_url="https://devresurge.test")
+    assert "# Ada" in md
+    assert f"**@{profile.handle}**" in md
+    assert "## Stack" in md
+    assert "## Projects" in md
+    assert "Analytical Engine" in md
+    assert "open to work" in md
+    assert "https://devresurge.test" in md

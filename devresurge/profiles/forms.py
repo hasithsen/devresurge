@@ -42,7 +42,12 @@ class ProfileForm(forms.ModelForm):
             "is_public",
         )
         widgets = {
-            "bio": forms.Textarea(attrs={"rows": 6, "placeholder": "$ cat about.md"}),
+            "bio": forms.Textarea(
+                attrs={
+                    "rows": 6,
+                    "placeholder": "# about\n\nI ship **reliable** systems.\n\n- python\n- django",
+                },
+            ),
             "headline": forms.TextInput(attrs={"placeholder": "Senior Backend Engineer · Python & Go"}),
             "tech_stack": forms.TextInput(attrs={"placeholder": "python, django, postgres, aws"}),
             "handle": forms.TextInput(attrs={"placeholder": "your-handle"}),
@@ -53,6 +58,12 @@ class ProfileForm(forms.ModelForm):
                 },
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["bio"].help_text = _(
+            "Markdown supported: headings, lists, bold, italic, code, and links.",
+        )
 
     def clean_avatar(self):
         """Defence-in-depth — model validators run too, but better UX here."""

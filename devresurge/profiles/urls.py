@@ -6,11 +6,13 @@ app_name = "profiles"
 
 urlpatterns = [
     path("u/", views.profile_browse_view, name="browse"),
+    path("u/<slug:handle>/badge.svg", views.profile_badge_view, name="badge"),
     path("u/<slug:handle>/", views.profile_public_view, name="public"),
     path("c/", views.link_click_view, name="link_click"),
     path("me/", views.profile_dashboard_view, name="dashboard"),
     path("me/edit/", views.profile_edit_view, name="edit"),
     path("me/analytics/", views.profile_analytics_view, name="analytics"),
+    path("me/export/readme.md", views.profile_export_readme_view, name="export_readme"),
     path("me/projects/", views.project_list_view, name="project_list"),
     path("me/projects/new/", views.project_create_view, name="project_create"),
     path("me/projects/reorder/", views.project_reorder_view, name="project_reorder"),

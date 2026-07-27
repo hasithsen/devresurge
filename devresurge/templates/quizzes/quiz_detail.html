@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{{ quiz.title }} — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'quizzes:list' %}">~/quizzes</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>{{ quiz.slug }}</span>
+    </nav>
+
+    <article class="dr-panel" style="margin-top: 1rem;">
+      <header class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">{{ quiz.topic|default:quiz.slug }}.quiz</span>
+        {% if prior_pass %}<span class="dr-pill dr-pill--ok">{% trans "passed" %}</span>{% endif %}
+      </header>
+      <div class="dr-panel__body dr-stack-lg">
+        <div>
+          <h1 style="margin: 0;">{{ quiz.title }}</h1>
+          {% if quiz.tagline %}
+            <p style="margin: 0.4rem 0 0; color: var(--text-muted);">{{ quiz.tagline }}</p>
+          {% endif %}
+        </div>
+        {% if quiz.description %}
+          <p style="margin: 0;">{{ quiz.description }}</p>
+        {% endif %}
+        <div class="dr-meta">
+          <span>{{ quiz.questions.all|length }} {% trans "questions" %}</span>
+          <span>· {% blocktranslate with pct=quiz.pass_percent %}pass at {{ pct }}%{% endblocktranslate %}</span>
+          {% if quiz.badge_slug %}
+            <span>· {% trans "earns a badge" %}</span>
+          {% endif %}
+        </div>
+        {% if best_attempt %}
+          <p style="margin: 0; color: var(--text-dim); font-size: 0.9rem;">
+            {% blocktranslate with pct=best_attempt.percent %}Your best score: {{ pct }}%{% endblocktranslate %}
+          </p>
+        {% endif %}
+        <div class="dr-btn-row">
+          {% if request.user.is_authenticated %}
+            <a class="dr-btn dr-btn--primary" href="{% url 'quizzes:take' quiz.slug %}">
+              {% if prior_pass %}{% trans "retake" %}{% else %}{% trans "start" %}{% endif %}
+            </a>
+          {% else %}
+            <a class="dr-btn dr-btn--primary" href="{% url 'account_login' %}?next={% url 'quizzes:take' quiz.slug %}">
+              {% trans "sign in to take" %}
+            </a>
+          {% endif %}
+          <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:list' %}">{% trans "all quizzes" %}</a>
+        </div>
+      </div>
+    </article>
+  </section>
+{% endblock content %}

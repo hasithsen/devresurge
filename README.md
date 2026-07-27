@@ -14,8 +14,10 @@ License: MIT
   Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
   Handles are **case-insensitive**: they're stored lowercase, uniqueness is enforced at the DB
   with a `Lower("handle")` constraint, and `/u/Ada/` 301-redirects to the canonical `/u/ada/`.
-- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links and a
-  one-click copy-share-URL chip.
+  Bios render a **safe Markdown subset** (headings, lists, bold/italic, code, http(s)/mailto links).
+- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links, a
+  one-click copy-share-URL chip, a **profile readiness checklist** (`setup.sh`) that tracks what's
+  still missing, **README.md export**, and an embeddable **SVG badge** for GitHub READMEs.
 - **Privacy-first analytics** at `/me/analytics/` — daily views, unique visitors, busiest day,
   referrer breakdown and **outbound link clicks** over a 7/30/90-day window, rendered as a
   dependency-free CSS bar chart. Visitors are tracked via a salted, irreversible fingerprint
@@ -23,13 +25,20 @@ License: MIT
   `navigator.sendBeacon` POST to `/c/`; the server derives the label/destination from its own
   records so payloads can't be spoofed. Events auto-expire after a **90-day retention window**
   (see `prune_analytics`).
-- **Connections & notifications** — logged-in users send connection requests from any profile; the
-  recipient accepts/declines from an in-app inbox at `/connections/notifications/` (with an unread
-  badge in the navbar). Accepting links both users and notifies the requester. Each request/accept
-  also triggers an email, which every user can turn off under account settings → notifications
-  (`/users/~settings/`). Connections are an undirected pair with a DB-level uniqueness + no-self-link
-  guard.
-- **Profile directory** at `/u/` with search + role filter, lazy-loaded avatars, pagination.
+- **Connections & notifications** — logged-in users send connection requests from any profile with a
+  **relation label** (peer, collaborator, mentor, hiring, …) and optional note; the recipient
+  accepts/declines from an in-app inbox at `/connections/notifications/` (unread badge in the
+  navbar). Accepted links show editable relation status; either party can **block**. Accepting
+  links both users, notifies the requester, and can unlock network badges. Emails are opt-out
+  under `/users/~settings/`.
+- **Quizzes & achievement badges** — skill quizzes at `/quizzes/` (Python, Git, Django starters,
+  seeded via `seed_quizzes`). Pass at 80% to earn badges shown on your public profile and in the
+  badge cabinet. Profile milestones (ready, shipper, open to work) and network milestones
+  (first link, networker) award automatically.
+- **Profile directory** at `/u/` with search, role filter, **open-to-work filter**, lazy-loaded
+  avatars, pagination. Hireable profiles float to the top of the default listing.
+- **SEO** — `/sitemap.xml` indexes public profiles + key static pages; `/robots.txt` points crawlers
+  at it and blocks private surfaces (`/me/`, `/accounts/`, `/admin/`, …).
 - **Mobile-first terminal UI** — JetBrains Mono, scanline overlay, prompt headers, blinking cursor.
 - **Dark / light theme toggle** that respects `prefers-color-scheme` and persists in `localStorage`.
   Theme is applied **before first paint** to avoid the flash-of-wrong-theme. Toggle always visible
@@ -38,8 +47,6 @@ License: MIT
   on signup / login / password reset, enumeration protection.
 - **Hardened avatar uploads** — 2 MB cap, allowed-extension + MIME allowlist, live client-side
   preview and validation, fallback server-side `validate_avatar_size` + `FileExtensionValidator`.
-- **`/robots.txt`** auto-served with sensible defaults (allows `/u/...` indexing, blocks `/me/`,
-  `/accounts/` and `/admin/`).
 - **Production-ready scaffolding** — Postgres, Redis, Whitenoise, Argon2, Docker compose for local + prod.
 
 ## Settings
@@ -63,17 +70,23 @@ Then visit <http://localhost:8000>.
 | `/`                                 | Terminal landing page              |
 | `/u/`                               | Public profile directory + search  |
 | `/u/<handle>/`                      | A user's public profile            |
+| `/u/<handle>/badge.svg`             | Embeddable SVG profile badge       |
 | `/c/`                               | Link-click beacon (POST)           |
 | `/connections/`                     | Your network + pending requests    |
 | `/connections/notifications/`       | In-app notification inbox          |
+| `/quizzes/`                         | Skill quizzes                      |
+| `/quizzes/badges/`                  | Achievement badge cabinet          |
+| `/quizzes/<slug>/` (+ take)         | Quiz detail + attempt              |
 | `/users/~settings/`                 | Notification (email) preferences   |
 | `/me/`                              | Owner dashboard                    |
 | `/me/edit/`                         | Edit your profile                  |
 | `/me/analytics/`                    | Views + link-click analytics (90d) |
+| `/me/export/readme.md`              | Download profile as README.md      |
 | `/me/projects/` (+ new/edit/delete) | Manage project links               |
 | `/me/links/` (+ new/edit/delete)    | Manage social / website links      |
 | `/admin/`                           | Django admin                       |
 | `/robots.txt`                       | Crawler rules                      |
+| `/sitemap.xml`                      | Public profile + static sitemap    |
 
 ## Basic Commands
 
@@ -98,6 +111,14 @@ e.g. daily:
 Use `--days N` to override the window or `--dry-run` to preview what would be
 deleted. The command prunes every analytics model and reports a per-model and
 total count.
+
+### Quizzes & badges
+
+After migrate, starter quizzes and achievement badges are seeded by the quizzes
+migration. To re-seed or refresh question banks:
+
+    uv run python manage.py seed_quizzes
+
 
 ### Type checks
 

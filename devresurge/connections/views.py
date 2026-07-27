@@ -21,6 +21,7 @@ from django.views.generic import ListView
 
 from .emails import send_notification_email
 from .models import Connection
+from .models import ConnectionRelation
 from .models import ConnectionStatus
 from .models import Notification
 from .models import NotificationKind
@@ -37,7 +38,8 @@ def _notify(
     recipient,
     actor,
     kind: str,
-    connection: Connection,
+    connection: Connection | None = None,
+    payload: str = "",
 ) -> None:
     """Create an in-app notification and best-effort email the recipient."""
     notification = Notification.objects.create(
@@ -45,8 +47,13 @@ def _notify(
         actor=actor,
         kind=kind,
         connection=connection,
+        payload=payload[:120],
     )
-    send_notification_email(notification, request=request)
+    if connection is not None and kind in {
+        NotificationKind.CONNECTION_REQUEST,
+        NotificationKind.CONNECTION_ACCEPTED,
+    }:
+        send_notification_email(notification, request=request)
 
 
 def _safe_redirect_back(request: HttpRequest, default: str) -> HttpResponse:
@@ -57,11 +64,24 @@ def _safe_redirect_back(request: HttpRequest, default: str) -> HttpResponse:
     return redirect(default)
 
 
+def _parse_relation(raw: str | None) -> str:
+    value = (raw or "").strip()
+    if value in ConnectionRelation.values:
+        return value
+    return ConnectionRelation.PEER
+
+
+def _parse_message(raw: str | None) -> str:
+    return (raw or "").strip()[:280]
+
+
 @require_POST
 @login_required
 def connection_request_view(request: HttpRequest, user_id: int) -> HttpResponse:
     me = request.user
     target = get_object_or_404(User, pk=user_id)
+    relation = _parse_relation(request.POST.get("relation"))
+    message = _parse_message(request.POST.get("message"))
 
     fallback = reverse("connections:list")
     if target.pk == me.pk:
@@ -70,6 +90,9 @@ def connection_request_view(request: HttpRequest, user_id: int) -> HttpResponse:
 
     existing = Connection.between(me, target)
     if existing is not None:
+        if existing.is_blocked:
+            messages.error(request, _("You can't connect with this member."))
+            return _safe_redirect_back(request, fallback)
         if existing.is_accepted:
             messages.info(request, _("You're already connected."))
             return _safe_redirect_back(request, fallback)
@@ -87,10 +110,21 @@ def connection_request_view(request: HttpRequest, user_id: int) -> HttpResponse:
         existing.requester = me
         existing.addressee = target
         existing.status = ConnectionStatus.PENDING
+        existing.relation = relation
+        existing.message = message
         existing.responded_at = None
         try:
             with transaction.atomic():
-                existing.save(update_fields=["requester", "addressee", "status", "responded_at"])
+                existing.save(
+                    update_fields=[
+                        "requester",
+                        "addressee",
+                        "status",
+                        "relation",
+                        "message",
+                        "responded_at",
+                    ],
+                )
         except IntegrityError:
             messages.error(request, _("Could not send the request. Please try again."))
             return _safe_redirect_back(request, fallback)
@@ -98,7 +132,12 @@ def connection_request_view(request: HttpRequest, user_id: int) -> HttpResponse:
     else:
         try:
             with transaction.atomic():
-                connection = Connection.objects.create(requester=me, addressee=target)
+                connection = Connection.objects.create(
+                    requester=me,
+                    addressee=target,
+                    relation=relation,
+                    message=message,
+                )
         except IntegrityError:
             messages.info(request, _("A connection already exists."))
             return _safe_redirect_back(request, fallback)
@@ -136,6 +175,15 @@ def connection_accept_view(request: HttpRequest, pk: int) -> HttpResponse:
         kind=NotificationKind.CONNECTION_ACCEPTED,
         connection=connection,
     )
+    # Engagement hook — first / network badges.
+    try:
+        from devresurge.quizzes.awards import evaluate_connection_badges
+
+        evaluate_connection_badges(me)
+        evaluate_connection_badges(connection.requester)
+    except Exception:  # noqa: BLE001 — badges must never break accept
+        pass
+
     messages.success(
         request,
         _("You're now connected with %(name)s.") % {"name": _display(connection.requester)},
@@ -169,7 +217,6 @@ def connection_cancel_view(request: HttpRequest, pk: int) -> HttpResponse:
         requester=me,
         status=ConnectionStatus.PENDING,
     )
-    # Deleting cascades to the addressee's pending request notification.
     connection.delete()
     messages.info(request, _("Request withdrawn."))
     return _safe_redirect_back(request, reverse("connections:list"))
@@ -189,6 +236,67 @@ def connection_remove_view(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         _("Removed your connection with %(name)s.") % {"name": _display(other)},
     )
+    return _safe_redirect_back(request, reverse("connections:list"))
+
+
+@require_POST
+@login_required
+def connection_relation_view(request: HttpRequest, pk: int) -> HttpResponse:
+    """Update the relation label on an accepted connection."""
+    me = request.user
+    connection = get_object_or_404(
+        Connection.objects.involving(me).filter(status=ConnectionStatus.ACCEPTED),
+        pk=pk,
+    )
+    connection.relation = _parse_relation(request.POST.get("relation"))
+    connection.save(update_fields=["relation"])
+    messages.success(request, _("Connection status updated."))
+    return _safe_redirect_back(request, reverse("connections:list"))
+
+
+@require_POST
+@login_required
+def connection_block_view(request: HttpRequest, user_id: int) -> HttpResponse:
+    """Block a user — prevents future connection requests either way."""
+    me = request.user
+    target = get_object_or_404(User, pk=user_id)
+    fallback = reverse("connections:list")
+    if target.pk == me.pk:
+        messages.error(request, _("You can't block yourself."))
+        return _safe_redirect_back(request, fallback)
+
+    existing = Connection.between(me, target)
+    if existing is not None:
+        if existing.is_blocked and existing.requester_id == me.pk:
+            messages.info(request, _("Already blocked."))
+            return _safe_redirect_back(request, fallback)
+        existing.block(me)
+    else:
+        Connection.objects.create(
+            requester=me,
+            addressee=target,
+            status=ConnectionStatus.BLOCKED,
+            responded_at=timezone.now(),
+        )
+    messages.info(
+        request,
+        _("Blocked %(name)s.") % {"name": _display(target)},
+    )
+    return _safe_redirect_back(request, fallback)
+
+
+@require_POST
+@login_required
+def connection_unblock_view(request: HttpRequest, pk: int) -> HttpResponse:
+    me = request.user
+    connection = get_object_or_404(
+        Connection,
+        pk=pk,
+        requester=me,
+        status=ConnectionStatus.BLOCKED,
+    )
+    connection.delete()
+    messages.info(request, _("Unblocked."))
     return _safe_redirect_back(request, reverse("connections:list"))
 
 
@@ -238,6 +346,11 @@ class ConnectionListView(LoginRequiredMixin, ListView):
         ctx["outgoing"] = (
             Connection.objects.outgoing(me).select_related("addressee__profile")
         )
+        ctx["blocked"] = (
+            Connection.objects.filter(requester=me, status=ConnectionStatus.BLOCKED)
+            .select_related("addressee__profile")
+        )
+        ctx["relations"] = ConnectionRelation.choices
         return ctx
 
 
@@ -255,8 +368,6 @@ class NotificationListView(LoginRequiredMixin, ListView):
         )
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        # Capture which were unread so we can still highlight them this load,
-        # then clear them immediately so the navbar badge resets.
         self.unread_ids = set(
             Notification.objects.for_user(request.user)
             .unread()

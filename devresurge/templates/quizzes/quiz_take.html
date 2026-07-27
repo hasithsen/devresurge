@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}take · {{ quiz.title }} — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'quizzes:list' %}">~/quizzes</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{{ quiz.get_absolute_url }}">{{ quiz.slug }}</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>take</span>
+    </nav>
+
+    <header style="margin: 1rem 0;">
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">./{{ quiz.slug }} --grade</span></p>
+      <h1 style="margin: 0;">{{ quiz.title }}</h1>
+    </header>
+
+    <form method="post" class="dr-stack-lg" action="">
+      {% csrf_token %}
+      {% for question in questions %}
+        <fieldset class="dr-panel dr-quiz-q">
+          <legend class="dr-panel__header" style="width: 100%; box-sizing: border-box;">
+            <span class="dr-dots"><span></span><span></span><span></span></span>
+            <span class="dr-panel__title">q{{ forloop.counter }}</span>
+          </legend>
+          <div class="dr-panel__body dr-stack">
+            <p class="dr-quiz-q__prompt">{{ question.prompt }}</p>
+            <div class="dr-quiz-choices" role="radiogroup" aria-label="{% blocktranslate with n=forloop.counter %}Question {{ n }}{% endblocktranslate %}">
+              {% for choice in question.choices.all %}
+                <label class="dr-quiz-choice">
+                  <input type="radio"
+                         name="q_{{ question.pk }}"
+                         value="{{ choice.pk }}"
+                         required />
+                  <span>{{ choice.label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </fieldset>
+      {% endfor %}
+
+      <div class="dr-btn-row">
+        <button type="submit" class="dr-btn dr-btn--primary">{% trans "submit answers" %}</button>
+        <a class="dr-btn dr-btn--ghost" href="{{ quiz.get_absolute_url }}">{% trans "cancel" %}</a>
+      </div>
+    </form>
+  </section>
+{% endblock content %}

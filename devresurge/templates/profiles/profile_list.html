@@ -28,8 +28,12 @@
           <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
+      <label class="dr-check">
+        <input type="checkbox" name="hire" value="1" {% if hire %}checked{% endif %} />
+        <span>{% trans "open to work" %}</span>
+      </label>
       <button class="dr-btn dr-btn--primary" type="submit">run</button>
-      {% if q or role %}
+      {% if q or role or hire %}
         <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">reset</a>
       {% endif %}
     </form>
@@ -79,12 +83,12 @@
         <nav class="dr-pager" aria-label="{% translate 'Pagination' %}">
           {% if page_obj.has_previous %}
             <a class="dr-btn dr-btn--sm"
-               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
+               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}{% if hire %}hire=1&amp;{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
           {% endif %}
           <span class="current">page {{ page_obj.number }} / {{ paginator.num_pages }}</span>
           {% if page_obj.has_next %}
             <a class="dr-btn dr-btn--sm"
-               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
+               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}{% if hire %}hire=1&amp;{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
           {% endif %}
         </nav>
       {% endif %}
@@ -94,7 +98,7 @@
         <p>
           {% blocktranslate with q=q|default:"*" %}No profiles match <code>{{ q }}</code>.{% endblocktranslate %}
         </p>
-        {% if q or role %}
+        {% if q or role or hire %}
           <a class="dr-btn dr-btn--ghost dr-btn--sm" href="{% url 'profiles:browse' %}">reset filters</a>
         {% endif %}
       </div>

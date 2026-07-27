@@ -357,3 +357,71 @@ def test_profile_shows_connect_state(client):
     )
     response = client.get(url)
     assert response.context["connect_state"] == "connected"
+
+
+# ---------------------------------------------------------------------------
+# Relation labels, notes, block
+# ---------------------------------------------------------------------------
+
+
+def test_request_stores_relation_and_message(client):
+    me = UserFactory()
+    target = UserFactory()
+    client.force_login(me)
+
+    client.post(
+        reverse("connections:request", args=[target.pk]),
+        data={"relation": "collaborator", "message": "Loved your Django talk."},
+    )
+    conn = Connection.objects.get(requester=me, addressee=target)
+    assert conn.relation == "collaborator"
+    assert conn.message == "Loved your Django talk."
+
+
+def test_update_relation_on_accepted_connection(client):
+    me = UserFactory()
+    other = UserFactory()
+    conn = ConnectionFactory(
+        requester=me,
+        addressee=other,
+        status=ConnectionStatus.ACCEPTED,
+        relation="peer",
+    )
+    client.force_login(me)
+    client.post(
+        reverse("connections:relation", args=[conn.pk]),
+        data={"relation": "mentor"},
+    )
+    conn.refresh_from_db()
+    assert conn.relation == "mentor"
+
+
+def test_block_prevents_new_requests(client):
+    me = UserFactory()
+    other = UserFactory()
+    client.force_login(me)
+    client.post(reverse("connections:block", args=[other.pk]))
+
+    blocked = Connection.objects.get(requester=me, addressee=other)
+    assert blocked.status == ConnectionStatus.BLOCKED
+
+    client.force_login(other)
+    client.post(reverse("connections:request", args=[me.pk]))
+    assert (
+        Connection.objects.filter(requester=other, addressee=me).count() == 0
+    )
+    blocked.refresh_from_db()
+    assert blocked.status == ConnectionStatus.BLOCKED
+
+
+def test_unblock_removes_block_row(client):
+    me = UserFactory()
+    other = UserFactory()
+    conn = ConnectionFactory(
+        requester=me,
+        addressee=other,
+        status=ConnectionStatus.BLOCKED,
+    )
+    client.force_login(me)
+    client.post(reverse("connections:unblock", args=[conn.pk]))
+    assert not Connection.objects.filter(pk=conn.pk).exists()

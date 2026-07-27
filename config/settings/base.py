@@ -66,6 +66,7 @@ DJANGO_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
     "django.forms",
@@ -83,6 +84,7 @@ LOCAL_APPS = [
     "devresurge.users",
     "devresurge.profiles",
     "devresurge.connections",
+    "devresurge.quizzes",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

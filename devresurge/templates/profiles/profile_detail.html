@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load i18n %}
+{% load i18n profile_extras %}
 
 {% block title %}@{{ profile.handle }} — DevResurge{% endblock title %}
 {% block meta_description %}{{ profile.headline|default:profile.display_name|default:profile.handle }}{% if profile.location %} · {{ profile.location }}{% endif %}{% endblock meta_description %}
@@ -55,7 +55,11 @@
           <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:edit' %}">edit</a>
         {% elif can_connect %}
           {% if connect_state == 'connected' %}
-            <span class="dr-pill dr-pill--ok">{% trans "connected" %}</span>
+            <span class="dr-pill dr-pill--ok">
+              {% trans "connected" %}{% if connection %} · {{ connection.get_relation_display|lower }}{% endif %}
+            </span>
+          {% elif connect_state == 'blocked' %}
+            <span class="dr-pill">{% trans "blocked" %}</span>
           {% elif connect_state == 'outgoing' %}
             <form method="post" action="{% url 'connections:cancel' connection.pk %}">
               {% csrf_token %}
@@ -63,17 +67,39 @@
               <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "Cancel request" %}</button>
             </form>
           {% elif connect_state == 'incoming' %}
-            <form method="post" action="{% url 'connections:accept' connection.pk %}">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.path }}" />
-              <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept request" %}</button>
-            </form>
+            <div class="dr-btn-row">
+              <form method="post" action="{% url 'connections:accept' connection.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept" %}</button>
+              </form>
+              <form method="post" action="{% url 'connections:decline' connection.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "Decline" %}</button>
+              </form>
+            </div>
           {% else %}
-            <form method="post" action="{% url 'connections:request' profile.user_id %}">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.path }}" />
-              <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</button>
-            </form>
+            <details class="dr-connect">
+              <summary class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</summary>
+              <form method="post" action="{% url 'connections:request' profile.user_id %}" class="dr-connect__form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <label class="dr-label" for="connect-relation">{% trans "Relation" %}</label>
+                <select class="dr-select" id="connect-relation" name="relation">
+                  {% for value, label in relations %}
+                    <option value="{{ value }}" {% if value == 'peer' %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <label class="dr-label" for="connect-message">{% trans "Note (optional)" %}</label>
+                <input class="dr-input"
+                       id="connect-message"
+                       name="message"
+                       maxlength="280"
+                       placeholder="{% translate 'Hey — saw your Django work…' %}" />
+                <button type="submit" class="dr-btn dr-btn--primary">{% trans "Send request" %}</button>
+              </form>
+            </details>
           {% endif %}
         {% endif %}
       </header>
@@ -105,6 +131,16 @@
                 <span class="dr-tag">{% trans "open to work" %}</span>
               {% endif %}
             </div>
+            {% if user_badges %}
+              <div class="dr-achieve-row" style="margin-top: 0.65rem;">
+                {% for ub in user_badges %}
+                  <span class="dr-achieve" title="{{ ub.badge.description }}">
+                    <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
+                    <span>{{ ub.badge.title }}</span>
+                  </span>
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
         </div>
 
@@ -122,7 +158,7 @@
         {% if profile.bio %}
           <div>
             <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat about.md</span></p>
-            <div class="dr-block" style="white-space: pre-wrap;">{{ profile.bio }}</div>
+            <div class="dr-block dr-markdown">{{ profile.bio|markdownify }}</div>
           </div>
         {% endif %}
 
@@ -245,6 +281,12 @@
             <span class="dr-copy__icon" aria-hidden="true"></span>
             <span data-copy-label>copy</span>
           </button>
+          {% if profile.is_public %}
+            <a class="dr-btn dr-btn--sm dr-btn--ghost"
+               href="{% url 'profiles:badge' profile.handle %}"
+               target="_blank"
+               rel="noopener">badge.svg</a>
+          {% endif %}
         </div>
 
         <p class="dr-cli" style="margin-top: 1rem;"><span class="dr-prompt"></span> <span class="cmd">exit</span></p>

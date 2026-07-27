@@ -12,6 +12,20 @@ class ConnectionStatus(models.TextChoices):
     PENDING = "pending", _("Pending")
     ACCEPTED = "accepted", _("Accepted")
     DECLINED = "declined", _("Declined")
+    BLOCKED = "blocked", _("Blocked")
+
+
+class ConnectionRelation(models.TextChoices):
+    """How two people relate once connected (or when requesting)."""
+
+    PEER = "peer", _("Peer")
+    COLLABORATOR = "collaborator", _("Collaborator")
+    MENTOR = "mentor", _("Mentor")
+    MENTEE = "mentee", _("Mentee")
+    RECRUITER = "recruiter", _("Recruiter")
+    HIRING = "hiring", _("Hiring")
+    FRIEND = "friend", _("Friend")
+    OTHER = "other", _("Other")
 
 
 class ConnectionQuerySet(models.QuerySet):
@@ -24,11 +38,18 @@ class ConnectionQuerySet(models.QuerySet):
     def accepted(self) -> ConnectionQuerySet:
         return self.filter(status=ConnectionStatus.ACCEPTED)
 
+    def blocked(self) -> ConnectionQuerySet:
+        return self.filter(status=ConnectionStatus.BLOCKED)
+
     def incoming(self, user) -> ConnectionQuerySet:
         return self.filter(addressee=user, status=ConnectionStatus.PENDING)
 
     def outgoing(self, user) -> ConnectionQuerySet:
         return self.filter(requester=user, status=ConnectionStatus.PENDING)
+
+    def visible_network(self, user) -> ConnectionQuerySet:
+        """Accepted links for a user, excluding rows they blocked."""
+        return self.involving(user).accepted()
 
 
 class Connection(models.Model):
@@ -37,6 +58,10 @@ class Connection(models.Model):
     The pair is stored as an ordered (requester, addressee) tuple, but treated
     as undirected once accepted — use `Connection.between()` to look up the
     relationship regardless of who initiated it.
+
+    ``relation`` labels *why* you're connected; ``message`` is an optional note
+    attached to the request. ``BLOCKED`` is set by the blocker (always stored
+    as requester=blocker) so the other party cannot re-request.
     """
 
     requester = models.ForeignKey(
@@ -55,6 +80,19 @@ class Connection(models.Model):
         choices=ConnectionStatus.choices,
         default=ConnectionStatus.PENDING,
         db_index=True,
+    )
+    relation = models.CharField(
+        _("relation"),
+        max_length=20,
+        choices=ConnectionRelation.choices,
+        default=ConnectionRelation.PEER,
+        help_text=_("How you know each other."),
+    )
+    message = models.CharField(
+        _("message"),
+        max_length=280,
+        blank=True,
+        help_text=_("Optional note sent with the request."),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(_("responded at"), null=True, blank=True)
@@ -78,6 +116,7 @@ class Connection(models.Model):
         indexes = [
             models.Index(fields=["addressee", "status"], name="conn_addressee_status_idx"),
             models.Index(fields=["requester", "status"], name="conn_requester_status_idx"),
+            models.Index(fields=["status", "relation"], name="conn_status_relation_idx"),
         ]
 
     def __str__(self) -> str:
@@ -107,6 +146,18 @@ class Connection(models.Model):
     def is_accepted(self) -> bool:
         return self.status == ConnectionStatus.ACCEPTED
 
+    @property
+    def is_blocked(self) -> bool:
+        return self.status == ConnectionStatus.BLOCKED
+
+    @property
+    def status_label(self) -> str:
+        return self.get_status_display()
+
+    @property
+    def relation_label(self) -> str:
+        return self.get_relation_display()
+
     def accept(self) -> None:
         self.status = ConnectionStatus.ACCEPTED
         self.responded_at = timezone.now()
@@ -117,10 +168,23 @@ class Connection(models.Model):
         self.responded_at = timezone.now()
         self.save(update_fields=["status", "responded_at"])
 
+    def block(self, blocker) -> None:
+        """Mark this pair blocked, with ``blocker`` as the requester."""
+        other = self.other_user(blocker)
+        self.requester = blocker
+        self.addressee = other
+        self.status = ConnectionStatus.BLOCKED
+        self.responded_at = timezone.now()
+        self.save(
+            update_fields=["requester", "addressee", "status", "responded_at"],
+        )
+
 
 class NotificationKind(models.TextChoices):
     CONNECTION_REQUEST = "connection_request", _("Connection request")
     CONNECTION_ACCEPTED = "connection_accepted", _("Connection accepted")
+    BADGE_EARNED = "badge_earned", _("Badge earned")
+    QUIZ_PASSED = "quiz_passed", _("Quiz passed")
 
 
 class NotificationQuerySet(models.QuerySet):
@@ -155,6 +219,8 @@ class Notification(models.Model):
         null=True,
         blank=True,
     )
+    # Free-form payload for badge/quiz notices (slug or title snapshot).
+    payload = models.CharField(_("payload"), max_length=120, blank=True)
     read_at = models.DateTimeField(_("read at"), null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

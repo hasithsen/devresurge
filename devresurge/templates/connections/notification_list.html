@@ -28,7 +28,9 @@
         {% for n in notifications %}
           <li class="dr-notif{% if n.id in unread_ids %} dr-notif--unread{% endif %}">
             <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
-              {% if n.actor.profile.avatar %}
+              {% if n.kind == 'badge_earned' or n.kind == 'quiz_passed' %}
+                ★
+              {% elif n.actor.profile.avatar %}
                 <img src="{{ n.actor.profile.avatar.url }}" alt="" />
               {% else %}
                 {{ n.actor.profile.initials|default:"?" }}
@@ -36,20 +38,34 @@
             </span>
             <div class="dr-notif__main">
               <p class="dr-notif__text">
-                {% with actor_name=n.actor.profile.public_name|default:_("a member") %}
-                  {% if n.actor.profile.handle %}
-                    <a href="{% url 'profiles:public' n.actor.profile.handle %}"><strong>{{ actor_name }}</strong></a>
-                  {% else %}
-                    <strong>{{ actor_name }}</strong>
-                  {% endif %}
-                  {% if n.kind == 'connection_request' %}
-                    {% trans "wants to connect with you." %}
-                  {% elif n.kind == 'connection_accepted' %}
-                    {% trans "accepted your connection request." %}
-                  {% endif %}
-                {% endwith %}
+                {% if n.kind == 'badge_earned' %}
+                  <strong>{% trans "Badge unlocked" %}</strong>
+                  {% if n.payload %}— {{ n.payload }}{% endif %}
+                {% elif n.kind == 'quiz_passed' %}
+                  <strong>{% trans "Quiz passed" %}</strong>
+                  {% if n.payload %}— {{ n.payload }}{% endif %}
+                {% else %}
+                  {% with actor_name=n.actor.profile.public_name|default:_("a member") %}
+                    {% if n.actor.profile.handle %}
+                      <a href="{% url 'profiles:public' n.actor.profile.handle %}"><strong>{{ actor_name }}</strong></a>
+                    {% else %}
+                      <strong>{{ actor_name }}</strong>
+                    {% endif %}
+                    {% if n.kind == 'connection_request' %}
+                      {% trans "wants to connect with you." %}
+                      {% if n.connection %}
+                        <span class="dr-pill">{{ n.connection.get_relation_display }}</span>
+                      {% endif %}
+                    {% elif n.kind == 'connection_accepted' %}
+                      {% trans "accepted your connection request." %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
                 {% if n.id in unread_ids %}<span class="dr-pill dr-pill--new">{% trans "new" %}</span>{% endif %}
               </p>
+              {% if n.kind == 'connection_request' and n.connection.message %}
+                <p class="dr-conn__msg">“{{ n.connection.message }}”</p>
+              {% endif %}
               <p class="dr-notif__time">{% blocktranslate with ago=n.created_at|timesince %}{{ ago }} ago{% endblocktranslate %}</p>
 
               {% if n.kind == 'connection_request' and n.connection and n.connection.status == 'pending' and n.connection.addressee_id == request.user.pk %}
@@ -69,6 +85,10 @@
                 <div class="dr-btn-row dr-notif__actions">
                   <a class="dr-btn dr-btn--sm dr-btn--ghost"
                      href="{% url 'profiles:public' n.actor.profile.handle %}">{% trans "View profile" %}</a>
+                </div>
+              {% elif n.kind == 'badge_earned' %}
+                <div class="dr-btn-row dr-notif__actions">
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'quizzes:badges' %}">{% trans "Badge cabinet" %}</a>
                 </div>
               {% endif %}
             </div>

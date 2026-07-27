@@ -92,6 +92,10 @@
                    {% if 'browse' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/profiles</a>
               </li>
               <li>
+                <a href="{% url 'quizzes:list' %}"
+                   {% if request.resolver_match.namespace == 'quizzes' %}aria-current="page"{% endif %}>~/quizzes</a>
+              </li>
+              <li>
                 <a href="{% url 'about' %}"
                    {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>~/about</a>
               </li>

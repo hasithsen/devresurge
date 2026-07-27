@@ -283,3 +283,110 @@ def test_reorder_requires_ids_list(client):
         content_type="application/json",
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+# ---------------------------------------------------------------------------
+# Discovery, export, badge, sitemap
+# ---------------------------------------------------------------------------
+
+
+def test_browse_hire_filter(client):
+    hireable = ProfileFactory(is_public=True, available_for_hire=True, display_name="Hire Me")
+    other = ProfileFactory(is_public=True, available_for_hire=False, display_name="Busy")
+    response = client.get(reverse("profiles:browse"), {"hire": "1"})
+    body = response.content.decode()
+    assert hireable.handle in body
+    assert other.handle not in body
+    assert response.context["hire"] is True
+
+
+def test_public_profile_renders_markdown_bio(client):
+    profile = ProfileFactory(
+        is_public=True,
+        bio="Hello **world** and `code`.",
+    )
+    response = client.get(reverse("profiles:public", kwargs={"handle": profile.handle}))
+    body = response.content.decode()
+    assert "<strong>world</strong>" in body
+    assert "<code>code</code>" in body
+
+
+def test_dashboard_shows_readiness_checklist(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    profile.display_name = ""
+    profile.headline = ""
+    profile.bio = ""
+    profile.tech_stack = ""
+    profile.is_public = False
+    profile.save()
+    response = client.get(reverse("profiles:dashboard"))
+    assert response.status_code == HTTPStatus.OK
+    readiness = response.context["readiness"]
+    assert readiness["complete"] is False
+    assert readiness["pct"] < 100
+    assert b"setup.sh" in response.content
+
+
+def test_export_readme_requires_login(client):
+    response = client.get(reverse("profiles:export_readme"))
+    assert response.status_code == HTTPStatus.FOUND
+
+
+def test_export_readme_downloads_markdown(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    profile.display_name = "Ada"
+    profile.headline = "Builds things"
+    profile.tech_stack = "python, go"
+    profile.save()
+    ProjectLinkFactory(profile=profile, title="Cool Tool")
+    response = client.get(reverse("profiles:export_readme"))
+    assert response.status_code == HTTPStatus.OK
+    assert response["Content-Type"].startswith("text/markdown")
+    assert f'filename="{profile.handle}-README.md"' in response["Content-Disposition"]
+    body = response.content.decode()
+    assert "# Ada" in body
+    assert "Cool Tool" in body
+    assert "`python`" in body
+
+
+def test_badge_svg_for_public_profile(client):
+    profile = ProfileFactory(
+        is_public=True,
+        display_name="Ada Lovelace",
+        available_for_hire=True,
+        tech_stack="python, django",
+    )
+    response = client.get(reverse("profiles:badge", kwargs={"handle": profile.handle}))
+    assert response.status_code == HTTPStatus.OK
+    assert response["Content-Type"].startswith("image/svg+xml")
+    body = response.content.decode()
+    assert "Ada Lovelace" in body
+    assert "open to work" in body
+    assert f"@{profile.handle}" in body
+
+
+def test_badge_svg_404_for_private_profile(client):
+    profile = ProfileFactory(is_public=False)
+    response = client.get(reverse("profiles:badge", kwargs={"handle": profile.handle}))
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_sitemap_includes_public_profiles(client):
+    public = ProfileFactory(is_public=True)
+    private = ProfileFactory(is_public=False)
+    response = client.get(reverse("sitemap"))
+    assert response.status_code == HTTPStatus.OK
+    body = response.content.decode()
+    assert public.get_absolute_url() in body
+    assert private.get_absolute_url() not in body
+    assert "/about/" in body
+
+
+def test_robots_txt_points_at_sitemap(client):
+    response = client.get(reverse("robots"))
+    assert response.status_code == HTTPStatus.OK
+    assert b"Sitemap: /sitemap.xml" in response.content

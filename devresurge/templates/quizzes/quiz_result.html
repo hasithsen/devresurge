@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}result · {{ quiz.title }} — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'quizzes:list' %}">~/quizzes</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{{ quiz.get_absolute_url }}">{{ quiz.slug }}</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>result</span>
+    </nav>
+
+    <article class="dr-panel" style="margin-top: 1rem;">
+      <header class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">result.log</span>
+        {% if attempt.passed %}
+          <span class="dr-pill dr-pill--ok">{% trans "pass" %}</span>
+        {% else %}
+          <span class="dr-pill">{% trans "retry" %}</span>
+        {% endif %}
+      </header>
+      <div class="dr-panel__body dr-stack">
+        <p class="dr-cli" style="margin: 0;">
+          <span class="dr-prompt"></span>
+          <span class="cmd">score {{ attempt.score }}/{{ attempt.total }} → {{ attempt.percent }}%</span>
+        </p>
+        {% if awarded %}
+          <div class="dr-achieve-row">
+            {% for ub in awarded %}
+              <span class="dr-achieve" title="{{ ub.badge.description }}">
+                <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
+                <span>{{ ub.badge.title }}</span>
+              </span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="dr-btn-row">
+          {% if not attempt.passed %}
+            <a class="dr-btn dr-btn--primary" href="{% url 'quizzes:take' quiz.slug %}">{% trans "try again" %}</a>
+          {% endif %}
+          <a class="dr-btn" href="{% url 'quizzes:badges' %}">{% trans "badge cabinet" %}</a>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:list' %}">{% trans "more quizzes" %}</a>
+        </div>
+      </div>
+    </article>
+
+    <h2 class="dr-section-title"><span class="dr-prompt"></span> review</h2>
+    <div class="dr-stack-lg">
+      {% for item in review %}
+        <article class="dr-panel">
+          <header class="dr-panel__header">
+            <span class="dr-dots"><span></span><span></span><span></span></span>
+            <span class="dr-panel__title">q{{ forloop.counter }}</span>
+            {% if item.is_right %}
+              <span class="dr-pill dr-pill--ok">✓</span>
+            {% else %}
+              <span class="dr-pill" style="border-color: var(--error); color: var(--error);">✗</span>
+            {% endif %}
+          </header>
+          <div class="dr-panel__body dr-stack">
+            <p style="margin: 0;">{{ item.question.prompt }}</p>
+            <p style="margin: 0; font-size: 0.9rem;">
+              <span style="color: var(--text-dim);">{% trans "yours:" %}</span>
+              {% if item.selected %}{{ item.selected.label }}{% else %}—{% endif %}
+            </p>
+            {% if not item.is_right and item.correct %}
+              <p style="margin: 0; font-size: 0.9rem;">
+                <span style="color: var(--accent);">{% trans "correct:" %}</span>
+                {{ item.correct.label }}
+              </p>
+              {% if item.question.explanation %}
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+                  {{ item.question.explanation }}
+                </p>
+              {% endif %}
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock content %}

@@ -26,12 +26,15 @@ from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView
 from django.views.generic import DeleteView
@@ -42,6 +45,7 @@ from django.views.generic import UpdateView
 
 from devresurge.connections.models import Connection
 
+from .badges import render_profile_badge_svg
 from .forms import ProfileForm
 from .forms import ProjectLinkForm
 from .forms import SocialLinkForm
@@ -312,12 +316,15 @@ class HomeView(TemplateView):
 
 
 class ProfileBrowseView(ListView):
-    """Public directory of profiles with simple search + role filter."""
+    """Public directory of profiles with search, role, and hire filters."""
 
     model = Profile
     template_name = "profiles/profile_list.html"
     context_object_name = "profiles"
     paginate_by = 24
+
+    def hire_only(self) -> bool:
+        return (self.request.GET.get("hire") or "").strip() in {"1", "true", "yes", "on"}
 
     def get_queryset(self) -> QuerySet[Profile]:
         qs = (
@@ -337,12 +344,19 @@ class ProfileBrowseView(ListView):
             )
         if role and role in PrimaryRole.values:
             qs = qs.filter(primary_role=role)
-        return qs
+        if self.hire_only():
+            qs = qs.filter(available_for_hire=True)
+        # Surface hireable profiles first when browsing the open-to-work lane;
+        # otherwise keep the default recency ordering from the model Meta.
+        if self.hire_only():
+            return qs.order_by("-updated_at")
+        return qs.order_by("-available_for_hire", "-updated_at")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
         ctx["q"] = self.request.GET.get("q", "")
         ctx["role"] = self.request.GET.get("role", "")
+        ctx["hire"] = self.hire_only()
         ctx["roles"] = PrimaryRole.choices
         return ctx
 
@@ -401,13 +415,33 @@ class ProfilePublicView(DetailView):
         if can_connect:
             connection = Connection.between(viewer, profile.user)
             if connection is not None:
-                if connection.is_accepted:
+                if connection.is_blocked:
+                    # Only the blocker sees a blocked state; blocked party sees none.
+                    if connection.requester_id == viewer.pk:
+                        state = "blocked"
+                    else:
+                        can_connect = False
+                        state = "none"
+                        connection = None
+                elif connection.is_accepted:
                     state = "connected"
                 elif connection.is_pending:
                     state = "outgoing" if connection.requester_id == viewer.pk else "incoming"
+                elif connection.status == "declined":
+                    state = "none"
         ctx["can_connect"] = can_connect
         ctx["connection"] = connection
         ctx["connect_state"] = state
+        from devresurge.connections.models import ConnectionRelation
+
+        ctx["relations"] = ConnectionRelation.choices
+        from devresurge.quizzes.models import UserBadge
+
+        ctx["user_badges"] = (
+            UserBadge.objects.filter(user=profile.user, badge__is_active=True)
+            .select_related("badge")
+            .order_by("badge__order", "-earned_at")
+        )
         return ctx
 
 
@@ -426,7 +460,43 @@ class ProfileDashboardView(LoginRequiredMixin, DetailView):
         ctx["views_30d"] = (
             ProfileViewEvent.objects.for_profile(self.object).within_days(30).count()
         )
+        ctx["readiness"] = self.object.readiness()
+        badge_path = reverse("profiles:badge", kwargs={"handle": self.object.handle})
+        ctx["badge_url"] = self.request.build_absolute_uri(badge_path)
+        from devresurge.quizzes.models import Quiz
+        from devresurge.quizzes.models import UserBadge
+
+        ctx["earned_badges"] = (
+            UserBadge.objects.filter(user=self.request.user, badge__is_active=True)
+            .select_related("badge")
+            .order_by("badge__order")[:8]
+        )
+        ctx["quiz_count"] = Quiz.objects.filter(is_published=True).count()
         return ctx
+
+
+@login_required
+@require_GET
+def profile_export_readme_view(request: HttpRequest) -> HttpResponse:
+    """Download the owner's profile as a README.md file."""
+    profile = _get_or_create_profile(request.user)
+    base = f"{request.scheme}://{request.get_host()}"
+    body = profile.to_readme_markdown(base_url=base)
+    response = HttpResponse(body, content_type="text/markdown; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{profile.handle}-README.md"'
+    return response
+
+
+@cache_control(public=True, max_age=60 * 10)
+@require_GET
+def profile_badge_view(request: HttpRequest, handle: str) -> HttpResponse:
+    """Public SVG badge for embedding in GitHub READMEs and personal sites."""
+    profile = get_object_or_404(
+        Profile.objects.filter(is_public=True),
+        handle=Profile.normalize_handle(handle),
+    )
+    svg = render_profile_badge_svg(profile)
+    return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
 
 
 class ProfileEditView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -437,6 +507,16 @@ class ProfileEditView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
     def get_object(self, queryset: QuerySet[Profile] | None = None) -> Profile:
         return _get_or_create_profile(self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        try:
+            from devresurge.quizzes.awards import evaluate_profile_badges
+
+            evaluate_profile_badges(self.request.user)
+        except Exception:  # noqa: BLE001
+            pass
+        return response
 
     def get_success_url(self) -> str:
         return reverse("profiles:dashboard")
@@ -595,7 +675,14 @@ class ProjectLinkCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
 
     def form_valid(self, form: ProjectLinkForm):
         form.instance.profile = _get_or_create_profile(self.request.user)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        try:
+            from devresurge.quizzes.awards import evaluate_profile_badges
+
+            evaluate_profile_badges(self.request.user)
+        except Exception:  # noqa: BLE001
+            pass
+        return response
 
 
 class ProjectLinkUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
@@ -729,5 +816,6 @@ link_list_view = SocialLinkListView.as_view()
 link_create_view = SocialLinkCreateView.as_view()
 link_update_view = SocialLinkUpdateView.as_view()
 link_delete_view = SocialLinkDeleteView.as_view()
-# `project_reorder_view`, `link_reorder_view` and `link_click_view` are already
+# `project_reorder_view`, `link_reorder_view`, `link_click_view`,
+# `profile_export_readme_view` and `profile_badge_view` are already
 # module-level functions.

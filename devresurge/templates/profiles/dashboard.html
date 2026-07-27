@@ -27,6 +27,40 @@
       </div>
     </header>
 
+    {% if not readiness.complete %}
+      <section class="dr-panel dr-readiness" style="margin-bottom: 1.25rem;" aria-labelledby="readiness-title">
+        <div class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title" id="readiness-title">setup.sh</span>
+          <span class="dr-pill">{{ readiness.pct }}%</span>
+        </div>
+        <div class="dr-panel__body dr-stack">
+          <p style="margin: 0; color: var(--text-muted);">
+            {% blocktranslate with done=readiness.done total=readiness.total %}
+              {{ done }} of {{ total }} checks green — finish these to make your profile share-ready.
+            {% endblocktranslate %}
+          </p>
+          <div class="dr-progress" role="progressbar"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ readiness.pct }}"
+               aria-label="{% translate 'Profile readiness' %}">
+            <span class="dr-progress__bar" style="width: {{ readiness.pct }}%;"></span>
+          </div>
+          <ul class="dr-checklist">
+            {% for check in readiness.checks %}
+              <li class="dr-checklist__item{% if check.done %} dr-checklist__item--done{% endif %}">
+                <span class="dr-checklist__mark" aria-hidden="true">{% if check.done %}✓{% else %}○{% endif %}</span>
+                {% if check.done %}
+                  <span>{{ check.label }}</span>
+                {% else %}
+                  <a href="{% url check.url_name %}">{{ check.label }}</a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    {% endif %}
+
     <section class="dr-grid dr-grid--3">
       <div class="dr-panel">
         <div class="dr-panel__header">
@@ -121,6 +155,62 @@
           <div class="dr-btn-row">
             <a class="dr-btn" href="{% url 'connections:list' %}">network</a>
             <a class="dr-btn dr-btn--ghost" href="{% url 'connections:notifications' %}">inbox</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="dr-panel">
+        <div class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">share/</span>
+        </div>
+        <div class="dr-panel__body dr-stack">
+          <p style="margin: 0;">{% trans "Export a README or embed a badge on GitHub." %}</p>
+          <div class="dr-btn-row">
+            <a class="dr-btn" href="{% url 'profiles:export_readme' %}">export .md</a>
+            <button type="button"
+                    class="dr-btn dr-btn--ghost dr-copy"
+                    data-copy="{{ badge_url }}"
+                    aria-label="{% translate 'Copy badge URL' %}">
+              <span data-copy-label>badge url</span>
+            </button>
+          </div>
+          {% if profile.is_public %}
+            <div class="dr-badge-preview">
+              <img src="{% url 'profiles:badge' profile.handle %}"
+                   alt="{% blocktranslate with handle=profile.handle %}DevResurge badge for @{{ handle }}{% endblocktranslate %}"
+                   width="420" height="96" loading="lazy" />
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dr-panel">
+        <div class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">quizzes/</span>
+        </div>
+        <div class="dr-panel__body dr-stack">
+          <p style="margin: 0;">
+            {% blocktranslate count counter=quiz_count %}
+              {{ counter }} skill quiz available.
+            {% plural %}
+              {{ counter }} skill quizzes available.
+            {% endblocktranslate %}
+          </p>
+          {% if earned_badges %}
+            <div class="dr-achieve-row">
+              {% for ub in earned_badges %}
+                <span class="dr-achieve" title="{{ ub.badge.description }}">
+                  <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
+                  <span>{{ ub.badge.title }}</span>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="dr-btn-row">
+            <a class="dr-btn" href="{% url 'quizzes:list' %}">take a quiz</a>
+            <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:badges' %}">cabinet</a>
           </div>
         </div>
       </div>

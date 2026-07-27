@@ -2176,7 +2176,306 @@ a.dr-tag:hover {
 
 .dr-field-error { color: var(--danger, #ef4444); font-size: 0.85rem; margin: 0; }
 
+/* Profile readiness ------------------------------------------------------- */
+
+.dr-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.dr-progress__bar {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  border-radius: inherit;
+  transition: width 0.35s var(--ease);
+}
+
+.dr-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.35rem 0.75rem;
+}
+
+.dr-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.dr-checklist__item a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in oklab, var(--link) 50%, transparent);
+}
+
+.dr-checklist__item a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.dr-checklist__item--done {
+  color: var(--text-dim);
+}
+
+.dr-checklist__item--done .dr-checklist__mark {
+  color: var(--accent);
+}
+
+.dr-checklist__mark {
+  flex: 0 0 auto;
+  width: 1rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.dr-badge-preview {
+  margin-top: 0.35rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  background: var(--bg-elev-2);
+  overflow: auto;
+}
+
+.dr-badge-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Markdown bio ------------------------------------------------------------ */
+
+.dr-markdown {
+  line-height: 1.55;
+}
+
+.dr-markdown > *:first-child { margin-top: 0; }
+.dr-markdown > *:last-child { margin-bottom: 0; }
+
+.dr-markdown h1,
+.dr-markdown h2,
+.dr-markdown h3 {
+  margin: 0.9rem 0 0.4rem;
+  font-size: 1rem;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.dr-markdown h1 { font-size: 1.15rem; }
+.dr-markdown h2 { font-size: 1.05rem; }
+
+.dr-markdown p { margin: 0.55rem 0; }
+
+.dr-markdown ul,
+.dr-markdown ol {
+  margin: 0.45rem 0;
+  padding-left: 1.25rem;
+  color: var(--text);
+}
+
+.dr-markdown li { margin: 0.2rem 0; }
+
+.dr-markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 0.05rem 0.3rem;
+}
+
+.dr-markdown pre {
+  margin: 0.65rem 0;
+  padding: 0.75rem 0.85rem;
+  overflow-x: auto;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.dr-markdown pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.dr-markdown a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in oklab, var(--link) 55%, transparent);
+}
+
+.dr-markdown a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.dr-markdown strong { color: var(--text); font-weight: 700; }
+.dr-markdown em { color: var(--text-muted); }
+
+/* Quizzes + achievement badges ------------------------------------------- */
+
+.dr-quiz-q__prompt {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dr-quiz-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dr-quiz-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.dr-quiz-choice:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elev-2);
+}
+
+.dr-quiz-choice:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dr-quiz-choice input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+}
+
+.dr-achieve-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dr-achieve {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, var(--border));
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.82rem;
+  max-width: 100%;
+}
+
+.dr-achieve__icon {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.dr-achieve__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.dr-achieve__meta strong {
+  font-weight: 600;
+}
+
+.dr-achieve__meta small {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.dr-achieve--locked {
+  opacity: 0.55;
+  background: var(--bg-elev);
+  border-color: var(--border);
+}
+
+.dr-achieve--locked .dr-achieve__icon {
+  color: var(--text-dim);
+}
+
+/* Connection relation / connect popover ---------------------------------- */
+
+.dr-conn__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.dr-conn__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dr-conn__msg {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.dr-conn__relation .dr-select--sm,
+.dr-select--sm {
+  width: auto;
+  min-width: 8rem;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.45rem;
+}
+
+.dr-connect {
+  position: relative;
+}
+
+.dr-connect > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.dr-connect > summary::-webkit-details-marker { display: none; }
+
+.dr-connect__form {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 20;
+  width: min(280px, 80vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
 @media (max-width: 560px) {
   .dr-conn { flex-direction: column; align-items: stretch; gap: 0.6rem; }
   .dr-conn__actions { justify-content: flex-start; }
+  .dr-checklist { grid-template-columns: 1fr; }
+  .dr-connect__form { right: auto; left: 0; }
 }

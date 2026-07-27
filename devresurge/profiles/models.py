@@ -223,6 +223,142 @@ class Profile(models.Model):
         self.handle = self.normalize_handle(self.handle)
         super().save(*args, **kwargs)
 
+    def readiness_checks(self) -> list[dict]:
+        """Checklist of profile fields that make a share-ready public page.
+
+        Each item is ``{key, label, done, url_name}`` so the dashboard can
+        render a progress bar and deep-link to the right editor.
+        """
+        has_projects = self.projects.exists() if self.pk else False
+        has_links = bool(self.website_url) or (
+            self.social_links.exists() if self.pk else False
+        )
+        return [
+            {
+                "key": "display_name",
+                "label": _("Display name"),
+                "done": bool(self.display_name),
+                "url_name": "profiles:edit",
+            },
+            {
+                "key": "headline",
+                "label": _("Headline"),
+                "done": bool(self.headline),
+                "url_name": "profiles:edit",
+            },
+            {
+                "key": "bio",
+                "label": _("Bio"),
+                "done": bool(self.bio.strip() if self.bio else ""),
+                "url_name": "profiles:edit",
+            },
+            {
+                "key": "avatar",
+                "label": _("Avatar"),
+                "done": bool(self.avatar),
+                "url_name": "profiles:edit",
+            },
+            {
+                "key": "tech_stack",
+                "label": _("Tech stack"),
+                "done": bool(self.tech_stack_list),
+                "url_name": "profiles:edit",
+            },
+            {
+                "key": "projects",
+                "label": _("At least one project"),
+                "done": has_projects,
+                "url_name": "profiles:project_create",
+            },
+            {
+                "key": "links",
+                "label": _("Social or website link"),
+                "done": has_links,
+                "url_name": "profiles:link_create",
+            },
+            {
+                "key": "public",
+                "label": _("Publicly listed"),
+                "done": bool(self.is_public),
+                "url_name": "profiles:edit",
+            },
+        ]
+
+    def readiness(self) -> dict:
+        """Aggregate readiness score for the owner dashboard."""
+        checks = self.readiness_checks()
+        done = sum(1 for c in checks if c["done"])
+        total = len(checks)
+        pct = round((done / total) * 100) if total else 100
+        return {
+            "checks": checks,
+            "done": done,
+            "total": total,
+            "pct": pct,
+            "complete": done == total,
+        }
+
+    def to_readme_markdown(self, *, base_url: str = "") -> str:
+        """Serialize this profile as a shareable README.md document."""
+        name = self.display_name or self.handle
+        lines: list[str] = [f"# {name}", ""]
+        if self.headline:
+            lines.extend([f"*{self.headline}*", ""])
+
+        meta: list[str] = [f"**@{self.handle}**", self.get_primary_role_display()]
+        if self.location:
+            meta.append(self.location)
+        if self.years_experience:
+            meta.append(f"{self.years_experience} yr experience")
+        if self.available_for_hire:
+            meta.append("open to work")
+        lines.append(" · ".join(meta))
+        lines.append("")
+
+        if self.tech_stack_list:
+            lines.extend(["## Stack", "", ", ".join(f"`{t}`" for t in self.tech_stack_list), ""])
+
+        if self.bio:
+            lines.extend(["## About", "", self.bio.strip(), ""])
+
+        projects = list(self.projects.all()) if self.pk else []
+        if projects:
+            lines.extend(["## Projects", ""])
+            for project in projects:
+                title = f"★ {project.title}" if project.is_featured else project.title
+                link = project.url or project.repo_url
+                heading = f"### [{title}]({link})" if link else f"### {title}"
+                lines.append(heading)
+                if project.description:
+                    lines.append("")
+                    lines.append(project.description)
+                if project.tech_stack_list:
+                    lines.append("")
+                    lines.append(", ".join(f"`{t}`" for t in project.tech_stack_list))
+                extras: list[str] = []
+                if project.url and project.repo_url:
+                    extras.append(f"[live]({project.url})")
+                    extras.append(f"[repo]({project.repo_url})")
+                if extras:
+                    lines.append("")
+                    lines.append(" · ".join(extras))
+                lines.append("")
+
+        links: list[str] = []
+        if self.website_url:
+            links.append(f"- [Website]({self.website_url})")
+        if self.show_email and self.user_id and self.user.email:
+            links.append(f"- [Email](mailto:{self.user.email})")
+        if self.pk:
+            for link in self.social_links.all():
+                links.append(f"- [{link.display_label}]({link.url})")
+        if links:
+            lines.extend(["## Links", "", *links, ""])
+
+        if base_url:
+            lines.extend(["---", "", f"Profile: {base_url}{self.get_absolute_url()}", ""])
+        return "\n".join(lines)
+
 
 class ProjectLink(models.Model):
     """A project a user wants to highlight on their profile."""
