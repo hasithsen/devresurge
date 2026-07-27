@@ -18,7 +18,11 @@
         <h1 style="margin: 0;">{% trans "connections" %}</h1>
       </div>
       <div class="dr-page__head-actions">
-        <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'connections:map' %}">{% trans "network map" %}</a>
+        {% if profile.is_public and profile.handle %}
+          <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:network_map' profile.handle %}">{% trans "network map" %}</a>
+        {% else %}
+          <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'connections:map' %}">{% trans "network map" %}</a>
+        {% endif %}
         <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:notifications' %}">{% trans "notifications" %}</a>
         <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
       </div>

@@ -28,9 +28,34 @@ def test_network_map_requires_login(client):
     assert "/accounts/login/" in response.url
 
 
-def test_network_map_renders_for_user(client):
+def test_owner_map_redirects_to_public_map_when_listed(client):
+    me = UserFactory()
+    me.profile.is_public = True
+    me.profile.save()
+    client.force_login(me)
+    response = client.get(reverse("connections:map"))
+    assert response.status_code == HTTPStatus.FOUND
+    assert response.url == reverse(
+        "profiles:network_map",
+        kwargs={"handle": me.profile.handle},
+    )
+
+
+def test_owner_map_preserves_mutual_query_on_redirect(client):
+    me = UserFactory()
+    me.profile.is_public = True
+    me.profile.save()
+    client.force_login(me)
+    response = client.get(reverse("connections:map"), {"mutual": "0"})
+    assert response.status_code == HTTPStatus.FOUND
+    assert "mutual=0" in response.url
+
+
+def test_private_owner_map_renders_preview(client):
     me = UserFactory()
     peer = UserFactory()
+    me.profile.is_public = False
+    me.profile.save()
     peer.profile.display_name = "Peer One"
     peer.profile.is_public = True
     peer.profile.save()
@@ -38,9 +63,10 @@ def test_network_map_renders_for_user(client):
     client.force_login(me)
     response = client.get(reverse("connections:map"))
     assert response.status_code == HTTPStatus.OK
-    assert b"network map" in response.content
+    assert b"Private preview" in response.content
     assert b"dr-network-map" in response.content
     assert peer.profile.handle.encode() in response.content
+    assert response.context["is_public_map"] is False
 
 
 def test_network_map_json_payload(client):
@@ -136,6 +162,8 @@ def test_public_network_map_is_anonymous(client):
     assert b"dr-network-map" in response.content
     assert peer.profile.handle.encode() in response.content
     assert response.context["is_public_map"] is True
+    assert b"my map" not in response.content
+    assert b"public map" not in response.content
 
 
 def test_public_network_map_404_for_private_profile(client):

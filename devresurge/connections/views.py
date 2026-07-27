@@ -355,13 +355,32 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             .select_related("addressee__profile")
         )
         ctx["relations"] = ConnectionRelation.choices
+        ctx["profile"] = getattr(me, "profile", None)
         return ctx
 
 
 class NetworkMapView(LoginRequiredMixin, TemplateView):
-    """Interactive force-directed map of the signed-in user's public network."""
+    """Owner map of public connections.
+
+    When the profile is publicly listed, redirect to the canonical shareable
+    URL ``/u/<handle>/map/`` so there is one map product — not two.
+    Private profiles keep a login-only preview here until they publish.
+    """
 
     template_name = "connections/network_map.html"
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        profile = getattr(request.user, "profile", None)
+        if profile is not None and profile.is_public and profile.handle:
+            target = reverse(
+                "profiles:network_map",
+                kwargs={"handle": profile.handle},
+            )
+            qs = request.META.get("QUERY_STRING", "")
+            if qs:
+                target = f"{target}?{qs}"
+            return redirect(target)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
