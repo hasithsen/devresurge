@@ -44,7 +44,7 @@
       <span>@{{ profile.handle }}</span>
     </nav>
 
-    <article class="dr-panel"
+    <article class="dr-panel dr-panel--dropdown"
              data-track-scope
              data-track-handle="{{ profile.handle }}"
              data-track-url="{% url 'profiles:link_click' %}">
@@ -85,6 +85,7 @@
               <form method="post" action="{% url 'connections:request' profile.user_id %}" class="dr-connect__form">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.path }}" />
+                <p class="dr-connect__title">{% trans "Send connection request" %}</p>
                 <label class="dr-label" for="connect-relation">{% trans "Relation" %}</label>
                 <select class="dr-select" id="connect-relation" name="relation">
                   {% for value, label in relations %}
@@ -96,7 +97,8 @@
                        id="connect-message"
                        name="message"
                        maxlength="280"
-                       placeholder="{% translate 'Hey — saw your Django work…' %}" />
+                       placeholder="{% translate 'Hey — saw your Django work…' %}"
+                       autocomplete="off" />
                 <button type="submit" class="dr-btn dr-btn--primary">{% trans "Send request" %}</button>
               </form>
             </details>

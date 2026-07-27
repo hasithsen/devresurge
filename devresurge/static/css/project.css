@@ -537,6 +537,17 @@ code {
   overflow: hidden;
 }
 
+/* Panels that host dropdowns/popovers must not clip them. */
+.dr-panel--dropdown {
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.dr-panel--dropdown:has(.dr-connect[open]) {
+  z-index: 30;
+}
+
 .dr-panel__header {
   display: flex;
   align-items: center;
@@ -550,6 +561,14 @@ code {
   font-size: 0.82rem;
   letter-spacing: 0.04em;
   text-transform: lowercase;
+  position: relative;
+  overflow: visible;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.dr-panel--dropdown > .dr-panel__body {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
 }
 
 .dr-panel__header .dr-dots {
@@ -2987,6 +3006,9 @@ a.dr-achieve:hover {
 
 .dr-connect {
   position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+  z-index: 40;
 }
 
 .dr-connect > summary {
@@ -2996,20 +3018,49 @@ a.dr-achieve:hover {
 
 .dr-connect > summary::-webkit-details-marker { display: none; }
 
+.dr-connect[open] > summary {
+  border-color: var(--accent);
+}
+
 .dr-connect__form {
   position: absolute;
   right: 0;
-  top: calc(100% + 0.4rem);
-  z-index: 20;
-  width: min(280px, 80vw);
+  top: calc(100% + 0.45rem);
+  z-index: 50;
+  width: min(300px, calc(100vw - 2rem));
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.85rem;
   background: var(--bg-elev);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md, 0 12px 32px rgba(0, 0, 0, 0.35));
+}
+
+.dr-connect__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.dr-connect__form .dr-label {
+  margin: 0;
+}
+
+.dr-connect__form .dr-select,
+.dr-connect__form .dr-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.dr-connect__form .dr-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.15rem;
 }
 
 /* Career timeline + endorsements + recommendations ---------------------- */
@@ -3284,5 +3335,18 @@ a.dr-achieve:hover {
   .dr-conn { flex-direction: column; align-items: stretch; gap: 0.6rem; }
   .dr-conn__actions { justify-content: flex-start; }
   .dr-checklist { grid-template-columns: 1fr; }
-  .dr-connect__form { right: auto; left: 0; }
+  .dr-connect {
+    margin-left: 0;
+  }
+  .dr-connect__form {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    top: auto;
+    bottom: 1rem;
+    width: auto;
+    max-height: min(70vh, 420px);
+    overflow-y: auto;
+    z-index: 80;
+  }
 }
