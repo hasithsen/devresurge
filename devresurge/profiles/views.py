@@ -588,7 +588,9 @@ def profile_badge_view(request: HttpRequest, handle: str) -> HttpResponse:
         handle=Profile.normalize_handle(handle),
     )
     svg = render_profile_badge_svg(profile)
-    return HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
+    return response
 
 
 class ProfileEditView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):

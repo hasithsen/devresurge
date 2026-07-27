@@ -255,12 +255,16 @@ class BadgeDetailView(DetailView):
             ctx["viewer_award"] and profile is not None and profile.is_public,
         )
         ctx["holder_handle"] = profile.handle if ctx["show_holder_svg"] else None
-        ctx["share"] = build_badge_share_links(
-            page_url=self.request.build_absolute_uri(badge.get_absolute_url()),
-            title=badge.title,
-            description=badge.description,
-            earned=bool(ctx["viewer_award"]),
-        )
+        # Social share + embed tooling only after the viewer has earned the badge.
+        if ctx["viewer_award"]:
+            ctx["share"] = build_badge_share_links(
+                page_url=self.request.build_absolute_uri(badge.get_absolute_url()),
+                title=badge.title,
+                description=badge.description,
+                earned=True,
+            )
+        else:
+            ctx["share"] = None
         return ctx
 
 
@@ -268,7 +272,8 @@ def badge_svg_view(request: HttpRequest, slug: str) -> HttpResponse:
     badge = get_object_or_404(Badge, slug=slug, is_active=True)
     svg = render_achievement_badge_svg(badge)
     response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
-    response["Cache-Control"] = "public, max-age=3600"
+    # Short cache — badge layout iterates often in prod; avoid stale cropped SVGs.
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
     return response
 
 
@@ -282,7 +287,7 @@ def badge_holder_svg_view(request: HttpRequest, slug: str, handle: str) -> HttpR
         return HttpResponse(status=404)
     svg = render_achievement_badge_svg(badge, holder_handle=profile.handle)
     response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
-    response["Cache-Control"] = "public, max-age=3600"
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
     return response
 
 

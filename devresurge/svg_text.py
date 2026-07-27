@@ -1,7 +1,7 @@
 """Shared SVG text measurement helpers for embeddable badges.
 
-Glyph widths are intentionally overestimated so text never clips when the SVG
-is rasterized as ``<img>`` (browsers clip overflow to the viewport).
+Use a full-em advance so glyph width is never underestimated. Prefer wrapping
+inside a capped canvas over a wide single line that panels clip.
 """
 
 from __future__ import annotations
@@ -12,10 +12,9 @@ import re
 
 _XML_SAFE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
-# Overestimate monospace advance. Real SFMono ≈ 0.6em; Windows Consolas /
-# fallback faces and bold weights run wider — underestimating causes clipping.
-_MONO_ADVANCE = 0.85
-_SAFETY_PX = 16
+# Full em advance — safe for Consolas/Menlo/Courier fallbacks under <img>.
+_MONO_ADVANCE = 1.0
+_SAFETY_PX = 20
 
 
 def clean_text(value: str) -> str:
@@ -37,31 +36,43 @@ def fit_canvas_width(
     min_width: int,
     max_width: int,
 ) -> int:
-    """Ceil + safety padding so measured text always fits inside the SVG."""
     content = max((w for w in widths if w is not None), default=0)
     needed = math.ceil(pad_left + content + pad_right + _SAFETY_PX)
     return int(min(max_width, max(min_width, needed)))
 
 
-def _ellipsis(raw: str, *, max_width: float, font_size: float) -> str:
+def wrap_by_chars(raw: str, *, max_chars: int) -> list[str]:
+    """Word-wrap by character budget (font-agnostic, never ellipsizes)."""
     cleaned = clean_text(raw)
-    if not cleaned or text_width(cleaned, font_size) <= max_width:
-        return cleaned
-    ellipsis = "…"
-    budget = max_width - text_width(ellipsis, font_size)
-    if budget <= 0:
-        return ellipsis
-    lo, hi = 0, len(cleaned)
-    while lo < hi:
-        mid = (lo + hi + 1) // 2
-        if text_width(cleaned[:mid], font_size) <= budget:
-            lo = mid
+    if not cleaned:
+        return []
+    if max_chars < 8:
+        max_chars = 8
+    words = cleaned.split()
+    if not words:
+        return [cleaned]
+
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        # Hard-break an oversized token rather than dropping it.
+        while len(word) > max_chars:
+            if current:
+                lines.append(current)
+                current = ""
+            lines.append(word[:max_chars])
+            word = word[max_chars:]
+        if not word:
+            continue
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) <= max_chars:
+            current = candidate
         else:
-            hi = mid - 1
-    cut = cleaned[:lo].rstrip()
-    if " " in cut and len(cut) > 8:
-        cut = cut.rsplit(" ", 1)[0]
-    return f"{cut}{ellipsis}"
+            lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
 
 
 def wrap_words(
@@ -71,57 +82,28 @@ def wrap_words(
     font_size: float,
     max_lines: int | None = None,
 ) -> list[str]:
-    """Word-wrap ``raw`` to fit ``max_width``.
-
-    When ``max_lines`` is None, wraps onto as many lines as needed (no ellipsis).
-    When set, ellipsizes only the final line if content still overflows.
-    """
-    cleaned = clean_text(raw)
-    if not cleaned:
-        return []
-    if text_width(cleaned, font_size) <= max_width:
-        return [cleaned]
-    if max_lines == 1:
-        return [_ellipsis(cleaned, max_width=max_width, font_size=font_size)]
-
-    words = cleaned.split()
-    if not words:
-        return [cleaned]
-
-    lines: list[str] = []
-    current = ""
-    i = 0
-    while i < len(words):
-        word = words[i]
-        candidate = word if not current else f"{current} {word}"
-        if text_width(candidate, font_size) <= max_width:
-            current = candidate
-            i += 1
-            continue
-
-        if not current:
-            # Token wider than the column — hard break with ellipsis.
-            lines.append(_ellipsis(word, max_width=max_width, font_size=font_size))
-            i += 1
-        else:
-            lines.append(current)
-            current = ""
-
-        if max_lines is not None and len(lines) >= max_lines - 1 and current == "":
-            rest = " ".join(words[i:])
-            lines.append(_ellipsis(rest, max_width=max_width, font_size=font_size))
-            return lines[:max_lines]
-
-    if current:
-        lines.append(current)
-    if max_lines is not None:
-        return lines[:max_lines]
+    """Wrap using pixel budget derived from full-em advance."""
+    max_chars = max(8, int(max_width // (font_size * _MONO_ADVANCE)))
+    lines = wrap_by_chars(raw, max_chars=max_chars)
+    if max_lines is not None and len(lines) > max_lines:
+        kept = lines[:max_lines]
+        # Ellipsize only the final kept line — never drop overflow silently.
+        last = kept[-1]
+        if len(last) + 1 > max_chars:
+            last = last[: max(1, max_chars - 1)].rstrip() + "…"
+        elif not last.endswith("…"):
+            last = last.rstrip() + "…"
+        kept[-1] = last
+        return kept
     return lines
 
 
 def fit_single_line(raw: str, *, max_width: float, font_size: float) -> str:
-    """Escape a single line, ellipsizing only when it cannot fit."""
-    return xml_escape(_ellipsis(raw, max_width=max_width, font_size=font_size))
+    cleaned = clean_text(raw)
+    max_chars = max(8, int(max_width // (font_size * _MONO_ADVANCE)))
+    if len(cleaned) <= max_chars:
+        return xml_escape(cleaned)
+    return xml_escape(cleaned[: max_chars - 1].rstrip() + "…")
 
 
 def tspan_lines(
@@ -134,7 +116,6 @@ def tspan_lines(
     font_size: float,
     font_weight: str = "400",
 ) -> str:
-    """Render wrapped lines as absolute-positioned ``<text>`` elements."""
     weight_attr = f' font-weight="{font_weight}"' if font_weight != "400" else ""
     parts = []
     for i, line in enumerate(lines):

@@ -548,6 +548,15 @@ code {
   z-index: 30;
 }
 
+/* Badge previews can be taller/wider — never crop SVG text. */
+.dr-panel--badge {
+  overflow: visible;
+}
+
+.dr-panel--badge .dr-panel__body {
+  overflow: visible;
+}
+
 .dr-panel__header {
   display: flex;
   align-items: center;
@@ -2646,16 +2655,11 @@ a.dr-tag:hover {
 
 .dr-badge-preview img {
   display: block;
-  /* Keep intrinsic SVG size so text is never scaled/cropped in preview. */
-  max-width: none;
   width: auto;
   height: auto;
-}
-
-@media (max-width: 560px) {
-  .dr-badge-preview {
-    overflow-x: auto;
-  }
+  max-width: 100%;
+  /* Defeat the global `img { max-width:100% }` only when it would crop. */
+  object-fit: contain;
 }
 
 /* Markdown bio ------------------------------------------------------------ */

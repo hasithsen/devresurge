@@ -493,23 +493,6 @@
     });
   }
 
-  function initNativeShare() {
-    if (!navigator.share) return;
-    document.querySelectorAll("[data-native-share]").forEach(function (btn) {
-      btn.hidden = false;
-      btn.addEventListener("click", function () {
-        var payload = {
-          title: btn.getAttribute("data-share-title") || document.title,
-          text: btn.getAttribute("data-share-text") || "",
-          url: btn.getAttribute("data-share-url") || window.location.href,
-        };
-        navigator.share(payload).catch(function () {
-          /* user cancelled — ignore */
-        });
-      });
-    });
-  }
-
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -523,7 +506,6 @@
     initNav();
     initAlerts();
     initCopyButtons();
-    initNativeShare();
     initAvatarPreview();
     initAutoFade();
     initSortable();

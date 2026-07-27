@@ -10,10 +10,11 @@ def build_badge_share_links(
     page_url: str,
     title: str,
     description: str,
-    earned: bool = False,
+    earned: bool = True,
 ) -> dict[str, str]:
-    """Return platform share URLs for a badge page.
+    """Return platform share URLs for an earned badge.
 
+    Callers must only expose these for badges the user has already achieved.
     LinkedIn only accepts a URL; X/Reddit/email carry a short caption.
     """
     if earned:

@@ -127,19 +127,43 @@ def test_badge_detail_and_svg(client, seeded_quizzes):
     response = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_python"}))
     assert response.status_code == HTTPStatus.OK
     assert b"Python Pulse" in response.content
-    assert b"LinkedIn" in response.content
-    share = response.context["share"]
-    assert "linkedin.com/sharing/share-offsite" in share["linkedin"]
-    assert "twitter.com/intent/tweet" in share["x"]
-    assert "reddit.com/submit" in share["reddit"]
-    assert share["email"].startswith("mailto:")
-    assert "quiz_python" in share["page_url"]
+    # Unearned visitors do not get social share controls.
+    assert b"LinkedIn" not in response.content
+    assert response.context["share"] is None
+    assert b"Earn this badge" in response.content or b"Sign in and earn" in response.content
 
     svg = client.get(reverse("quizzes:badge_svg", kwargs={"slug": "quiz_python"}))
     assert svg.status_code == HTTPStatus.OK
     assert svg["Content-Type"].startswith("image/svg+xml")
-    assert b"Python Pulse" in svg.content
-    assert b"Passed the Python fundamentals quiz." in svg.content
+    body = svg.content.decode()
+    assert "Python Pulse" in body
+    for word in "Passed the Python fundamentals quiz.".split():
+        assert word in body
+    assert "…" not in body
+
+
+def test_badge_detail_share_only_when_earned(client, seeded_quizzes):
+    user = UserFactory()
+    award_badge(user, "quiz_python")
+    client.force_login(user)
+
+    response = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_python"}))
+    assert response.status_code == HTTPStatus.OK
+    assert b"LinkedIn" in response.content
+    share = response.context["share"]
+    assert share is not None
+    assert "linkedin.com/sharing/share-offsite" in share["linkedin"]
+    assert "twitter.com/intent/tweet" in share["x"]
+    assert "reddit.com/submit" in share["reddit"]
+    assert share["email"].startswith("mailto:")
+    assert "I earned" in share["caption"]
+    assert "quiz_python" in share["page_url"]
+
+    # A different unearned badge stays locked for sharing.
+    locked = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_git"}))
+    assert locked.status_code == HTTPStatus.OK
+    assert locked.context["share"] is None
+    assert b"LinkedIn" not in locked.content
 
 
 def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
@@ -148,7 +172,8 @@ def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
 
     badge = Badge.objects.get(slug="profile_ready")
     svg = render_achievement_badge_svg(badge)
-    assert "Completed every item on the setup.sh checklist." in svg
+    for word in "Completed every item on the setup.sh checklist.".split():
+        assert word in svg
     assert "…" not in svg
 
 
@@ -159,21 +184,38 @@ def test_python_pulse_badge_shows_full_description(seeded_quizzes):
     badge = Badge.objects.get(slug="quiz_python")
     svg = render_achievement_badge_svg(badge)
     assert "Python Pulse" in svg
-    assert "Passed the Python fundamentals quiz." in svg
+    # May wrap across <text> lines — every word must still be present.
+    for word in "Passed the Python fundamentals quiz.".split():
+        assert word in svg
     assert "…" not in svg
-    # Single-line copy should drive a canvas wider than the old fixed 280px.
     width = int(svg.split('width="', 1)[1].split('"', 1)[0])
-    assert width >= 400
+    assert width <= 380
 
 
 def test_all_catalog_badge_svgs_have_full_descriptions(seeded_quizzes):
     from devresurge.quizzes.badge_svg import render_achievement_badge_svg
     from devresurge.quizzes.models import Badge
+    from devresurge.svg_text import text_width
 
     for badge in Badge.objects.filter(is_active=True):
         svg = render_achievement_badge_svg(badge)
-        assert badge.description in svg, f"{badge.slug} cropped description"
+        for word in badge.description.split():
+            assert word in svg, f"{badge.slug} missing {word!r}"
         assert "…" not in svg, f"{badge.slug} still ellipsizes"
+        width = int(svg.split('width="', 1)[1].split('"', 1)[0])
+        assert width <= 380
+        # Every body <text> line must fit the content box (pad 56+18).
+        content_w = width - 56 - 18
+        for chunk in svg.split("<text ")[1:]:
+            if 'fill="#7a8a85"' not in chunk and 'fill="#7cf0a8"' not in chunk:
+                continue
+            text = chunk.split(">", 1)[1].split("</text>", 1)[0]
+            # Skip icon circle text (centered at x=34).
+            if 'x="34"' in chunk:
+                continue
+            assert text_width(text, 12) <= content_w + 1, (
+                f"{badge.slug} overflows: {text!r}"
+            )
 
 
 def test_badge_holder_svg(client, seeded_quizzes):

@@ -380,14 +380,16 @@ def test_badge_svg_does_not_clip_long_name(client):
     assert response.status_code == HTTPStatus.OK
     body = response.content.decode()
     width = int(body.split('width="', 1)[1].split('"', 1)[0])
-    assert width > 420
-    assert width <= 800
+    assert 360 <= width <= 420
     assert "open to work" in body
     chip_x = width - 18 - 96
     assert f'x="{chip_x}"' in body
     # Every skill is present — not truncated to the first four.
     for skill in ("python", "django", "typescript", "postgres", "redis", "celery", "kafka"):
         assert skill in body
+    # Long names wrap on their own rows — never ellipsize profile badge copy.
+    for word in "Alexandria Quintessa Montgomery-Whitfield III".split():
+        assert word in body
     assert "…" not in body
 
 

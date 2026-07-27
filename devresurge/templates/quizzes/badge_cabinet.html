@@ -19,9 +19,9 @@
         <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
           {% if request.user.is_authenticated %}
             {% blocktranslate count counter=earned_count %}
-              {{ counter }} earned — open any badge for its share link and SVG.
+              {{ counter }} earned — open an earned badge to share it.
             {% plural %}
-              {{ counter }} earned — open any badge for its share link and SVG.
+              {{ counter }} earned — open an earned badge to share it.
             {% endblocktranslate %}
           {% else %}
             {% trans "Public catalog — pass quizzes and finish your profile to unlock." %}
