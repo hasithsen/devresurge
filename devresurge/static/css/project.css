@@ -1386,10 +1386,28 @@ form ul.errorlist li::before {
 
 /* Analytics ------------------------------------------------------------- */
 
+.dr-analytics__lede {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dr-analytics__lede-sep {
+  margin: 0 0.2rem;
+  color: var(--text-dim);
+}
+
+.dr-analytics__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .dr-analytics-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
 .dr-analytics-kpis > * { min-width: 0; }
@@ -1402,6 +1420,17 @@ form ul.errorlist li::before {
   min-width: 0;
 }
 
+.dr-kpi--lead {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent) 10%, transparent),
+      transparent 55%
+    ),
+    var(--bg-elev);
+  border-color: color-mix(in oklab, var(--accent) 28%, var(--border));
+}
+
 .dr-kpi__label {
   font-size: 0.78rem;
   color: var(--text-dim);
@@ -1410,17 +1439,107 @@ form ul.errorlist li::before {
 }
 
 .dr-kpi__value {
-  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.8rem);
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.85rem);
   color: var(--accent);
-  margin-top: 0.15rem;
+  margin-top: 0.2rem;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dr-kpi--lead .dr-kpi__value {
+  font-size: clamp(1.65rem, 1.25rem + 1.6vw, 2.15rem);
 }
 
 .dr-kpi__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
   font-size: 0.78rem;
   color: var(--text-muted);
-  margin-top: 0.15rem;
+  margin-top: 0.3rem;
   overflow-wrap: anywhere;
+}
+
+.dr-kpi__hint {
+  color: var(--text-dim);
+}
+
+.dr-analytics-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  align-items: start;
+}
+
+.dr-analytics__empty-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dr-analytics__empty {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 2rem 1.25rem;
+  background: var(--bg-elev);
+}
+
+.dr-analytics__foot {
+  margin-top: 1.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border);
+}
+
+.dr-analytics__foot p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.dr-chart-legend__item--muted {
+  color: var(--text-dim);
+}
+
+.dr-share-meter {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 4.5rem;
+}
+
+.dr-share-meter__bar {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+  max-width: 100%;
+}
+
+.dr-share-meter__val {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.dr-table--analytics td {
+  vertical-align: middle;
+}
+
+.dr-table--analytics td .dr-tag {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.dr-table__row--today {
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+
+.dr-table__row--peak td:first-child time {
+  color: var(--accent);
 }
 
 /* Range selector (segmented control) */
@@ -2373,10 +2492,14 @@ a.dr-tag:hover {
   .dr-list-row__url { font-size: 0.8rem; }
 
   .dr-analytics-kpis { grid-template-columns: repeat(2, 1fr); }
+  .dr-kpi--lead { grid-column: 1 / -1; }
+  .dr-analytics-split { grid-template-columns: 1fr; gap: 1rem; }
   .dr-chart { --chart-h: 160px; }
   .dr-chart-y { height: 160px; }
   .dr-range { width: 100%; justify-content: space-between; }
   .dr-range a { flex: 1 1 auto; justify-content: center; }
+  .dr-analytics__actions { width: 100%; }
+  .dr-analytics__actions .dr-btn { flex: 1 1 auto; justify-content: center; }
 }
 
 /* Ensure interactive controls meet a comfortable 40px tap target. */
@@ -2651,6 +2774,19 @@ a.dr-tag:hover {
   padding: 0.65rem;
   background: var(--bg-elev-2);
   overflow: visible;
+}
+
+.dr-badge-preview--locked {
+  opacity: 0.9;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 6px,
+      color-mix(in srgb, var(--border) 35%, transparent) 6px,
+      color-mix(in srgb, var(--border) 35%, transparent) 7px
+    ),
+    var(--bg-elev-2);
 }
 
 .dr-badge-preview img {

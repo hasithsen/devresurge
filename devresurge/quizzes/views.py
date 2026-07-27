@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
 
@@ -263,16 +264,41 @@ class BadgeDetailView(DetailView):
                 description=badge.description,
                 earned=True,
             )
+            if ctx["show_holder_svg"] and ctx["holder_handle"]:
+                ctx["preview_svg_url"] = reverse(
+                    "quizzes:badge_holder_svg",
+                    kwargs={"slug": badge.slug, "handle": ctx["holder_handle"]},
+                )
+            else:
+                ctx["preview_svg_url"] = reverse(
+                    "quizzes:badge_svg",
+                    kwargs={"slug": badge.slug},
+                )
+            ctx["preview_locked"] = False
         else:
             ctx["share"] = None
+            ctx["preview_svg_url"] = reverse(
+                "quizzes:badge_locked_svg",
+                kwargs={"slug": badge.slug},
+            )
+            ctx["preview_locked"] = True
         return ctx
 
 
 def badge_svg_view(request: HttpRequest, slug: str) -> HttpResponse:
+    """Public catalog SVG — the shareable earned look for embeds."""
     badge = get_object_or_404(Badge, slug=slug, is_active=True)
     svg = render_achievement_badge_svg(badge)
     response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
-    # Short cache — badge layout iterates often in prod; avoid stale cropped SVGs.
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
+    return response
+
+
+def badge_locked_svg_view(request: HttpRequest, slug: str) -> HttpResponse:
+    """Muted preview for viewers who have not earned the badge yet."""
+    badge = get_object_or_404(Badge, slug=slug, is_active=True)
+    svg = render_achievement_badge_svg(badge, locked=True)
+    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
     response["Cache-Control"] = "public, max-age=60, must-revalidate"
     return response
 
@@ -284,6 +310,7 @@ def badge_holder_svg_view(request: HttpRequest, slug: str, handle: str) -> HttpR
     badge = get_object_or_404(Badge, slug=slug, is_active=True)
     profile = get_object_or_404(Profile, handle=handle, is_public=True)
     if not UserBadge.objects.filter(user=profile.user, badge=badge).exists():
+        # Unearned claim — never emit a personalized badge SVG.
         return HttpResponse(status=404)
     svg = render_achievement_badge_svg(badge, holder_handle=profile.handle)
     response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")

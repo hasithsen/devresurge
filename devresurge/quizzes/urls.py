@@ -10,6 +10,11 @@ urlpatterns = [
     path("badges/<slug:slug>/", views.badge_detail_view, name="badge_detail"),
     path("badges/<slug:slug>.svg", views.badge_svg_view, name="badge_svg"),
     path(
+        "badges/<slug:slug>.locked.svg",
+        views.badge_locked_svg_view,
+        name="badge_locked_svg",
+    ),
+    path(
         "badges/<slug:slug>/@<slug:handle>.svg",
         views.badge_holder_svg_view,
         name="badge_holder_svg",

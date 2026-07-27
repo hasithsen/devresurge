@@ -35,9 +35,9 @@
           </div>
         </div>
 
-        <div class="dr-badge-preview">
-          <img src="{% url 'quizzes:badge_svg' badge.slug %}"
-               alt="{% blocktranslate with title=badge.title %}{{ title }} badge{% endblocktranslate %}"
+        <div class="dr-badge-preview{% if preview_locked %} dr-badge-preview--locked{% endif %}">
+          <img src="{{ preview_svg_url }}"
+               alt="{% if preview_locked %}{% blocktranslate with title=badge.title %}{{ title }} badge — locked{% endblocktranslate %}{% else %}{% blocktranslate with title=badge.title %}{{ title }} badge{% endblocktranslate %}{% endif %}"
                loading="lazy" />
         </div>
 

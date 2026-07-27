@@ -739,6 +739,7 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
 
         # Active days table (newest first) — actual per-day numbers.
         daily_rows = [p for p in reversed(series) if p["views"] > 0]
+        active_days = len(daily_rows)
 
         # Referrer breakdown (external hosts only) + a synthetic "direct" row.
         referrers = list(
@@ -802,6 +803,7 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
                 "busiest": busiest,
                 "series": series,
                 "daily_rows": daily_rows,
+                "active_days": active_days,
                 "peak": peak,
                 "peak_mid": peak_mid,
                 "referrers": referrers,

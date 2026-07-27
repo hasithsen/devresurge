@@ -130,6 +130,8 @@ def test_badge_detail_and_svg(client, seeded_quizzes):
     # Unearned visitors do not get social share controls.
     assert b"LinkedIn" not in response.content
     assert response.context["share"] is None
+    assert response.context["preview_locked"] is True
+    assert ".locked.svg" in response.context["preview_svg_url"]
     assert b"Earn this badge" in response.content or b"Sign in and earn" in response.content
 
     svg = client.get(reverse("quizzes:badge_svg", kwargs={"slug": "quiz_python"}))
@@ -137,13 +139,25 @@ def test_badge_detail_and_svg(client, seeded_quizzes):
     assert svg["Content-Type"].startswith("image/svg+xml")
     body = svg.content.decode()
     assert "Python Pulse" in body
+    assert "not earned yet" not in body
     for word in "Passed the Python fundamentals quiz.".split():
         assert word in body
     assert "…" not in body
 
+    locked_svg = client.get(
+        reverse("quizzes:badge_locked_svg", kwargs={"slug": "quiz_python"}),
+    )
+    assert locked_svg.status_code == HTTPStatus.OK
+    locked_body = locked_svg.content.decode()
+    assert "Python Pulse" in locked_body
+    assert "locked · not earned yet" in locked_body
+    assert "#7cf0a8" not in locked_body  # muted palette, no earned accent
+
 
 def test_badge_detail_share_only_when_earned(client, seeded_quizzes):
     user = UserFactory()
+    user.profile.is_public = True
+    user.profile.save(update_fields=["is_public"])
     award_badge(user, "quiz_python")
     client.force_login(user)
 
@@ -158,12 +172,29 @@ def test_badge_detail_share_only_when_earned(client, seeded_quizzes):
     assert share["email"].startswith("mailto:")
     assert "I earned" in share["caption"]
     assert "quiz_python" in share["page_url"]
+    assert response.context["preview_locked"] is False
+    assert f"@{user.profile.handle}.svg" in response.context["preview_svg_url"]
 
-    # A different unearned badge stays locked for sharing.
+    # A different unearned badge stays locked for sharing + preview.
     locked = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_git"}))
     assert locked.status_code == HTTPStatus.OK
     assert locked.context["share"] is None
+    assert locked.context["preview_locked"] is True
+    assert ".locked.svg" in locked.context["preview_svg_url"]
     assert b"LinkedIn" not in locked.content
+
+
+def test_holder_svg_404_when_unearned(client, seeded_quizzes):
+    user = UserFactory()
+    user.profile.is_public = True
+    user.profile.save(update_fields=["is_public"])
+    response = client.get(
+        reverse(
+            "quizzes:badge_holder_svg",
+            kwargs={"slug": "quiz_python", "handle": user.profile.handle},
+        ),
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
@@ -190,6 +221,12 @@ def test_python_pulse_badge_shows_full_description(seeded_quizzes):
     assert "…" not in svg
     width = int(svg.split('width="', 1)[1].split('"', 1)[0])
     assert width <= 380
+
+    locked = render_achievement_badge_svg(badge, locked=True)
+    assert "locked · not earned yet" in locked
+    for word in "Passed the Python fundamentals quiz.".split():
+        assert word in locked
+    assert "#7cf0a8" not in locked
 
 
 def test_all_catalog_badge_svgs_have_full_descriptions(seeded_quizzes):

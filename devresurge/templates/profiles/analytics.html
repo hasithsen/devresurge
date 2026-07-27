@@ -5,7 +5,7 @@
 {% block title %}~/me/analytics — DevResurge{% endblock title %}
 
 {% block content %}
-  <section class="dr-page">
+  <section class="dr-page dr-analytics">
     <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
       <a href="{% url 'profiles:dashboard' %}">~/me</a>
       <span class="dr-crumb__sep">/</span>
@@ -15,34 +15,51 @@
     <header class="dr-page__head">
       <div>
         <h1 style="margin: 0;">{% trans "analytics" %}</h1>
-        <p style="margin: 0.35rem 0 0; color: var(--text-muted); font-size: 0.9rem;">
-          {{ window_start|date:"M j, Y" }} – {{ window_end|date:"M j, Y" }}
-          · {% blocktranslate %}{{ days }} days{% endblocktranslate %}
+        <p class="dr-analytics__lede">
+          <time datetime="{{ window_start|date:'Y-m-d' }}">{{ window_start|date:"M j" }}</time>
+          –
+          <time datetime="{{ window_end|date:'Y-m-d' }}">{{ window_end|date:"M j, Y" }}</time>
+          <span class="dr-analytics__lede-sep" aria-hidden="true">·</span>
+          {% blocktranslate count counter=days %}{{ counter }} day window{% plural %}{{ counter }} day window{% endblocktranslate %}
         </p>
       </div>
-      <div class="dr-page__head-actions">
+      <div class="dr-page__head-actions dr-analytics__actions">
         <nav class="dr-range" aria-label="{% translate 'Date range' %}">
           {% for choice in range_choices %}
             <a href="?days={{ choice }}"
-               {% if choice == days %}aria-current="page"{% endif %}>{{ choice }}d</a>
+               {% if choice == days %}aria-current="page"{% endif %}
+               title="{% blocktranslate with n=choice %}Last {{ n }} days{% endblocktranslate %}">{{ choice }}d</a>
           {% endfor %}
         </nav>
+        {% if profile.is_public %}
+          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{{ profile.get_absolute_url }}">{% trans "view profile ↗" %}</a>
+        {% else %}
+          <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "make public" %}</a>
+        {% endif %}
       </div>
     </header>
 
+    {% if not profile.is_public %}
+      <div class="dr-alert dr-alert--warning" style="margin-bottom: 1rem;">
+        <span class="dr-alert__body">
+          {% trans "Your profile is private — public visitors aren’t counted until you turn on “publicly listed.”" %}
+        </span>
+      </div>
+    {% endif %}
+
     <section class="dr-analytics-kpis" aria-label="{% translate 'Key metrics' %}">
-      <div class="dr-kpi">
-        <div class="dr-kpi__label">{% trans "views" %}</div>
+      <div class="dr-kpi dr-kpi--lead">
+        <div class="dr-kpi__label">{% trans "profile views" %}</div>
         <div class="dr-kpi__value">{{ total_views }}</div>
         <div class="dr-kpi__sub">
           {% if views_delta > 0 %}
-            <span class="dr-delta dr-delta--up">+{{ views_delta }} ({{ views_delta_pct }}%)</span>
+            <span class="dr-delta dr-delta--up">+{{ views_delta }} · {{ views_delta_pct }}%</span>
           {% elif views_delta < 0 %}
-            <span class="dr-delta dr-delta--down">{{ views_delta }} ({{ views_delta_pct }}%)</span>
+            <span class="dr-delta dr-delta--down">{{ views_delta }} · {{ views_delta_pct }}%</span>
           {% else %}
-            <span class="dr-delta">0 vs prior</span>
+            <span class="dr-delta">0%</span>
           {% endif %}
-          · {{ prev_views }} prior
+          <span class="dr-kpi__hint">{% blocktranslate with n=days %}vs prior {{ n }}d{% endblocktranslate %}</span>
         </div>
       </div>
       <div class="dr-kpi">
@@ -59,17 +76,13 @@
       <div class="dr-kpi">
         <div class="dr-kpi__label">{% trans "avg / day" %}</div>
         <div class="dr-kpi__value">{{ avg_per_day }}</div>
-        <div class="dr-kpi__sub">{% trans "views per day" %}</div>
-      </div>
-      <div class="dr-kpi">
-        <div class="dr-kpi__label">{% trans "busiest day" %}</div>
-        {% if busiest %}
-          <div class="dr-kpi__value">{{ busiest.views }}</div>
-          <div class="dr-kpi__sub">{{ busiest.date|date:"D, M j" }} · {{ busiest.uniques }} unique</div>
-        {% else %}
-          <div class="dr-kpi__value">0</div>
-          <div class="dr-kpi__sub">{% trans "no traffic yet" %}</div>
-        {% endif %}
+        <div class="dr-kpi__sub">
+          {% if has_views %}
+            {% blocktranslate count counter=active_days %}{{ counter }} active day{% plural %}{{ counter }} active days{% endblocktranslate %}
+          {% else %}
+            {% trans "views per day" %}
+          {% endif %}
+        </div>
       </div>
       <div class="dr-kpi">
         <div class="dr-kpi__label">{% trans "link clicks" %}</div>
@@ -86,18 +99,40 @@
 
     {% if has_data %}
       {% if has_views %}
-        <article class="dr-panel" style="margin-top: 1.25rem;">
+        <article class="dr-panel dr-analytics__chart" style="margin-top: 1.25rem;">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
             <span class="dr-panel__title">daily views</span>
-            <span class="dr-pill">peak {{ peak }}</span>
+            {% if busiest %}
+              <span class="dr-pill" title="{% blocktranslate with d=busiest.date|date:'M j' n=busiest.views %}Peak {{ n }} on {{ d }}{% endblocktranslate %}">
+                peak {{ peak }}
+              </span>
+            {% else %}
+              <span class="dr-pill">peak {{ peak }}</span>
+            {% endif %}
           </header>
           <div class="dr-panel__body">
-            <div class="dr-chart-legend" aria-hidden="true">
-              <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--views"></i> views</span>
-              <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--uniques"></i> unique</span>
+            <div class="dr-chart-legend">
+              <span class="dr-chart-legend__item">
+                <i class="dr-chart-legend__swatch dr-chart-legend__swatch--views" aria-hidden="true"></i>
+                {% trans "views" %}
+              </span>
+              <span class="dr-chart-legend__item">
+                <i class="dr-chart-legend__swatch dr-chart-legend__swatch--uniques" aria-hidden="true"></i>
+                {% trans "unique" %}
+              </span>
               {% if avg_pct %}
-                <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--avg"></i> avg {{ avg_per_day }}/day</span>
+                <span class="dr-chart-legend__item">
+                  <i class="dr-chart-legend__swatch dr-chart-legend__swatch--avg" aria-hidden="true"></i>
+                  {% blocktranslate with avg=avg_per_day %}avg {{ avg }}/day{% endblocktranslate %}
+                </span>
+              {% endif %}
+              {% if busiest %}
+                <span class="dr-chart-legend__item dr-chart-legend__item--muted">
+                  {% blocktranslate with d=busiest.date|date:"D, M j" n=busiest.views u=busiest.uniques %}
+                    busiest {{ d }} · {{ n }} views · {{ u }} unique
+                  {% endblocktranslate %}
+                </span>
               {% endif %}
             </div>
 
@@ -157,17 +192,83 @@
                 </div>
               </div>
             </div>
-
-            <p class="dr-chart-meta">
-              {% blocktranslate count counter=total_views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktranslate %}
-              · {{ unique_visitors }} unique
-              · avg {{ avg_per_day }}/day
-              {% if busiest %}
-                · peak {{ busiest.views }} on {{ busiest.date|date:"M j" }}
-              {% endif %}
-            </p>
           </div>
         </article>
+
+        <div class="dr-analytics-split">
+          <article class="dr-panel">
+            <header class="dr-panel__header">
+              <span class="dr-dots"><span></span><span></span><span></span></span>
+              <span class="dr-panel__title">referrers</span>
+            </header>
+            <div class="dr-panel__body">
+              {% if referrers or direct_views %}
+                <ul class="dr-ref-list">
+                  {% for ref in referrers %}
+                    <li class="dr-ref">
+                      <div class="dr-ref__top">
+                        <span class="dr-ref__host" title="{{ ref.referrer }}">{{ ref.referrer }}</span>
+                        <span class="dr-ref__count">
+                          <strong>{{ ref.count }}</strong>
+                          <span class="dr-ref__share">{{ ref.share }}%</span>
+                        </span>
+                      </div>
+                      <div class="dr-ref__bar" aria-hidden="true"><span style="width: {{ ref.pct }}%;"></span></div>
+                    </li>
+                  {% endfor %}
+                  {% if direct_views %}
+                    <li class="dr-ref">
+                      <div class="dr-ref__top">
+                        <span class="dr-ref__host dr-ref__host--muted">{% trans "direct / none" %}</span>
+                        <span class="dr-ref__count">
+                          <strong>{{ direct_views }}</strong>
+                          <span class="dr-ref__share">{{ direct_share }}%</span>
+                        </span>
+                      </div>
+                      <div class="dr-ref__bar" aria-hidden="true"><span class="dr-ref__bar--ghost" style="width: {{ direct_pct }}%;"></span></div>
+                    </li>
+                  {% endif %}
+                </ul>
+              {% else %}
+                <p class="dr-analytics__empty-note">{% trans "No referrer data in this window." %}</p>
+              {% endif %}
+            </div>
+          </article>
+
+          <article class="dr-panel">
+            <header class="dr-panel__header">
+              <span class="dr-dots"><span></span><span></span><span></span></span>
+              <span class="dr-panel__title">link clicks</span>
+              <span class="dr-pill">{{ total_clicks }}</span>
+            </header>
+            <div class="dr-panel__body">
+              {% if has_clicks %}
+                <ul class="dr-ref-list">
+                  {% for link in top_links %}
+                    <li class="dr-ref">
+                      <div class="dr-ref__top">
+                        <span class="dr-click__id">
+                          <span class="dr-tag dr-tag--ghost dr-click__kind">{{ link.kind }}</span>
+                          <span class="dr-click__label" title="{{ link.label|default:link.destination|default:'' }}">
+                            {{ link.label|default:link.destination|default:"—" }}
+                            {% if link.destination %}<span class="dr-ref__host--muted">→ {{ link.destination }}</span>{% endif %}
+                          </span>
+                        </span>
+                        <span class="dr-ref__count">
+                          <strong>{{ link.count }}</strong>
+                          <span class="dr-ref__share">{{ link.share }}%</span>
+                        </span>
+                      </div>
+                      <div class="dr-ref__bar" aria-hidden="true"><span style="width: {{ link.pct }}%;"></span></div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="dr-analytics__empty-note">{% trans "No outbound clicks in this window." %}</p>
+              {% endif %}
+            </div>
+          </article>
+        </div>
 
         {% if daily_rows %}
           <article class="dr-panel" style="margin-top: 1.25rem;">
@@ -178,24 +279,31 @@
             </header>
             <div class="dr-panel__body" style="padding: 0;">
               <div class="dr-table-wrap">
-                <table class="dr-table">
+                <table class="dr-table dr-table--analytics">
                   <thead>
                     <tr>
                       <th scope="col">{% trans "date" %}</th>
                       <th scope="col" class="dr-table__num">{% trans "views" %}</th>
                       <th scope="col" class="dr-table__num">{% trans "unique" %}</th>
-                      <th scope="col" class="dr-table__num">{% trans "share" %}</th>
+                      <th scope="col">{% trans "share" %}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for row in daily_rows %}
-                      <tr>
+                      <tr class="{% if row.is_today %}dr-table__row--today {% endif %}{% if row.is_peak %}dr-table__row--peak{% endif %}">
                         <td>
                           <time datetime="{{ row.date|date:'Y-m-d' }}">{{ row.date|date:"D, M j" }}</time>
+                          {% if row.is_today %}<span class="dr-tag dr-tag--ghost">{% trans "today" %}</span>{% endif %}
+                          {% if row.is_peak and not row.is_today %}<span class="dr-tag dr-tag--ghost">{% trans "peak" %}</span>{% endif %}
                         </td>
                         <td class="dr-table__num"><strong>{{ row.views }}</strong></td>
                         <td class="dr-table__num">{{ row.uniques }}</td>
-                        <td class="dr-table__num">{{ row.share }}%</td>
+                        <td>
+                          <div class="dr-share-meter" title="{{ row.share }}%">
+                            <span class="dr-share-meter__bar" style="width: {{ row.share }}%;" aria-hidden="true"></span>
+                            <span class="dr-share-meter__val">{{ row.share }}%</span>
+                          </div>
+                        </td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -212,48 +320,7 @@
             </div>
           </article>
         {% endif %}
-
-        <article class="dr-panel" style="margin-top: 1.25rem;">
-          <header class="dr-panel__header">
-            <span class="dr-dots"><span></span><span></span><span></span></span>
-            <span class="dr-panel__title">referrers</span>
-          </header>
-          <div class="dr-panel__body">
-            {% if referrers or direct_views %}
-              <ul class="dr-ref-list">
-                {% for ref in referrers %}
-                  <li class="dr-ref">
-                    <div class="dr-ref__top">
-                      <span class="dr-ref__host">{{ ref.referrer }}</span>
-                      <span class="dr-ref__count">
-                        <strong>{{ ref.count }}</strong>
-                        <span class="dr-ref__share">{{ ref.share }}%</span>
-                      </span>
-                    </div>
-                    <div class="dr-ref__bar"><span style="width: {{ ref.pct }}%;"></span></div>
-                  </li>
-                {% endfor %}
-                {% if direct_views %}
-                  <li class="dr-ref">
-                    <div class="dr-ref__top">
-                      <span class="dr-ref__host dr-ref__host--muted">{% trans "direct / none" %}</span>
-                      <span class="dr-ref__count">
-                        <strong>{{ direct_views }}</strong>
-                        <span class="dr-ref__share">{{ direct_share }}%</span>
-                      </span>
-                    </div>
-                    <div class="dr-ref__bar"><span class="dr-ref__bar--ghost" style="width: {{ direct_pct }}%;"></span></div>
-                  </li>
-                {% endif %}
-              </ul>
-            {% else %}
-              <p style="margin: 0; color: var(--text-muted);">{% trans "No referrer data in this window." %}</p>
-            {% endif %}
-          </div>
-        </article>
-      {% endif %}
-
-      {% if has_clicks %}
+      {% elif has_clicks %}
         <article class="dr-panel" style="margin-top: 1.25rem;">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
@@ -277,7 +344,7 @@
                       <span class="dr-ref__share">{{ link.share }}%</span>
                     </span>
                   </div>
-                  <div class="dr-ref__bar"><span style="width: {{ link.pct }}%;"></span></div>
+                  <div class="dr-ref__bar" aria-hidden="true"><span style="width: {{ link.pct }}%;"></span></div>
                 </li>
               {% endfor %}
             </ul>
@@ -285,21 +352,31 @@
         </article>
       {% endif %}
     {% else %}
-      <div class="dr-empty" style="margin-top: 1.25rem;">
-        <div class="dr-emoji">∅</div>
+      <div class="dr-empty dr-analytics__empty" style="margin-top: 1.25rem;">
+        <div class="dr-emoji" aria-hidden="true">∅</div>
         <p>
-          {% trans "No views or clicks recorded in this window yet." %}<br />
-          {% url 'profiles:public' profile.handle as public_url %}
-          {% blocktranslate %}Share your <a href="{{ public_url }}">public profile</a> to start collecting data.{% endblocktranslate %}
+          {% trans "No views or clicks in this window yet." %}
         </p>
+        <div class="dr-btn-row" style="justify-content: center;">
+          {% if profile.is_public %}
+            <a class="dr-btn dr-btn--primary" href="{{ profile.get_absolute_url }}">{% trans "open public profile" %}</a>
+            <button type="button" class="dr-btn dr-btn--ghost dr-copy" data-copy="{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}">
+              <span data-copy-label>{% trans "copy link" %}</span>
+            </button>
+          {% else %}
+            <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">{% trans "publish profile" %}</a>
+          {% endif %}
+        </div>
       </div>
     {% endif %}
 
-    <p class="dr-helptext" style="margin-top: 1.25rem;">
-      {% blocktranslate %}Privacy-first: salted fingerprint only — never visitor IPs. Events kept {{ retention_days }} days.{% endblocktranslate %}
-      {% if last_view %}
-        {% blocktranslate with ago=last_view|timesince %}Last view {{ ago }} ago.{% endblocktranslate %}
-      {% endif %}
-    </p>
+    <footer class="dr-analytics__foot">
+      <p>
+        {% blocktranslate %}Privacy-first: salted fingerprint only — never visitor IPs. Events kept {{ retention_days }} days.{% endblocktranslate %}
+        {% if last_view %}
+          {% blocktranslate with ago=last_view|timesince %}Last view {{ ago }} ago.{% endblocktranslate %}
+        {% endif %}
+      </p>
+    </footer>
   </section>
 {% endblock content %}
