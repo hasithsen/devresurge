@@ -557,6 +557,15 @@ code {
   overflow: visible;
 }
 
+/* Chart panels must not clip day tooltips / readouts. */
+.dr-panel--chart {
+  overflow: visible;
+}
+
+.dr-panel--chart .dr-panel__body {
+  overflow: visible;
+}
+
 .dr-panel__header {
   display: flex;
   align-items: center;
@@ -1245,6 +1254,10 @@ form ul.errorlist li::before {
   margin-bottom: 1rem;
 }
 
+.dr-page__head h1 {
+  margin: 0;
+}
+
 .dr-page__head-actions {
   margin-left: auto;
 }
@@ -1386,10 +1399,8 @@ form ul.errorlist li::before {
 
 /* Analytics ------------------------------------------------------------- */
 
-.dr-analytics__lede {
-  margin: 0.35rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+.dr-analytics__private {
+  margin-bottom: 1rem;
 }
 
 .dr-analytics__lede-sep {
@@ -1465,12 +1476,20 @@ form ul.errorlist li::before {
   color: var(--text-dim);
 }
 
+.dr-analytics__chart {
+  margin-top: 1.25rem;
+}
+
 .dr-analytics-split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
   margin-top: 1.25rem;
   align-items: start;
+}
+
+.dr-analytics__table {
+  margin-top: 1.25rem;
 }
 
 .dr-analytics__empty-note {
@@ -1480,6 +1499,7 @@ form ul.errorlist li::before {
 }
 
 .dr-analytics__empty {
+  margin-top: 1.25rem;
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
   padding: 2rem 1.25rem;
@@ -1499,8 +1519,40 @@ form ul.errorlist li::before {
   line-height: 1.45;
 }
 
+.dr-panel__body--flush {
+  padding: 0;
+}
+
+.dr-btn-row--center {
+  justify-content: center;
+}
+
 .dr-chart-legend__item--muted {
   color: var(--text-dim);
+}
+
+.dr-chart-readout {
+  margin: 0 0 0.75rem;
+  min-height: 1.35rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.dr-chart-readout[data-active="1"] {
+  border-style: solid;
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+  color: var(--text);
+}
+
+.dr-chart-readout strong {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .dr-share-meter {
@@ -1615,13 +1667,16 @@ form ul.errorlist li::before {
   border-top: 1.5px dashed color-mix(in oklab, var(--accent) 70%, var(--text-muted));
 }
 
-.dr-chart-wrap {
-  overflow-x: auto;
-  overflow-y: visible;
+.dr-chart-scroll {
   flex: 1;
   min-width: 0;
+  /* overflow-x:auto forces overflow-y to compute as auto (not visible) —
+     keep tooltips/labels inside the plot so they are never clipped. */
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 0.15rem;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dr-chart-layout {
@@ -1637,20 +1692,20 @@ form ul.errorlist li::before {
   align-items: flex-end;
   flex: 0 0 auto;
   min-width: 1.6rem;
-  height: 200px;
-  margin-top: 1.15rem;
+  height: var(--chart-h, 200px);
+  margin-top: 0;
   color: var(--text-dim);
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  padding-bottom: 1.4rem;
 }
 
 .dr-chart {
   --chart-h: 200px;
   position: relative;
-  height: calc(var(--chart-h) + 1.15rem + 1.4rem);
+  height: calc(var(--chart-h) + 1.4rem);
   min-width: 100%;
-  padding-top: 1.15rem;
   box-sizing: border-box;
 }
 
@@ -1666,7 +1721,7 @@ form ul.errorlist li::before {
   position: absolute;
   left: 0;
   right: 0;
-  top: 1.15rem;
+  top: 0;
   height: var(--chart-h);
   pointer-events: none;
   z-index: 0;
@@ -1736,6 +1791,14 @@ form ul.errorlist li::before {
   position: relative;
   border-radius: var(--radius-xs);
   outline: none;
+  z-index: 1;
+}
+
+.dr-chart__col:hover,
+.dr-chart__col:focus-visible,
+.dr-chart__col:focus,
+.dr-chart__col[aria-pressed="true"] {
+  z-index: 6;
 }
 
 .dr-chart__col:focus-visible {
@@ -1806,14 +1869,17 @@ form ul.errorlist li::before {
 }
 
 .dr-chart__col:hover .dr-chart__bar--views,
-.dr-chart__col:focus-visible .dr-chart__bar--views {
+.dr-chart__col:focus-visible .dr-chart__bar--views,
+.dr-chart__col:focus .dr-chart__bar--views,
+.dr-chart__col[aria-pressed="true"] .dr-chart__bar--views {
   filter: brightness(1.12);
 }
 
 .dr-chart__val {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--views) + 5px);
+  /* Cap inside the plot — peak bars must not push labels outside overflow. */
+  bottom: min(calc(var(--views) + 5px), calc(100% - 0.85rem));
   transform: translateX(-50%);
   font-size: 0.65rem;
   color: var(--accent);
@@ -1822,28 +1888,42 @@ form ul.errorlist li::before {
   pointer-events: none;
   white-space: nowrap;
   z-index: 2;
+  transition: opacity 120ms var(--ease);
 }
 
+.dr-chart__col:hover .dr-chart__val,
+.dr-chart__col:focus-visible .dr-chart__val,
+.dr-chart__col:focus .dr-chart__val,
+.dr-chart__col[aria-pressed="true"] .dr-chart__val {
+  opacity: 0;
+}
+
+/* Tooltips stay inside the column so overflow cannot hide them. */
 .dr-chart__tooltip {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%) translateY(4px);
-  min-width: 7.5rem;
-  padding: 0.45rem 0.55rem;
+  top: 4px;
+  bottom: auto;
+  transform: translateX(-50%) translateY(-2px);
+  min-width: max(7.5rem, 100%);
+  max-width: min(11rem, 70vw);
+  width: max-content;
+  padding: 0.4rem 0.5rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--bg-elev);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  background: color-mix(in oklab, var(--bg-elev) 96%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
   color: var(--text-muted);
   font-size: 0.72rem;
   line-height: 1.35;
   display: grid;
-  gap: 0.12rem;
+  gap: 0.1rem;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 120ms var(--ease), transform 120ms var(--ease);
-  z-index: 5;
+  transition: opacity 120ms var(--ease), transform 120ms var(--ease), visibility 120ms;
+  z-index: 8;
   text-align: left;
 }
 
@@ -1854,28 +1934,48 @@ form ul.errorlist li::before {
 }
 
 .dr-chart__col:hover .dr-chart__tooltip,
-.dr-chart__col:focus-visible .dr-chart__tooltip {
+.dr-chart__col:focus-visible .dr-chart__tooltip,
+.dr-chart__col:focus .dr-chart__tooltip,
+.dr-chart__col[aria-pressed="true"] .dr-chart__tooltip {
   opacity: 1;
+  visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
 
 /* Keep edge tooltips on-screen */
 .dr-chart__col:first-child .dr-chart__tooltip {
   left: 0;
-  transform: translateX(0) translateY(4px);
+  transform: translateX(0) translateY(-2px);
 }
 .dr-chart__col:first-child:hover .dr-chart__tooltip,
-.dr-chart__col:first-child:focus-visible .dr-chart__tooltip {
+.dr-chart__col:first-child:focus-visible .dr-chart__tooltip,
+.dr-chart__col:first-child:focus .dr-chart__tooltip,
+.dr-chart__col:first-child[aria-pressed="true"] .dr-chart__tooltip {
   transform: translateX(0) translateY(0);
 }
 .dr-chart__col:last-child .dr-chart__tooltip {
   left: auto;
   right: 0;
-  transform: translateX(0) translateY(4px);
+  transform: translateX(0) translateY(-2px);
 }
 .dr-chart__col:last-child:hover .dr-chart__tooltip,
-.dr-chart__col:last-child:focus-visible .dr-chart__tooltip {
+.dr-chart__col:last-child:focus-visible .dr-chart__tooltip,
+.dr-chart__col:last-child:focus .dr-chart__tooltip,
+.dr-chart__col:last-child[aria-pressed="true"] .dr-chart__tooltip {
   transform: translateX(0) translateY(0);
+}
+
+/* Touch: readout is the detail surface — avoid stuck overlay tooltips. */
+@media (hover: none) {
+  .dr-chart__tooltip {
+    display: none !important;
+  }
+  .dr-chart__col:hover .dr-chart__val,
+  .dr-chart__col:focus-visible .dr-chart__val,
+  .dr-chart__col:focus .dr-chart__val,
+  .dr-chart__col[aria-pressed="true"] .dr-chart__val {
+    opacity: 1;
+  }
 }
 
 .dr-chart-x__tick {
@@ -2494,8 +2594,8 @@ a.dr-tag:hover {
   .dr-analytics-kpis { grid-template-columns: repeat(2, 1fr); }
   .dr-kpi--lead { grid-column: 1 / -1; }
   .dr-analytics-split { grid-template-columns: 1fr; gap: 1rem; }
-  .dr-chart { --chart-h: 160px; }
-  .dr-chart-y { height: 160px; }
+  .dr-chart { --chart-h: 168px; }
+  .dr-chart-y { height: var(--chart-h, 168px); }
   .dr-range { width: 100%; justify-content: space-between; }
   .dr-range a { flex: 1 1 auto; justify-content: center; }
   .dr-analytics__actions { width: 100%; }

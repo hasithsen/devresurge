@@ -493,6 +493,85 @@
     });
   }
 
+  function initAnalyticsChart() {
+    var chart = document.querySelector("[data-analytics-chart]");
+    var readout = document.querySelector("[data-chart-readout]");
+    if (!chart || !readout) return;
+
+    var cols = Array.prototype.slice.call(chart.querySelectorAll("[data-chart-day]"));
+    var idle = readout.textContent;
+    var pinned = null;
+
+    function setReadout(col) {
+      var label = col.getAttribute("data-label") || "";
+      var views = col.getAttribute("data-views") || "0";
+      var uniques = col.getAttribute("data-uniques") || "0";
+      var share = col.getAttribute("data-share") || "0";
+      var strong = document.createElement("strong");
+      strong.textContent = label;
+      readout.replaceChildren();
+      readout.appendChild(strong);
+      readout.appendChild(
+        document.createTextNode(" · " + views + " views · " + uniques + " unique")
+      );
+      if (share && share !== "0") {
+        readout.appendChild(document.createTextNode(" · " + share + "% of window"));
+      }
+      readout.setAttribute("data-active", "1");
+    }
+
+    function paintPressed(active) {
+      cols.forEach(function (c) {
+        c.setAttribute("aria-pressed", c === active ? "true" : "false");
+      });
+    }
+
+    function activate(col, pin) {
+      if (pin) pinned = col;
+      paintPressed(col);
+      setReadout(col);
+    }
+
+    function clear(force) {
+      if (!force && pinned) {
+        paintPressed(pinned);
+        setReadout(pinned);
+        return;
+      }
+      pinned = null;
+      paintPressed(null);
+      readout.textContent = idle;
+      readout.setAttribute("data-active", "0");
+    }
+
+    cols.forEach(function (col) {
+      col.addEventListener("mouseenter", function () { activate(col, false); });
+      col.addEventListener("focus", function () { activate(col, false); });
+      col.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (pinned === col) {
+          clear(true);
+          return;
+        }
+        activate(col, true);
+      });
+    });
+
+    chart.addEventListener("mouseleave", function () {
+      if (!chart.querySelector("[data-chart-day]:focus")) clear(false);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") clear(true);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!chart.contains(event.target) && !readout.contains(event.target)) {
+        clear(true);
+      }
+    });
+  }
+
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -510,5 +589,6 @@
     initAutoFade();
     initSortable();
     initLinkTracking();
+    initAnalyticsChart();
   });
 })();

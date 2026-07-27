@@ -120,6 +120,9 @@ def test_analytics_counts_views_in_window(client):
     assert response.context["avg_pct"] >= 0
     assert b"dr-chart__bar--views" in response.content
     assert b"dr-chart__bar--uniques" in response.content
+    assert b"data-analytics-chart" in response.content
+    assert b"data-chart-readout" in response.content
+    assert b"dr-panel--chart" in response.content
 
 
 def test_analytics_shows_prior_period_delta(client):
