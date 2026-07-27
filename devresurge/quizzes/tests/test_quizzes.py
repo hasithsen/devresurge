@@ -132,6 +132,21 @@ def test_badge_detail_and_svg(client, seeded_quizzes):
     assert svg.status_code == HTTPStatus.OK
     assert svg["Content-Type"].startswith("image/svg+xml")
     assert b"Python Pulse" in svg.content
+    assert b"Passed the Python fundamentals quiz." in svg.content
+
+
+def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
+    from devresurge.quizzes.badge_svg import render_achievement_badge_svg
+    from devresurge.quizzes.models import Badge
+
+    badge = Badge.objects.get(slug="profile_ready")
+    svg = render_achievement_badge_svg(badge)
+    assert "Completed every item on the setup.sh checklist." in svg
+    # Width grows past the old fixed 280px canvas.
+    assert 'width="' in svg
+    width = int(svg.split('width="', 1)[1].split('"', 1)[0])
+    assert width >= 280
+    assert width <= 520
 
 
 def test_badge_holder_svg(client, seeded_quizzes):

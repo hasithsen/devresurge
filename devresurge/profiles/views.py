@@ -676,19 +676,60 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
             day = start + timedelta(days=offset)
             row = by_day.get(day)
             view_count = row["views"] if row else 0
+            unique_count = row["uniques"] if row else 0
             peak = max(peak, view_count)
             series.append(
                 {
                     "date": day,
                     "views": view_count,
-                    "uniques": row["uniques"] if row else 0,
+                    "uniques": unique_count,
+                    "is_today": day == today,
+                    "weekday": day.strftime("%a"),
                 },
             )
-        for point in series:
-            point["pct"] = round((point["views"] / peak) * 100) if peak else 0
+
+        # X-axis tick cadence: every day (7), ~weekly (30), ~biweekly (90).
+        if days <= 7:
+            tick_every = 1
+        elif days <= 30:
+            tick_every = 5
+        else:
+            tick_every = 14
+
+        for idx, point in enumerate(series):
+            point["pct"] = round((point["views"] / peak) * 100, 1) if peak else 0
+            point["unique_pct"] = (
+                round((point["uniques"] / peak) * 100, 1) if peak else 0
+            )
             point["share"] = (
                 round((point["views"] / total_views) * 100) if total_views else 0
             )
+            point["is_peak"] = bool(peak and point["views"] == peak)
+            point["show_tick"] = (
+                idx == 0
+                or idx == days - 1
+                or point["is_today"]
+                or (idx % tick_every == 0)
+            )
+            if days <= 7:
+                point["tick_label"] = point["weekday"][:2]
+            else:
+                point["tick_label"] = f"{point['date'].month}/{point['date'].day}"
+
+        peak_mid = peak // 2
+        avg_per_day = round(total_views / days, 1) if days else 0
+        avg_pct = round((avg_per_day / peak) * 100, 1) if peak and avg_per_day else 0
+        if peak <= 1:
+            y_ticks = [
+                {"value": peak, "pct": 100},
+                {"value": 0, "pct": 0},
+            ]
+        else:
+            y_ticks = [
+                {"value": peak, "pct": 100},
+                {"value": peak_mid, "pct": round((peak_mid / peak) * 100, 1)},
+                {"value": 0, "pct": 0},
+            ]
 
         busiest = max(series, key=lambda p: p["views"], default=None)
         if busiest and busiest["views"] == 0:
@@ -704,16 +745,17 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
             .annotate(count=Count("id"))
             .order_by("-count")[:8],
         )
-        ref_max = referrers[0]["count"] if referrers else 0
+        direct_views = total_views - events.exclude(referrer="").count()
+        ref_max = max([r["count"] for r in referrers] + [direct_views] + [0])
         for ref in referrers:
             ref["pct"] = round((ref["count"] / ref_max) * 100) if ref_max else 0
             ref["share"] = (
                 round((ref["count"] / total_views) * 100) if total_views else 0
             )
-        direct_views = total_views - events.exclude(referrer="").count()
         direct_share = (
             round((direct_views / total_views) * 100) if total_views else 0
         )
+        direct_pct = round((direct_views / ref_max) * 100) if ref_max else 0
 
         last_view = (
             events.order_by("-created_at").values_list("created_at", flat=True).first()
@@ -748,7 +790,9 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
                 "window_end": today,
                 "total_views": total_views,
                 "unique_visitors": unique_visitors,
-                "avg_per_day": round(total_views / days, 1) if days else 0,
+                "avg_per_day": avg_per_day,
+                "avg_pct": avg_pct,
+                "y_ticks": y_ticks,
                 "prev_views": prev_views,
                 "views_delta": views_delta,
                 "views_delta_pct": views_delta_pct,
@@ -757,10 +801,15 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
                 "series": series,
                 "daily_rows": daily_rows,
                 "peak": peak,
+                "peak_mid": peak_mid,
                 "referrers": referrers,
                 "direct_views": direct_views,
                 "direct_share": direct_share,
+                "direct_pct": direct_pct,
                 "last_view": last_view,
+                "unique_share": (
+                    round((unique_visitors / total_views) * 100) if total_views else 0
+                ),
                 "total_clicks": total_clicks,
                 "top_links": top_links,
                 "has_views": total_views > 0,

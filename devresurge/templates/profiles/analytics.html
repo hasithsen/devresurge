@@ -50,8 +50,7 @@
         <div class="dr-kpi__value">{{ unique_visitors }}</div>
         <div class="dr-kpi__sub">
           {% if total_views %}
-            {% widthratio unique_visitors total_views 100 as uniq_pct %}
-            {{ uniq_pct }}% of views
+            {{ unique_share }}% of views
           {% else %}
             {% trans "by fingerprint" %}
           {% endif %}
@@ -94,38 +93,79 @@
             <span class="dr-pill">peak {{ peak }}</span>
           </header>
           <div class="dr-panel__body">
+            <div class="dr-chart-legend" aria-hidden="true">
+              <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--views"></i> views</span>
+              <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--uniques"></i> unique</span>
+              {% if avg_pct %}
+                <span class="dr-chart-legend__item"><i class="dr-chart-legend__swatch dr-chart-legend__swatch--avg"></i> avg {{ avg_per_day }}/day</span>
+              {% endif %}
+            </div>
+
             <div class="dr-chart-layout">
               <div class="dr-chart-y" aria-hidden="true">
-                <span>{{ peak }}</span>
-                {% if peak > 1 %}<span>{{ peak|add:1|add:-1 }}{% widthratio peak 2 1 as mid %}{{ mid }}</span>{% endif %}
-                <span>0</span>
+                {% for tick in y_ticks %}
+                  <span>{{ tick.value }}</span>
+                {% endfor %}
               </div>
+
               <div class="dr-chart-wrap">
-                <div class="dr-chart"
-                     role="img"
-                     aria-label="{% blocktranslate %}Daily views over the last {{ days }} days. Peak {{ peak }}.{% endblocktranslate %}">
-                  {% for point in series %}
-                    <div class="dr-chart__col{% if point.views %} dr-chart__col--active{% endif %}"
-                         title="{{ point.date|date:'D, M j, Y' }} — {{ point.views }} view{{ point.views|pluralize }}, {{ point.uniques }} unique">
-                      {% if point.views and days <= 14 %}
-                        <span class="dr-chart__val">{{ point.views }}</span>
-                      {% elif point.views == peak and peak > 0 %}
-                        <span class="dr-chart__val">{{ point.views }}</span>
-                      {% endif %}
-                      <div class="dr-chart__bar{% if point.views == 0 %} dr-chart__bar--zero{% endif %}"
-                           style="height: {{ point.pct }}%;"></div>
-                    </div>
-                  {% endfor %}
+                <div class="dr-chart dr-chart--days-{{ days }}"
+                     role="group"
+                     aria-label="{% blocktranslate %}Daily views over the last {{ days }} days. {{ total_views }} total, peak {{ peak }}, average {{ avg_per_day }} per day.{% endblocktranslate %}">
+                  <div class="dr-chart__grid" aria-hidden="true">
+                    {% for tick in y_ticks %}
+                      <span class="dr-chart__gridline{% if tick.pct == 0 %} dr-chart__gridline--base{% endif %}"
+                            style="--y: {{ tick.pct }}%;"></span>
+                    {% endfor %}
+                    {% if avg_pct %}
+                      <span class="dr-chart__avg" style="--y: {{ avg_pct }}%;" title="{% blocktranslate with avg=avg_per_day %}Average {{ avg }} views/day{% endblocktranslate %}"></span>
+                    {% endif %}
+                  </div>
+
+                  <div class="dr-chart__bars">
+                    {% for point in series %}
+                      <button type="button"
+                              class="dr-chart__col{% if point.views %} dr-chart__col--active{% endif %}{% if point.is_today %} dr-chart__col--today{% endif %}{% if point.is_peak %} dr-chart__col--peak{% endif %}{% if not point.views %} dr-chart__col--zero{% endif %}"
+                              style="--views: {{ point.pct }}%; --uniques: {{ point.unique_pct }}%; --i: {{ forloop.counter0 }};"
+                              aria-label="{{ point.date|date:'l, M j, Y' }}: {{ point.views }} view{{ point.views|pluralize }}, {{ point.uniques }} unique">
+                        <span class="dr-chart__tooltip" role="tooltip">
+                          <strong>{{ point.date|date:"D, M j" }}</strong>
+                          <span>{{ point.views }} view{{ point.views|pluralize }}</span>
+                          <span>{{ point.uniques }} unique</span>
+                          {% if point.share %}<span>{{ point.share }}% of window</span>{% endif %}
+                        </span>
+                        {% if point.views %}
+                          {% if days <= 14 or point.is_peak %}
+                            <span class="dr-chart__val" aria-hidden="true">{{ point.views }}</span>
+                          {% endif %}
+                        {% endif %}
+                        <span class="dr-chart__stack" aria-hidden="true">
+                          <span class="dr-chart__bar dr-chart__bar--views"></span>
+                          <span class="dr-chart__bar dr-chart__bar--uniques"></span>
+                        </span>
+                      </button>
+                    {% endfor %}
+                  </div>
+
+                  <div class="dr-chart-x" aria-hidden="true">
+                    {% for point in series %}
+                      <span class="dr-chart-x__tick{% if point.show_tick %} is-on{% endif %}{% if point.is_today %} is-today{% endif %}">
+                        {% if point.show_tick %}{{ point.tick_label }}{% endif %}
+                      </span>
+                    {% endfor %}
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="dr-chart-axis">
-              <span>{{ series.0.date|date:"M j" }}</span>
-              <span class="dr-chart-axis__peak">
-                {% blocktranslate count counter=total_views %}{{ counter }} view total{% plural %}{{ counter }} views total{% endblocktranslate %}
-              </span>
-              {% with last_point=series|last %}<span>{{ last_point.date|date:"M j" }}</span>{% endwith %}
-            </div>
+
+            <p class="dr-chart-meta">
+              {% blocktranslate count counter=total_views %}{{ counter }} view{% plural %}{{ counter }} views{% endblocktranslate %}
+              · {{ unique_visitors }} unique
+              · avg {{ avg_per_day }}/day
+              {% if busiest %}
+                · peak {{ busiest.views }} on {{ busiest.date|date:"M j" }}
+              {% endif %}
+            </p>
           </div>
         </article>
 
@@ -202,7 +242,7 @@
                         <span class="dr-ref__share">{{ direct_share }}%</span>
                       </span>
                     </div>
-                    <div class="dr-ref__bar"><span class="dr-ref__bar--ghost" style="width: {% if ref_max %}{% widthratio direct_views ref_max 100 %}{% else %}100{% endif %}%;"></span></div>
+                    <div class="dr-ref__bar"><span class="dr-ref__bar--ghost" style="width: {{ direct_pct }}%;"></span></div>
                   </li>
                 {% endif %}
               </ul>

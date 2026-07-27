@@ -204,6 +204,9 @@ def test_analytics_reports_clicks(client):
     top = response.context["top_links"]
     assert top[0]["count"] == 3
     assert top[0]["destination"] == "github.com"
+    assert top[0]["share"] == 75
+    assert b"<strong>3</strong>" in response.content
+    assert b"75%" in response.content
 
 
 def test_analytics_has_data_when_only_clicks_present(client):

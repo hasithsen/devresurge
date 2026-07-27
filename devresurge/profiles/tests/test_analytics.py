@@ -109,6 +109,41 @@ def test_analytics_counts_views_in_window(client):
     assert response.context["total_views"] == 4
     assert response.context["unique_visitors"] == 2
     assert response.context["has_data"] is True
+    assert response.context["peak"] == 4
+    assert response.context["daily_rows"]
+    assert response.context["daily_rows"][0]["views"] == 4
+    assert b"by day" in response.content
+    assert b"<strong>4</strong>" in response.content
+    series = response.context["series"]
+    assert series[-1]["is_today"] is True
+    assert any(p["is_peak"] for p in series)
+    assert response.context["avg_pct"] >= 0
+    assert b"dr-chart__bar--views" in response.content
+    assert b"dr-chart__bar--uniques" in response.content
+
+
+def test_analytics_shows_prior_period_delta(client):
+    user = UserFactory()
+    profile = user.profile
+    # 2 views in current 7d window
+    for i in range(2):
+        ev = ProfileView.objects.create(profile=profile, visitor_hash=f"now{i}")
+        ProfileView.objects.filter(pk=ev.pk).update(
+            created_at=timezone.now() - timedelta(hours=i + 1),
+        )
+    # 4 views in prior 7d window
+    for i in range(4):
+        ev = ProfileView.objects.create(profile=profile, visitor_hash=f"old{i}")
+        ProfileView.objects.filter(pk=ev.pk).update(
+            created_at=timezone.now() - timedelta(days=8 + i),
+        )
+
+    client.force_login(user)
+    response = client.get(reverse("profiles:analytics"), {"days": 7})
+    assert response.context["total_views"] == 2
+    assert response.context["prev_views"] == 4
+    assert response.context["views_delta"] == -2
+    assert response.context["views_delta_pct"] == -50
 
 
 def test_analytics_range_defaults_and_validates(client):
