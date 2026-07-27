@@ -381,10 +381,14 @@ def test_badge_svg_does_not_clip_long_name(client):
     body = response.content.decode()
     width = int(body.split('width="', 1)[1].split('"', 1)[0])
     assert width > 420
-    assert width <= 720
+    assert width <= 800
     assert "open to work" in body
     chip_x = width - 18 - 96
     assert f'x="{chip_x}"' in body
+    # Every skill is present — not truncated to the first four.
+    for skill in ("python", "django", "typescript", "postgres", "redis", "celery", "kafka"):
+        assert skill in body
+    assert "…" not in body
 
 
 def test_badge_svg_404_for_private_profile(client):

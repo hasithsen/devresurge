@@ -1,7 +1,7 @@
 """Shared SVG text measurement helpers for embeddable badges.
 
 Glyph widths are intentionally overestimated so text never clips when the SVG
-is rasterized as ``<img>`` (overflow is hidden in that context).
+is rasterized as ``<img>`` (browsers clip overflow to the viewport).
 """
 
 from __future__ import annotations
@@ -12,10 +12,10 @@ import re
 
 _XML_SAFE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
-# Conservative monospace advance (em). Real SFMono/Menlo sit near ~0.6;
-# we pad so fallback fonts and bold weights never overflow the canvas.
-_MONO_ADVANCE = 0.72
-_SAFETY_PX = 14
+# Overestimate monospace advance. Real SFMono ≈ 0.6em; Windows Consolas /
+# fallback faces and bold weights run wider — underestimating causes clipping.
+_MONO_ADVANCE = 0.85
+_SAFETY_PX = 16
 
 
 def clean_text(value: str) -> str:
@@ -38,7 +38,7 @@ def fit_canvas_width(
     max_width: int,
 ) -> int:
     """Ceil + safety padding so measured text always fits inside the SVG."""
-    content = max(widths) if widths else 0
+    content = max((w for w in widths if w is not None), default=0)
     needed = math.ceil(pad_left + content + pad_right + _SAFETY_PX)
     return int(min(max_width, max(min_width, needed)))
 
@@ -69,15 +69,19 @@ def wrap_words(
     *,
     max_width: float,
     font_size: float,
-    max_lines: int = 2,
+    max_lines: int | None = None,
 ) -> list[str]:
-    """Word-wrap ``raw`` into up to ``max_lines`` lines that fit ``max_width``."""
+    """Word-wrap ``raw`` to fit ``max_width``.
+
+    When ``max_lines`` is None, wraps onto as many lines as needed (no ellipsis).
+    When set, ellipsizes only the final line if content still overflows.
+    """
     cleaned = clean_text(raw)
     if not cleaned:
         return []
     if text_width(cleaned, font_size) <= max_width:
         return [cleaned]
-    if max_lines <= 1:
+    if max_lines == 1:
         return [_ellipsis(cleaned, max_width=max_width, font_size=font_size)]
 
     words = cleaned.split()
@@ -96,21 +100,23 @@ def wrap_words(
             continue
 
         if not current:
+            # Token wider than the column — hard break with ellipsis.
             lines.append(_ellipsis(word, max_width=max_width, font_size=font_size))
             i += 1
         else:
             lines.append(current)
             current = ""
 
-        remaining_slots = max_lines - len(lines)
-        if remaining_slots <= 1:
-            rest = " ".join(([current] if current else []) + words[i:])
+        if max_lines is not None and len(lines) >= max_lines - 1 and current == "":
+            rest = " ".join(words[i:])
             lines.append(_ellipsis(rest, max_width=max_width, font_size=font_size))
             return lines[:max_lines]
 
     if current:
         lines.append(current)
-    return lines[:max_lines]
+    if max_lines is not None:
+        return lines[:max_lines]
+    return lines
 
 
 def fit_single_line(raw: str, *, max_width: float, font_size: float) -> str:

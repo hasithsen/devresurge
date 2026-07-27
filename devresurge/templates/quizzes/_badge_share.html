@@ -1,0 +1,39 @@
+{% load i18n %}
+<nav class="dr-share-btns" aria-label="{% translate 'Share badge' %}">
+  <span class="dr-share-btns__label">{% translate "share" %}</span>
+  <a class="dr-share-btn"
+     href="{{ share.linkedin }}"
+     target="_blank"
+     rel="noopener noreferrer"
+     data-share="linkedin">
+    LinkedIn
+  </a>
+  <a class="dr-share-btn"
+     href="{{ share.x }}"
+     target="_blank"
+     rel="noopener noreferrer"
+     data-share="x">
+    X
+  </a>
+  <a class="dr-share-btn"
+     href="{{ share.reddit }}"
+     target="_blank"
+     rel="noopener noreferrer"
+     data-share="reddit">
+    Reddit
+  </a>
+  <a class="dr-share-btn"
+     href="{{ share.email }}"
+     data-share="email">
+    {% translate "email" %}
+  </a>
+  <button type="button"
+          class="dr-share-btn dr-share-btn--native"
+          hidden
+          data-native-share
+          data-share-title="{{ badge.title }}"
+          data-share-text="{{ share.caption }}"
+          data-share-url="{{ share.page_url }}">
+    {% translate "more" %}
+  </button>
+</nav>

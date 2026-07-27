@@ -20,6 +20,7 @@ from .models import Choice
 from .models import Quiz
 from .models import QuizAttempt
 from .models import UserBadge
+from .share import build_badge_share_links
 
 
 class QuizListView(ListView):
@@ -151,6 +152,20 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
         )
         awarded = evaluate_quiz_badges(request.user, attempt) if passed else []
 
+    share_awards = []
+    for ub in awarded:
+        share_awards.append(
+            {
+                "award": ub,
+                "share": build_badge_share_links(
+                    page_url=request.build_absolute_uri(ub.badge.get_absolute_url()),
+                    title=ub.badge.title,
+                    description=ub.badge.description,
+                    earned=True,
+                ),
+            },
+        )
+
     if passed:
         messages.success(
             request,
@@ -170,6 +185,7 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
             "attempt": attempt,
             "review": review,
             "awarded": awarded,
+            "share_awards": share_awards,
         },
     )
 
@@ -239,6 +255,12 @@ class BadgeDetailView(DetailView):
             ctx["viewer_award"] and profile is not None and profile.is_public,
         )
         ctx["holder_handle"] = profile.handle if ctx["show_holder_svg"] else None
+        ctx["share"] = build_badge_share_links(
+            page_url=self.request.build_absolute_uri(badge.get_absolute_url()),
+            title=badge.title,
+            description=badge.description,
+            earned=bool(ctx["viewer_award"]),
+        )
         return ctx
 
 

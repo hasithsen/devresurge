@@ -127,6 +127,13 @@ def test_badge_detail_and_svg(client, seeded_quizzes):
     response = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_python"}))
     assert response.status_code == HTTPStatus.OK
     assert b"Python Pulse" in response.content
+    assert b"LinkedIn" in response.content
+    share = response.context["share"]
+    assert "linkedin.com/sharing/share-offsite" in share["linkedin"]
+    assert "twitter.com/intent/tweet" in share["x"]
+    assert "reddit.com/submit" in share["reddit"]
+    assert share["email"].startswith("mailto:")
+    assert "quiz_python" in share["page_url"]
 
     svg = client.get(reverse("quizzes:badge_svg", kwargs={"slug": "quiz_python"}))
     assert svg.status_code == HTTPStatus.OK
@@ -141,12 +148,22 @@ def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
 
     badge = Badge.objects.get(slug="profile_ready")
     svg = render_achievement_badge_svg(badge)
-    assert "Completed every item" in svg
-    assert "setup.sh checklist." in svg
+    assert "Completed every item on the setup.sh checklist." in svg
     assert "…" not in svg
+
+
+def test_python_pulse_badge_shows_full_description(seeded_quizzes):
+    from devresurge.quizzes.badge_svg import render_achievement_badge_svg
+    from devresurge.quizzes.models import Badge
+
+    badge = Badge.objects.get(slug="quiz_python")
+    svg = render_achievement_badge_svg(badge)
+    assert "Python Pulse" in svg
+    assert "Passed the Python fundamentals quiz." in svg
+    assert "…" not in svg
+    # Single-line copy should drive a canvas wider than the old fixed 280px.
     width = int(svg.split('width="', 1)[1].split('"', 1)[0])
-    assert width >= 300
-    assert width <= 580
+    assert width >= 400
 
 
 def test_all_catalog_badge_svgs_have_full_descriptions(seeded_quizzes):
@@ -155,9 +172,7 @@ def test_all_catalog_badge_svgs_have_full_descriptions(seeded_quizzes):
 
     for badge in Badge.objects.filter(is_active=True):
         svg = render_achievement_badge_svg(badge)
-        # Every word of the catalog description must appear (may wrap across lines).
-        for word in badge.description.split():
-            assert word in svg, f"{badge.slug} missing {word!r}"
+        assert badge.description in svg, f"{badge.slug} cropped description"
         assert "…" not in svg, f"{badge.slug} still ellipsizes"
 
 

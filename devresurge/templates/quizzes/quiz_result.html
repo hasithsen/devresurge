@@ -38,6 +38,14 @@
               </a>
             {% endfor %}
           </div>
+          {% for row in share_awards %}
+            <div class="dr-stack" style="gap: 0.35rem;">
+              <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+                {% blocktranslate with title=row.award.badge.title %}Share {{ title }}{% endblocktranslate %}
+              </p>
+              {% include "quizzes/_badge_share.html" with badge=row.award.badge share=row.share %}
+            </div>
+          {% endfor %}
         {% endif %}
         <div class="dr-btn-row">
           {% if not attempt.passed %}

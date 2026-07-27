@@ -42,8 +42,9 @@ License: MIT
   for the canvas client.
 - **Quizzes & achievement badges** — skill quizzes at `/quizzes/` (Python, Git, Django, SQL,
   JavaScript, HTTP/APIs, security basics — seeded via `seed_quizzes`). Pass at 80% to earn
-  badges. Each badge has a **public linkable page** at `/quizzes/badges/<slug>/` plus embeddable
-  SVGs (`/quizzes/badges/<slug>.svg`, and a personal variant with your handle). Profile milestones
+  badges. Each badge has a **public linkable page** at `/quizzes/badges/<slug>/` with
+  **LinkedIn / X / Reddit / email share buttons**, plus embeddable SVGs
+  (`/quizzes/badges/<slug>.svg`, and a personal variant with your handle). Profile milestones
   (ready, shipper, open to work), network milestones (first link, networker), and quiz milestones
   (core streak, polyglot) award automatically.
 - **Profile directory** at `/u/` with search, role filter, **open-to-work filter**, lazy-loaded

@@ -41,9 +41,11 @@
                loading="lazy" />
         </div>
 
+        {% include "quizzes/_badge_share.html" with badge=badge share=share %}
+
         <div class="dr-share-row">
           <span style="color: var(--text-dim); font-size: 0.85rem;">link</span>
-          <code id="dr-badge-url">{{ request.scheme }}://{{ request.get_host }}{{ badge.get_absolute_url }}</code>
+          <code id="dr-badge-url">{{ share.page_url }}</code>
           <button type="button" class="dr-copy" data-copy-from="#dr-badge-url" aria-label="{% translate 'Copy badge URL' %}">
             <span data-copy-label>copy</span>
           </button>

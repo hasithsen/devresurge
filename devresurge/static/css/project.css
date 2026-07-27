@@ -2134,6 +2134,56 @@ form ul.errorlist li::before {
   min-width: 0;
 }
 
+.dr-share-btns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dr-share-btns__label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-right: 0.15rem;
+}
+
+.dr-share-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 120ms var(--ease), color 120ms var(--ease), background 120ms var(--ease);
+}
+
+.dr-share-btn:hover,
+.dr-share-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  outline: none;
+}
+
+.dr-share-btn[data-share="linkedin"]:hover,
+.dr-share-btn[data-share="linkedin"]:focus-visible {
+  border-color: #6ea8d8;
+  color: #8ec0ea;
+}
+
+[data-theme="light"] .dr-share-btn[data-share="linkedin"]:hover,
+[data-theme="light"] .dr-share-btn[data-share="linkedin"]:focus-visible {
+  color: #0a66c2;
+  border-color: #0a66c2;
+}
+
 /* Bigger required indicator -------------------------------------------- */
 
 form label .req,
@@ -2572,15 +2622,21 @@ a.dr-tag:hover {
   border-radius: var(--radius-sm);
   padding: 0.65rem;
   background: var(--bg-elev-2);
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 .dr-badge-preview img {
   display: block;
-  max-width: 100%;
+  /* Keep intrinsic SVG size so text is never scaled/cropped in preview. */
+  max-width: none;
   width: auto;
   height: auto;
+}
+
+@media (max-width: 560px) {
+  .dr-badge-preview {
+    overflow-x: auto;
+  }
 }
 
 /* Markdown bio ------------------------------------------------------------ */
