@@ -117,7 +117,7 @@
           </span>
           <div class="dr-profile-hero__meta">
             <h1 style="margin: 0;">{{ profile.display_name|default:profile.handle }}</h1>
-            <div class="dr-handle">@{{ profile.handle }}</div>
+            <div class="dr-handle">{{ profile.handle }}</div>
             {% if profile.headline %}
               <p style="margin: 0; color: var(--text-muted);">{{ profile.headline }}</p>
             {% endif %}
