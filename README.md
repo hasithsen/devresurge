@@ -40,10 +40,12 @@ License: MIT
   under `/users/~settings/`. An interactive **network map** at `/connections/map/` renders your
   ego graph (drag, zoom, relation filter, mutual edges between peers) with a JSON data endpoint
   for the canvas client.
-- **Quizzes & achievement badges** — skill quizzes at `/quizzes/` (Python, Git, Django starters,
-  seeded via `seed_quizzes`). Pass at 80% to earn badges shown on your public profile and in the
-  badge cabinet. Profile milestones (ready, shipper, open to work) and network milestones
-  (first link, networker) award automatically.
+- **Quizzes & achievement badges** — skill quizzes at `/quizzes/` (Python, Git, Django, SQL,
+  JavaScript, HTTP/APIs, security basics — seeded via `seed_quizzes`). Pass at 80% to earn
+  badges. Each badge has a **public linkable page** at `/quizzes/badges/<slug>/` plus embeddable
+  SVGs (`/quizzes/badges/<slug>.svg`, and a personal variant with your handle). Profile milestones
+  (ready, shipper, open to work), network milestones (first link, networker), and quiz milestones
+  (core streak, polyglot) award automatically.
 - **Profile directory** at `/u/` with search, role filter, **open-to-work filter**, lazy-loaded
   avatars, pagination. Hireable profiles float to the top of the default listing.
 - **SEO** — `/sitemap.xml` indexes public profiles + key static pages; `/robots.txt` points crawlers
@@ -85,7 +87,10 @@ Then visit <http://localhost:8000>.
 | `/connections/map/`                 | Interactive network map            |
 | `/connections/notifications/`       | In-app notification inbox          |
 | `/quizzes/`                         | Skill quizzes                      |
-| `/quizzes/badges/`                  | Achievement badge cabinet          |
+| `/quizzes/badges/`                  | Badge catalog (public)             |
+| `/quizzes/badges/<slug>/`           | Linkable badge detail + holders    |
+| `/quizzes/badges/<slug>.svg`        | Embeddable achievement SVG         |
+| `/quizzes/badges/<slug>/@<h>.svg`   | Personal earned-badge SVG          |
 | `/quizzes/<slug>/` (+ take)         | Quiz detail + attempt              |
 | `/users/~settings/`                 | Notification (email) preferences   |
 | `/me/`                              | Owner dashboard                    |

@@ -117,9 +117,59 @@ def test_quiz_streak_badge(seeded_quizzes):
     assert UserBadge.objects.filter(user=user, badge__slug="quiz_streak").exists()
 
 
-def test_badge_cabinet_requires_login(client):
+def test_badge_cabinet_is_public(client, seeded_quizzes):
     response = client.get(reverse("quizzes:badges"))
-    assert response.status_code == HTTPStatus.FOUND
+    assert response.status_code == HTTPStatus.OK
+    assert b"Python Pulse" in response.content
+
+
+def test_badge_detail_and_svg(client, seeded_quizzes):
+    response = client.get(reverse("quizzes:badge_detail", kwargs={"slug": "quiz_python"}))
+    assert response.status_code == HTTPStatus.OK
+    assert b"Python Pulse" in response.content
+
+    svg = client.get(reverse("quizzes:badge_svg", kwargs={"slug": "quiz_python"}))
+    assert svg.status_code == HTTPStatus.OK
+    assert svg["Content-Type"].startswith("image/svg+xml")
+    assert b"Python Pulse" in svg.content
+
+
+def test_badge_holder_svg(client, seeded_quizzes):
+    user = UserFactory()
+    user.profile.is_public = True
+    user.profile.save(update_fields=["is_public"])
+    award_badge(user, "quiz_python")
+    response = client.get(
+        reverse(
+            "quizzes:badge_holder_svg",
+            kwargs={"slug": "quiz_python", "handle": user.profile.handle},
+        ),
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert f"@{user.profile.handle}".encode() in response.content
+
+
+def test_quiz_polyglot_badge(seeded_quizzes):
+    user = UserFactory()
+    for slug in (
+        "python-fundamentals",
+        "git-collaboration",
+        "django-basics",
+        "sql-fundamentals",
+        "javascript-essentials",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        attempt = QuizAttempt.objects.create(
+            user=user,
+            quiz=quiz,
+            score=5,
+            total=5,
+            percent=100,
+            passed=True,
+        )
+        evaluate_quiz_badges(user, attempt)
+
+    assert UserBadge.objects.filter(user=user, badge__slug="quiz_polyglot").exists()
 
 
 def test_public_profile_shows_earned_badges(client, seeded_quizzes):
@@ -130,3 +180,4 @@ def test_public_profile_shows_earned_badges(client, seeded_quizzes):
     )
     assert response.status_code == HTTPStatus.OK
     assert b"Python Pulse" in response.content
+    assert reverse("quizzes:badge_detail", kwargs={"slug": "quiz_python"}).encode() in response.content

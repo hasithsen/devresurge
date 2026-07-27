@@ -9,17 +9,12 @@
   <section class="dr-page">
     <header class="dr-page__head">
       <div>
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls quizzes/</span></p>
         <h1 style="margin: 0;">{% trans "quizzes" %}</h1>
         <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
-          {% trans "Short skill checks. Pass to earn badges that show on your public profile." %}
+          {% trans "Short skill checks. Pass to earn badges on your profile." %}
         </p>
       </div>
-      <div class="dr-page__head-actions">
-        {% if request.user.is_authenticated %}
-          <a class="dr-btn dr-btn--sm" href="{% url 'quizzes:badges' %}">{% trans "my badges" %}</a>
-        {% endif %}
-      </div>
+      <a class="dr-btn" href="{% url 'quizzes:badges' %}">{% trans "badges" %}</a>
     </header>
 
     {% if quiz_rows %}

@@ -6,40 +6,49 @@
 
 {% block content %}
   <section class="dr-page">
-    <header class="dr-stack" style="margin-bottom: 1.5rem;">
-      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami &amp;&amp; pwd</span></p>
-      <h1 style="margin: 0;">@{{ profile.handle }}</h1>
-      <p style="margin: 0; color: var(--text-muted);">
-        {{ profile.headline|default:_("No headline yet — add one in the editor below.") }}
-      </p>
-
-      <div class="dr-share-row" style="margin-top: 0.4rem;">
-        <span style="color: var(--text-dim); font-size: 0.85rem;">public url</span>
-        <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
-        <button type="button"
-                class="dr-copy"
-                data-copy-from="#dr-share-url"
-                aria-label="{% translate 'Copy URL' %}">
-          <span class="dr-copy__icon" aria-hidden="true"></span>
-          <span data-copy-label>copy</span>
-        </button>
-        <a class="dr-btn dr-btn--sm" href="{{ profile.get_absolute_url }}">view ↗</a>
+    <header class="dr-dash-head">
+      <div>
+        <h1 style="margin: 0;">@{{ profile.handle }}</h1>
+        <p style="margin: 0.25rem 0 0; color: var(--text-muted);">
+          {{ profile.headline|default:_("Add a headline so visitors know what you do.") }}
+        </p>
+      </div>
+      <div class="dr-btn-row">
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">edit profile</a>
+        <a class="dr-btn" href="{{ profile.get_absolute_url }}">view ↗</a>
       </div>
     </header>
+
+    <div class="dr-share-row" style="margin: 1rem 0 1.25rem;">
+      <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
+      <button type="button" class="dr-copy" data-copy-from="#dr-share-url" aria-label="{% translate 'Copy URL' %}">
+        <span class="dr-copy__icon" aria-hidden="true"></span>
+        <span data-copy-label>copy</span>
+      </button>
+      {% if profile.is_public %}
+        <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost dr-copy" data-copy="{{ badge_url }}" aria-label="{% translate 'Copy badge URL' %}">
+          <span data-copy-label>badge.svg</span>
+        </button>
+        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:export_readme' %}">readme.md</a>
+      {% endif %}
+    </div>
+
+    {% if not profile.is_public %}
+      <div class="dr-alert dr-alert--warning" style="margin-bottom: 1.25rem;">
+        <span class="dr-alert__body">
+          {% trans "Profile is private. Turn on “publicly listed” in the editor to share it." %}
+        </span>
+      </div>
+    {% endif %}
 
     {% if not readiness.complete %}
       <section class="dr-panel dr-readiness" style="margin-bottom: 1.25rem;" aria-labelledby="readiness-title">
         <div class="dr-panel__header">
           <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title" id="readiness-title">setup.sh</span>
+          <span class="dr-panel__title" id="readiness-title">setup</span>
           <span class="dr-pill">{{ readiness.pct }}%</span>
         </div>
         <div class="dr-panel__body dr-stack">
-          <p style="margin: 0; color: var(--text-muted);">
-            {% blocktranslate with done=readiness.done total=readiness.total %}
-              {{ done }} of {{ total }} checks green — finish these to make your profile share-ready.
-            {% endblocktranslate %}
-          </p>
           <div class="dr-progress" role="progressbar"
                aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ readiness.pct }}"
                aria-label="{% translate 'Profile readiness' %}">
@@ -47,211 +56,76 @@
           </div>
           <ul class="dr-checklist">
             {% for check in readiness.checks %}
-              <li class="dr-checklist__item{% if check.done %} dr-checklist__item--done{% endif %}">
-                <span class="dr-checklist__mark" aria-hidden="true">{% if check.done %}✓{% else %}○{% endif %}</span>
-                {% if check.done %}
-                  <span>{{ check.label }}</span>
-                {% else %}
+              {% if not check.done %}
+                <li class="dr-checklist__item">
+                  <span class="dr-checklist__mark" aria-hidden="true">○</span>
                   <a href="{% url check.url_name %}">{{ check.label }}</a>
-                {% endif %}
-              </li>
+                </li>
+              {% endif %}
             {% endfor %}
           </ul>
         </div>
       </section>
     {% endif %}
 
-    <section class="dr-grid dr-grid--3">
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">profile.yaml</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">{% trans "Handle, headline, bio, stack and avatar." %}</p>
-          <div class="dr-btn-row">
-            <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">edit</a>
-          </div>
-        </div>
-      </div>
+    <div class="dr-dash">
+      <nav class="dr-dash__nav" aria-label="{% translate 'Workspace' %}">
+        <a href="{% url 'profiles:edit' %}"><span>profile</span><span class="dr-dash__hint">edit</span></a>
+        <a href="{% url 'profiles:project_list' %}"><span>projects</span><span class="dr-dash__hint">{{ profile.projects.count }}</span></a>
+        <a href="{% url 'profiles:experience_list' %}"><span>experience</span><span class="dr-dash__hint">{{ profile.experiences.count }}</span></a>
+        <a href="{% url 'profiles:education_list' %}"><span>education</span><span class="dr-dash__hint">{{ profile.education.count }}</span></a>
+        <a href="{% url 'profiles:link_list' %}"><span>links</span><span class="dr-dash__hint">{{ profile.social_links.count }}</span></a>
+        <a href="{% url 'profiles:analytics' %}"><span>analytics</span><span class="dr-dash__hint">{{ views_30d }} views</span></a>
+        <a href="{% url 'connections:list' %}"><span>network</span><span class="dr-dash__hint">{% if unread_notification_count %}{{ unread_notification_count }} new{% else %}map{% endif %}</span></a>
+        <a href="{% url 'quizzes:list' %}"><span>quizzes</span><span class="dr-dash__hint">{{ quiz_count }}</span></a>
+      </nav>
 
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">projects/</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% blocktranslate count counter=profile.projects.count %}
-              {{ counter }} project listed.
-            {% plural %}
-              {{ counter }} projects listed.
-            {% endblocktranslate %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'profiles:project_list' %}">manage</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:project_create' %}">+ new</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">experience/</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% blocktranslate count counter=profile.experiences.count %}
-              {{ counter }} role on your timeline.
-            {% plural %}
-              {{ counter }} roles on your timeline.
-            {% endblocktranslate %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'profiles:experience_list' %}">manage</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:education_list' %}">education</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">links.json</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% blocktranslate count counter=profile.social_links.count %}
-              {{ counter }} link added.
-            {% plural %}
-              {{ counter }} links added.
-            {% endblocktranslate %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'profiles:link_list' %}">manage</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:link_create' %}">+ new</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">analytics.log</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% blocktranslate count counter=views_30d %}
-              {{ counter }} view in the last 30 days.
-            {% plural %}
-              {{ counter }} views in the last 30 days.
-            {% endblocktranslate %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'profiles:analytics' %}">open</a>
-            <a class="dr-btn dr-btn--ghost" href="{{ profile.get_absolute_url }}">view ↗</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">connections/</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% if unread_notification_count %}
-              {% blocktranslate count counter=unread_notification_count %}
-                {{ counter }} new notification.
-              {% plural %}
-                {{ counter }} new notifications.
-              {% endblocktranslate %}
-            {% else %}
-              {% trans "Your network and pending requests." %}
-            {% endif %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'connections:list' %}">network</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'connections:map' %}">map</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'connections:notifications' %}">inbox</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">share/</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">{% trans "Export a README or embed a badge on GitHub." %}</p>
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'profiles:export_readme' %}">export .md</a>
-            <button type="button"
-                    class="dr-btn dr-btn--ghost dr-copy"
-                    data-copy="{{ badge_url }}"
-                    aria-label="{% translate 'Copy badge URL' %}">
-              <span data-copy-label>badge url</span>
-            </button>
-          </div>
-          {% if profile.is_public %}
-            <div class="dr-badge-preview">
-              <img src="{% url 'profiles:badge' profile.handle %}"
-                   alt="{% blocktranslate with handle=profile.handle %}DevResurge badge for @{{ handle }}{% endblocktranslate %}"
-                   width="420" height="96" loading="lazy" />
+      <aside class="dr-dash__side">
+        {% if earned_badges %}
+          <div class="dr-panel">
+            <div class="dr-panel__header">
+              <span class="dr-panel__title">badges</span>
+              <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'quizzes:badges' %}">all</a>
             </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="dr-panel">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">quizzes/</span>
-        </div>
-        <div class="dr-panel__body dr-stack">
-          <p style="margin: 0;">
-            {% blocktranslate count counter=quiz_count %}
-              {{ counter }} skill quiz available.
-            {% plural %}
-              {{ counter }} skill quizzes available.
-            {% endblocktranslate %}
-          </p>
-          {% if earned_badges %}
-            <div class="dr-achieve-row">
-              {% for ub in earned_badges %}
-                <span class="dr-achieve" title="{{ ub.badge.description }}">
-                  <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
-                  <span>{{ ub.badge.title }}</span>
-                </span>
-              {% endfor %}
+            <div class="dr-panel__body">
+              <div class="dr-achieve-row">
+                {% for ub in earned_badges %}
+                  <a class="dr-achieve" href="{{ ub.badge.get_absolute_url }}" title="{{ ub.badge.description }}">
+                    <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
+                    <span>{{ ub.badge.title }}</span>
+                  </a>
+                {% endfor %}
+              </div>
             </div>
-          {% endif %}
-          <div class="dr-btn-row">
-            <a class="dr-btn" href="{% url 'quizzes:list' %}">take a quiz</a>
-            <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:badges' %}">cabinet</a>
           </div>
-        </div>
-      </div>
-    </section>
+        {% else %}
+          <div class="dr-panel">
+            <div class="dr-panel__body dr-stack">
+              <p style="margin: 0; color: var(--text-muted);">{% trans "Earn badges by finishing setup or passing a quiz." %}</p>
+              <a class="dr-btn" href="{% url 'quizzes:list' %}">start a quiz</a>
+            </div>
+          </div>
+        {% endif %}
 
-    {% if not profile.is_public %}
-      <div class="dr-alert dr-alert--warning" style="margin-top: 1.5rem;">
-        <span class="dr-alert__body">
-          <span class="dr-prompt"></span> {% trans "Your profile is private — only you can see it. Toggle 'publicly listed' in the editor to share it." %}
-        </span>
-      </div>
-    {% endif %}
-
-    <h2 class="dr-section-title"><span class="dr-prompt"></span> account</h2>
-    <div class="dr-btn-row">
-      <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">email</a>
-      <a class="dr-btn dr-btn--ghost" href="{% url 'users:settings' %}">notifications</a>
-      <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">mfa</a>
-      <a class="dr-btn dr-btn--ghost" href="{% url 'account_change_password' %}">password</a>
-      <a class="dr-btn dr-btn--danger" href="{% url 'account_logout' %}">logout</a>
+        {% if profile.is_public %}
+          <div class="dr-badge-preview" style="margin-top: 1rem;">
+            <img src="{% url 'profiles:badge' profile.handle %}"
+                 alt="{% blocktranslate with handle=profile.handle %}DevResurge badge for @{{ handle }}{% endblocktranslate %}"
+                 width="420" height="96" loading="lazy" />
+          </div>
+        {% endif %}
+      </aside>
     </div>
+
+    <details class="dr-account" style="margin-top: 1.75rem;">
+      <summary>{% trans "Account" %}</summary>
+      <div class="dr-btn-row" style="margin-top: 0.75rem;">
+        <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">email</a>
+        <a class="dr-btn dr-btn--ghost" href="{% url 'users:settings' %}">notifications</a>
+        <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">mfa</a>
+        <a class="dr-btn dr-btn--ghost" href="{% url 'account_change_password' %}">password</a>
+        <a class="dr-btn dr-btn--danger" href="{% url 'account_logout' %}">logout</a>
+      </div>
+    </details>
   </section>
 {% endblock content %}

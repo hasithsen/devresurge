@@ -637,12 +637,28 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         profile = _get_or_create_profile(self.request.user)
         days = self.get_range()
-        start = timezone.localdate() - timedelta(days=days - 1)
+        today = timezone.localdate()
+        start = today - timedelta(days=days - 1)
+        prev_start = start - timedelta(days=days)
+        prev_end = start - timedelta(days=1)
 
         events = ProfileViewEvent.objects.filter(profile=profile, created_at__date__gte=start)
 
         total_views = events.count()
         unique_visitors = events.values("visitor_hash").distinct().count()
+
+        prev_views = ProfileViewEvent.objects.filter(
+            profile=profile,
+            created_at__date__gte=prev_start,
+            created_at__date__lte=prev_end,
+        ).count()
+        views_delta = total_views - prev_views
+        if prev_views > 0:
+            views_delta_pct = round((views_delta / prev_views) * 100)
+        elif total_views > 0:
+            views_delta_pct = 100
+        else:
+            views_delta_pct = 0
 
         daily = (
             events.annotate(day=TruncDate("created_at"))
@@ -670,10 +686,16 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
             )
         for point in series:
             point["pct"] = round((point["views"] / peak) * 100) if peak else 0
+            point["share"] = (
+                round((point["views"] / total_views) * 100) if total_views else 0
+            )
 
         busiest = max(series, key=lambda p: p["views"], default=None)
         if busiest and busiest["views"] == 0:
             busiest = None
+
+        # Active days table (newest first) — actual per-day numbers.
+        daily_rows = [p for p in reversed(series) if p["views"] > 0]
 
         # Referrer breakdown (external hosts only) + a synthetic "direct" row.
         referrers = list(
@@ -685,7 +707,13 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
         ref_max = referrers[0]["count"] if referrers else 0
         for ref in referrers:
             ref["pct"] = round((ref["count"] / ref_max) * 100) if ref_max else 0
+            ref["share"] = (
+                round((ref["count"] / total_views) * 100) if total_views else 0
+            )
         direct_views = total_views - events.exclude(referrer="").count()
+        direct_share = (
+            round((direct_views / total_views) * 100) if total_views else 0
+        )
 
         last_view = (
             events.order_by("-created_at").values_list("created_at", flat=True).first()
@@ -702,6 +730,13 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
         click_max = top_links[0]["count"] if top_links else 0
         for link in top_links:
             link["pct"] = round((link["count"] / click_max) * 100) if click_max else 0
+            link["share"] = (
+                round((link["count"] / total_clicks) * 100) if total_clicks else 0
+            )
+
+        ctr = (
+            round((total_clicks / total_views) * 100, 1) if total_views else 0
+        )
 
         ctx.update(
             {
@@ -709,14 +744,22 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
                 "days": days,
                 "range_choices": self.RANGE_CHOICES,
                 "retention_days": ProfileViewEvent.RETENTION_DAYS,
+                "window_start": start,
+                "window_end": today,
                 "total_views": total_views,
                 "unique_visitors": unique_visitors,
                 "avg_per_day": round(total_views / days, 1) if days else 0,
+                "prev_views": prev_views,
+                "views_delta": views_delta,
+                "views_delta_pct": views_delta_pct,
+                "ctr": ctr,
                 "busiest": busiest,
                 "series": series,
+                "daily_rows": daily_rows,
                 "peak": peak,
                 "referrers": referrers,
                 "direct_views": direct_views,
+                "direct_share": direct_share,
                 "last_view": last_view,
                 "total_clicks": total_clicks,
                 "top_links": top_links,

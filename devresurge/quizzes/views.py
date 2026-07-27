@@ -4,18 +4,18 @@ from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
 
 from .awards import evaluate_quiz_badges
+from .badge_svg import render_achievement_badge_svg
+from .models import Badge
 from .models import Choice
 from .models import Quiz
 from .models import QuizAttempt
@@ -174,28 +174,97 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
     )
 
 
-class BadgeCabinetView(LoginRequiredMixin, ListView):
-    """Owner view of earned + available badges."""
+class BadgeCabinetView(ListView):
+    """Public badge catalog; shows earned set when authenticated."""
 
     template_name = "quizzes/badge_cabinet.html"
-    context_object_name = "earned"
-
-    def get_queryset(self):
-        return (
-            UserBadge.objects.filter(user=self.request.user)
-            .select_related("badge")
-            .order_by("-earned_at")
-        )
+    context_object_name = "catalog"
+    queryset = Badge.objects.filter(is_active=True)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        from .models import Badge
-
         ctx = super().get_context_data(**kwargs)
-        earned_ids = {ub.badge_id for ub in ctx["earned"]}
-        ctx["available"] = Badge.objects.filter(is_active=True).exclude(pk__in=earned_ids)
+        earned_map: dict[int, UserBadge] = {}
+        if self.request.user.is_authenticated:
+            for ub in (
+                UserBadge.objects.filter(user=self.request.user)
+                .select_related("badge")
+                .order_by("-earned_at")
+            ):
+                earned_map[ub.badge_id] = ub
+        rows = []
+        for badge in ctx["catalog"]:
+            rows.append({"badge": badge, "award": earned_map.get(badge.pk)})
+        ctx["rows"] = rows
+        ctx["earned_count"] = len(earned_map)
         return ctx
+
+
+class BadgeDetailView(DetailView):
+    """Public, linkable badge page with recent holders + embed URLs."""
+
+    model = Badge
+    template_name = "quizzes/badge_detail.html"
+    context_object_name = "badge"
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return Badge.objects.filter(is_active=True)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        badge = self.object
+        awards = (
+            UserBadge.objects.filter(badge=badge, user__profile__is_public=True)
+            .select_related("user__profile")
+            .order_by("-earned_at")[:24]
+        )
+        ctx["holders"] = awards
+        ctx["holder_count"] = UserBadge.objects.filter(badge=badge).count()
+        ctx["viewer_award"] = None
+        if self.request.user.is_authenticated:
+            ctx["viewer_award"] = UserBadge.objects.filter(
+                user=self.request.user,
+                badge=badge,
+            ).first()
+        related_quiz = None
+        if badge.slug.startswith("quiz_"):
+            related_quiz = Quiz.objects.filter(
+                badge_slug=badge.slug,
+                is_published=True,
+            ).first()
+        ctx["related_quiz"] = related_quiz
+        profile = getattr(self.request.user, "profile", None) if self.request.user.is_authenticated else None
+        ctx["show_holder_svg"] = bool(
+            ctx["viewer_award"] and profile is not None and profile.is_public,
+        )
+        ctx["holder_handle"] = profile.handle if ctx["show_holder_svg"] else None
+        return ctx
+
+
+def badge_svg_view(request: HttpRequest, slug: str) -> HttpResponse:
+    badge = get_object_or_404(Badge, slug=slug, is_active=True)
+    svg = render_achievement_badge_svg(badge)
+    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
+def badge_holder_svg_view(request: HttpRequest, slug: str, handle: str) -> HttpResponse:
+    """SVG proving a public profile earned this badge."""
+    from devresurge.profiles.models import Profile
+
+    badge = get_object_or_404(Badge, slug=slug, is_active=True)
+    profile = get_object_or_404(Profile, handle=handle, is_public=True)
+    if not UserBadge.objects.filter(user=profile.user, badge=badge).exists():
+        return HttpResponse(status=404)
+    svg = render_achievement_badge_svg(badge, holder_handle=profile.handle)
+    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=3600"
+    return response
 
 
 quiz_list_view = QuizListView.as_view()
 quiz_detail_view = QuizDetailView.as_view()
 badge_cabinet_view = BadgeCabinetView.as_view()
+badge_detail_view = BadgeDetailView.as_view()

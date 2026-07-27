@@ -2381,6 +2381,13 @@ a.dr-tag:hover {
   color: var(--text);
   font-size: 0.82rem;
   max-width: 100%;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+a.dr-achieve:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 18%, var(--bg-elev));
 }
 
 .dr-achieve__icon {
@@ -2412,6 +2419,111 @@ a.dr-tag:hover {
 
 .dr-achieve--locked .dr-achieve__icon {
   color: var(--text-dim);
+}
+
+.dr-badge-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.dr-badge-hero__icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.dr-holder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.dr-holder-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.dr-holder-list li span {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.dr-dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dr-dash {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 900px) {
+  .dr-dash {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    align-items: start;
+  }
+}
+
+.dr-dash__nav {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.dr-dash__nav a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.dr-dash__nav a:hover {
+  border-color: var(--accent);
+}
+
+.dr-dash__hint {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.dr-account {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.dr-account summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  list-style: none;
+}
+
+.dr-account summary::-webkit-details-marker {
+  display: none;
 }
 
 /* Connection relation / connect popover ---------------------------------- */

@@ -105,8 +105,6 @@
       </header>
       <div class="dr-panel__body dr-stack-lg">
 
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami</span></p>
-
         <div class="dr-profile-hero">
           <span class="dr-avatar dr-avatar--lg" aria-hidden="true">
             {% if profile.avatar %}
@@ -117,7 +115,7 @@
           </span>
           <div class="dr-profile-hero__meta">
             <h1 style="margin: 0;">{{ profile.display_name|default:profile.handle }}</h1>
-            <div class="dr-handle">{{ profile.handle }}</div>
+            <div class="dr-handle">@{{ profile.handle }}</div>
             {% if profile.headline %}
               <p style="margin: 0; color: var(--text-muted);">{{ profile.headline }}</p>
             {% endif %}
@@ -127,50 +125,43 @@
               {% if profile.years_experience %}
                 <span>· {{ profile.years_experience }} yr{{ profile.years_experience|pluralize }}</span>
               {% endif %}
-              {% if profile.available_for_hire %}
-                <span class="dr-tag">{% trans "open to work" %}</span>
-              {% endif %}
-              {% if profile.open_to_collaborate %}
-                <span class="dr-tag">{% trans "collaborate" %}</span>
-              {% endif %}
-              {% if profile.open_to_mentor %}
-                <span class="dr-tag">{% trans "mentor" %}</span>
-              {% endif %}
-              {% if profile.open_to_learning %}
-                <span class="dr-tag">{% trans "seeking mentor" %}</span>
-              {% endif %}
             </div>
+            {% if profile.available_for_hire or profile.open_to_collaborate or profile.open_to_mentor or profile.open_to_learning %}
+              <div class="dr-tags" style="margin-top: 0.45rem;">
+                {% if profile.available_for_hire %}<span class="dr-tag">{% trans "open to work" %}</span>{% endif %}
+                {% if profile.open_to_collaborate %}<span class="dr-tag">{% trans "collaborate" %}</span>{% endif %}
+                {% if profile.open_to_mentor %}<span class="dr-tag">{% trans "mentor" %}</span>{% endif %}
+                {% if profile.open_to_learning %}<span class="dr-tag">{% trans "seeking mentor" %}</span>{% endif %}
+              </div>
+            {% endif %}
             {% if profile.open_to_note %}
               <p class="dr-open-note">{{ profile.open_to_note }}</p>
             {% endif %}
             {% if user_badges %}
               <div class="dr-achieve-row" style="margin-top: 0.65rem;">
                 {% for ub in user_badges %}
-                  <span class="dr-achieve" title="{{ ub.badge.description }}">
+                  <a class="dr-achieve" href="{{ ub.badge.get_absolute_url }}" title="{{ ub.badge.description }}">
                     <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
                     <span>{{ ub.badge.title }}</span>
-                  </span>
+                  </a>
                 {% endfor %}
               </div>
             {% endif %}
-            {% if linkedin_url %}
-              <p class="dr-bridge" style="margin: 0.65rem 0 0;">
-                <a href="{{ linkedin_url }}" rel="noopener nofollow ugc" target="_blank"
-                   data-track-kind="social">LinkedIn ↗</a>
-                <span style="color: var(--text-dim);">· {% trans "career network" %}</span>
-              </p>
-            {% endif %}
-            {% if mutual_connections %}
-              <p class="dr-mutual" style="margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.85rem;">
-                {% blocktranslate count counter=mutual_connections|length %}
-                  {{ counter }} mutual connection
-                {% plural %}
-                  {{ counter }} mutual connections
-                {% endblocktranslate %}
-                —
-                {% for m in mutual_connections %}
-                  <a href="{{ m.get_absolute_url }}">@{{ m.handle }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
+            {% if linkedin_url or mutual_connections %}
+              <p class="dr-bridge" style="margin: 0.65rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                {% if linkedin_url %}
+                  <a href="{{ linkedin_url }}" rel="noopener nofollow ugc" target="_blank"
+                     data-track-kind="social">LinkedIn ↗</a>
+                {% endif %}
+                {% if linkedin_url and mutual_connections %}<span> · </span>{% endif %}
+                {% if mutual_connections %}
+                  {% blocktranslate count counter=mutual_connections|length %}
+                    {{ counter }} mutual
+                  {% plural %}
+                    {{ counter }} mutual
+                  {% endblocktranslate %}
+                  ({% for m in mutual_connections %}<a href="{{ m.get_absolute_url }}">@{{ m.handle }}</a>{% if not forloop.last %}, {% endif %}{% endfor %})
+                {% endif %}
               </p>
             {% endif %}
           </div>
@@ -178,7 +169,7 @@
 
         {% if skill_endorsements %}
           <div>
-            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat stack.txt</span></p>
+            <h2 class="dr-section-title">stack</h2>
             <div class="dr-tags">
               {% for row in skill_endorsements %}
                 <span class="dr-skill">
@@ -202,15 +193,10 @@
                 </span>
               {% endfor %}
             </div>
-            {% if is_connected %}
-              <p style="margin: 0.4rem 0 0; color: var(--text-dim); font-size: 0.8rem;">
-                {% trans "Connected? Tap + to endorse a skill you've seen them use." %}
-              </p>
-            {% endif %}
           </div>
         {% elif profile.tech_stack_list %}
           <div>
-            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat stack.txt</span></p>
+            <h2 class="dr-section-title">stack</h2>
             <div class="dr-tags">
               {% for tag in profile.tech_stack_list %}
                 <a class="dr-tag" href="{% url 'profiles:browse' %}?q={{ tag|urlencode }}">{{ tag }}</a>
@@ -221,14 +207,14 @@
 
         {% if profile.bio %}
           <div>
-            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat about.md</span></p>
+            <h2 class="dr-section-title">about</h2>
             <div class="dr-block dr-markdown">{{ profile.bio|markdownify }}</div>
           </div>
         {% endif %}
 
         {% if profile.experiences.all %}
           <div>
-            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat experience.yaml</span></p>
+            <h2 class="dr-section-title">experience</h2>
             <ul class="dr-timeline">
               {% for exp in profile.experiences.all %}
                 <li class="dr-timeline__item">
@@ -247,7 +233,7 @@
 
         {% if profile.education.all %}
           <div>
-            <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat education.yaml</span></p>
+            <h2 class="dr-section-title">education</h2>
             <ul class="dr-timeline">
               {% for edu in profile.education.all %}
                 <li class="dr-timeline__item">
@@ -262,9 +248,9 @@
           </div>
         {% endif %}
 
-        <div>
-          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls projects/</span></p>
-          {% if profile.projects.all %}
+        {% if profile.projects.all %}
+          <div>
+            <h2 class="dr-section-title">projects</h2>
             <div class="dr-grid dr-grid--2">
               {% for project in profile.projects.all %}
                 {% with primary=project.url|default:project.repo_url %}
@@ -313,14 +299,12 @@
                 {% endwith %}
               {% endfor %}
             </div>
-          {% else %}
-            <div class="dr-empty">{% trans "No projects listed yet." %}</div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
 
-        <div>
-          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
-          {% if profile.social_links.all or profile.website_url or profile.show_email %}
+        {% if profile.social_links.all or profile.website_url or profile.show_email %}
+          <div>
+            <h2 class="dr-section-title">links</h2>
             <ul class="dr-social-list">
               {% if profile.website_url %}
                 <li class="dr-list-row dr-list-row--card">
@@ -366,55 +350,52 @@
                 </li>
               {% endfor %}
             </ul>
-          {% else %}
-            <div class="dr-empty">{% trans "No links yet." %}</div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
 
-        <div>
-          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat recommendations.md</span></p>
-          {% with recs=profile.recommendations_received.all %}
-            {% if recs %}
-              <ul class="dr-recs">
-                {% for rec in recs %}
-                  <li class="dr-rec">
-                    <blockquote class="dr-rec__body">{{ rec.body }}</blockquote>
-                    <div class="dr-rec__meta">
-                      — {% if rec.author.profile %}
-                        <a href="{{ rec.author.profile.get_absolute_url }}">{{ rec.author.profile.public_name }}</a>
-                      {% else %}
-                        {% trans "a peer" %}
-                      {% endif %}
-                      {% if rec.relationship %}<span>· {{ rec.relationship }}</span>{% endif %}
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <div class="dr-empty">{% trans "No recommendations yet." %}</div>
-            {% endif %}
-          {% endwith %}
-          {% if is_connected and recommendation_form %}
-            <form method="post" action="{% url 'profiles:recommend' profile.handle %}" class="dr-rec-form">
-              {% csrf_token %}
-              <p style="margin: 0 0 0.4rem; color: var(--text-muted); font-size: 0.9rem;">
-                {% if existing_recommendation %}
-                  {% trans "Update your recommendation:" %}
-                {% else %}
-                  {% trans "Write a recommendation (connections only):" %}
-                {% endif %}
-              </p>
-              {% include "profiles/_field.html" with field=recommendation_form.relationship %}
-              {% include "profiles/_field.html" with field=recommendation_form.body %}
-              <button type="submit" class="dr-btn dr-btn--primary">
-                {% if existing_recommendation %}{% trans "Update" %}{% else %}{% trans "Publish" %}{% endif %}
-              </button>
-            </form>
+        {% with recs=profile.recommendations_received.all %}
+          {% if recs or is_connected and recommendation_form %}
+            <div>
+              <h2 class="dr-section-title">recommendations</h2>
+              {% if recs %}
+                <ul class="dr-recs">
+                  {% for rec in recs %}
+                    <li class="dr-rec">
+                      <blockquote class="dr-rec__body">{{ rec.body }}</blockquote>
+                      <div class="dr-rec__meta">
+                        — {% if rec.author.profile %}
+                          <a href="{{ rec.author.profile.get_absolute_url }}">{{ rec.author.profile.public_name }}</a>
+                        {% else %}
+                          {% trans "a peer" %}
+                        {% endif %}
+                        {% if rec.relationship %}<span>· {{ rec.relationship }}</span>{% endif %}
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              {% if is_connected and recommendation_form %}
+                <form method="post" action="{% url 'profiles:recommend' profile.handle %}" class="dr-rec-form">
+                  {% csrf_token %}
+                  <p style="margin: 0 0 0.4rem; color: var(--text-muted); font-size: 0.9rem;">
+                    {% if existing_recommendation %}
+                      {% trans "Update your recommendation:" %}
+                    {% else %}
+                      {% trans "Write a recommendation:" %}
+                    {% endif %}
+                  </p>
+                  {% include "profiles/_field.html" with field=recommendation_form.relationship %}
+                  {% include "profiles/_field.html" with field=recommendation_form.body %}
+                  <button type="submit" class="dr-btn dr-btn--primary">
+                    {% if existing_recommendation %}{% trans "Update" %}{% else %}{% trans "Publish" %}{% endif %}
+                  </button>
+                </form>
+              {% endif %}
+            </div>
           {% endif %}
-        </div>
+        {% endwith %}
 
         <div class="dr-share-row" style="margin-top: 0.5rem;">
-          <span style="color: var(--text-dim); font-size: 0.85rem;">share</span>
           <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
           <button type="button"
                   class="dr-copy"
@@ -430,8 +411,6 @@
                rel="noopener">badge.svg</a>
           {% endif %}
         </div>
-
-        <p class="dr-cli" style="margin-top: 1rem;"><span class="dr-prompt"></span> <span class="cmd">exit</span></p>
       </div>
     </article>
   </section>

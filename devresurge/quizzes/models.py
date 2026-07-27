@@ -152,6 +152,9 @@ class Badge(models.Model):
     def __str__(self) -> str:
         return self.title
 
+    def get_absolute_url(self) -> str:
+        return reverse("quizzes:badge_detail", kwargs={"slug": self.slug})
+
 
 class UserBadge(models.Model):
     """A badge earned by a user (via their profile)."""

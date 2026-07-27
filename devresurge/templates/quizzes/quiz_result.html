@@ -32,10 +32,10 @@
         {% if awarded %}
           <div class="dr-achieve-row">
             {% for ub in awarded %}
-              <span class="dr-achieve" title="{{ ub.badge.description }}">
+              <a class="dr-achieve" href="{{ ub.badge.get_absolute_url }}" title="{{ ub.badge.description }}">
                 <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
                 <span>{{ ub.badge.title }}</span>
-              </span>
+              </a>
             {% endfor %}
           </div>
         {% endif %}
@@ -43,7 +43,7 @@
           {% if not attempt.passed %}
             <a class="dr-btn dr-btn--primary" href="{% url 'quizzes:take' quiz.slug %}">{% trans "try again" %}</a>
           {% endif %}
-          <a class="dr-btn" href="{% url 'quizzes:badges' %}">{% trans "badge cabinet" %}</a>
+          <a class="dr-btn" href="{% url 'quizzes:badges' %}">{% trans "badges" %}</a>
           <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:list' %}">{% trans "more quizzes" %}</a>
         </div>
       </div>

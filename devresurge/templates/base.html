@@ -95,10 +95,6 @@
                 <a href="{% url 'quizzes:list' %}"
                    {% if request.resolver_match.namespace == 'quizzes' %}aria-current="page"{% endif %}>~/quizzes</a>
               </li>
-              <li>
-                <a href="{% url 'about' %}"
-                   {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>~/about</a>
-              </li>
               {% if request.user.is_authenticated %}
                 <li>
                   <a href="{% url 'profiles:dashboard' %}"
@@ -106,15 +102,12 @@
                 </li>
                 <li>
                   <a class="dr-nav__notif" href="{% url 'connections:notifications' %}"
-                     {% if request.resolver_match.namespace == 'connections' %}aria-current="page"{% endif %}>
+                     {% if request.resolver_match.namespace == 'connections' and request.resolver_match.url_name == 'notifications' %}aria-current="page"{% endif %}>
                     ~/inbox
                     {% if unread_notification_count %}
                       <span class="dr-badge" aria-label="{% blocktranslate count counter=unread_notification_count %}{{ counter }} unread notification{% plural %}{{ counter }} unread notifications{% endblocktranslate %}">{{ unread_notification_count }}</span>
                     {% endif %}
                   </a>
-                </li>
-                <li>
-                  <a href="{% url 'account_logout' %}">$ logout</a>
                 </li>
               {% else %}
                 {% if ACCOUNT_ALLOW_REGISTRATION %}
@@ -158,6 +151,7 @@
           <div class="dr-container">
             <span class="dr-prompt"></span> exit 0 ·
             <a href="{% url 'about' %}">about</a> ·
+            <a href="{% url 'quizzes:badges' %}">badges</a> ·
             <a href="mailto:contact@devresurge.com">contact</a>
           </div>
         </footer>

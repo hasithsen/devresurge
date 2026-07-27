@@ -99,7 +99,7 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         if got:
             awarded.append(got)
 
-    # Streak: passed each of the three starter quizzes at least once.
+    # Core streak: Python + Git + Django.
     needed = {"quiz_python", "quiz_git", "quiz_django"}
     held = set(
         UserBadge.objects.filter(user=user, badge__slug__in=needed).values_list(
@@ -111,6 +111,20 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         held.add(quiz.badge_slug)
     if needed.issubset(held):
         got = award_badge(user, "quiz_streak")
+        if got:
+            awarded.append(got)
+
+    # Polyglot: five or more quiz-category badges.
+    quiz_slugs = set(
+        UserBadge.objects.filter(user=user, badge__category="quiz").values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        quiz_slugs.add(quiz.badge_slug)
+    if len(quiz_slugs) >= 5:
+        got = award_badge(user, "quiz_polyglot")
         if got:
             awarded.append(got)
 
