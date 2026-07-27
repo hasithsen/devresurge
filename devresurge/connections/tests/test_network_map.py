@@ -32,6 +32,7 @@ def test_network_map_renders_for_user(client):
     me = UserFactory()
     peer = UserFactory()
     peer.profile.display_name = "Peer One"
+    peer.profile.is_public = True
     peer.profile.save()
     _accept(me, peer, relation="collaborator")
     client.force_login(me)
@@ -46,6 +47,10 @@ def test_network_map_json_payload(client):
     me = UserFactory()
     a = UserFactory()
     b = UserFactory()
+    a.profile.is_public = True
+    a.profile.save()
+    b.profile.is_public = True
+    b.profile.save()
     _accept(me, a)
     _accept(me, b)
     _accept(a, b)  # mutual edge among peers
@@ -63,12 +68,38 @@ def test_network_map_json_payload(client):
     assert len(mutual) == 1
     assert data["stats"]["connections"] == 2
     assert data["stats"]["mutual_edges"] == 1
+    assert data["stats"]["private_omitted"] == 0
+
+
+def test_build_network_graph_omits_private_peers():
+    me = UserFactory()
+    public = UserFactory()
+    private = UserFactory()
+    public.profile.is_public = True
+    public.profile.save()
+    private.profile.is_public = False
+    private.profile.save()
+    _accept(me, public)
+    _accept(me, private)
+
+    graph = build_network_graph(me, public_only=True)
+    ids = {n["id"] for n in graph["nodes"]}
+    assert me.pk in ids
+    assert public.pk in ids
+    assert private.pk not in ids
+    assert graph["stats"]["connections"] == 1
+    assert graph["stats"]["private_omitted"] == 1
+    assert all(n["is_public"] or n["is_self"] for n in graph["nodes"])
 
 
 def test_build_network_graph_can_omit_mutual():
     me = UserFactory()
     a = UserFactory()
     b = UserFactory()
+    a.profile.is_public = True
+    a.profile.save()
+    b.profile.is_public = True
+    b.profile.save()
     _accept(me, a)
     _accept(me, b)
     _accept(a, b)
@@ -80,8 +111,84 @@ def test_build_network_graph_can_omit_mutual():
 def test_map_data_hides_emails(client):
     me = UserFactory()
     peer = UserFactory()
+    peer.profile.is_public = True
+    peer.profile.save()
     _accept(me, peer)
     client.force_login(me)
     body = client.get(reverse("connections:map_data")).content.decode()
     assert me.email not in body
     assert peer.email not in body
+
+
+def test_public_network_map_is_anonymous(client):
+    host = UserFactory()
+    peer = UserFactory()
+    host.profile.is_public = True
+    host.profile.save()
+    peer.profile.is_public = True
+    peer.profile.display_name = "Public Peer"
+    peer.profile.save()
+    _accept(host, peer)
+
+    url = reverse("profiles:network_map", kwargs={"handle": host.profile.handle})
+    response = client.get(url)
+    assert response.status_code == HTTPStatus.OK
+    assert b"dr-network-map" in response.content
+    assert peer.profile.handle.encode() in response.content
+    assert response.context["is_public_map"] is True
+
+
+def test_public_network_map_404_for_private_profile(client):
+    host = UserFactory()
+    host.profile.is_public = False
+    host.profile.save()
+    response = client.get(
+        reverse("profiles:network_map", kwargs={"handle": host.profile.handle}),
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_public_network_map_json_excludes_private_peers(client):
+    host = UserFactory()
+    public = UserFactory()
+    private = UserFactory()
+    host.profile.is_public = True
+    host.profile.save()
+    public.profile.is_public = True
+    public.profile.save()
+    private.profile.is_public = False
+    private.profile.save()
+    _accept(host, public)
+    _accept(host, private)
+
+    response = client.get(
+        reverse("profiles:network_map_data", kwargs={"handle": host.profile.handle}),
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert "public" in response["Cache-Control"]
+    data = response.json()
+    ids = {n["id"] for n in data["nodes"]}
+    assert host.pk in ids
+    assert public.pk in ids
+    assert private.pk not in ids
+    assert data["stats"]["private_omitted"] == 1
+    body = response.content.decode()
+    assert private.email not in body
+    assert private.profile.handle not in body
+
+
+def test_sitemap_includes_public_network_maps(client):
+    public = UserFactory()
+    private = UserFactory()
+    public.profile.is_public = True
+    public.profile.save()
+    private.profile.is_public = False
+    private.profile.save()
+
+    response = client.get(reverse("sitemap"), {"section": "network_maps"})
+    assert response.status_code == HTTPStatus.OK
+    body = response.content.decode()
+    public_map = reverse("profiles:network_map", kwargs={"handle": public.profile.handle})
+    private_map = reverse("profiles:network_map", kwargs={"handle": private.profile.handle})
+    assert public_map in body
+    assert private_map not in body

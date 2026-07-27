@@ -9,6 +9,7 @@ from django.views import defaults as default_views
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
+from devresurge.profiles.sitemaps import ProfileNetworkMapSitemap
 from devresurge.profiles.sitemaps import ProfileSitemap
 from devresurge.profiles.sitemaps import StaticViewSitemap
 from devresurge.profiles.views import home_view
@@ -31,6 +32,7 @@ def robots_txt(_request):
 
 sitemaps = {
     "profiles": ProfileSitemap,
+    "network_maps": ProfileNetworkMapSitemap,
     "static": StaticViewSitemap,
 }
 

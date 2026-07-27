@@ -1,5 +1,7 @@
 from django.urls import path
 
+from devresurge.connections import views as connection_views
+
 from . import views
 
 app_name = "profiles"
@@ -7,6 +9,16 @@ app_name = "profiles"
 urlpatterns = [
     path("u/", views.profile_browse_view, name="browse"),
     path("u/<slug:handle>/badge.svg", views.profile_badge_view, name="badge"),
+    path(
+        "u/<slug:handle>/map/",
+        connection_views.public_network_map_view,
+        name="network_map",
+    ),
+    path(
+        "u/<slug:handle>/map/data.json",
+        connection_views.public_network_map_data_view,
+        name="network_map_data",
+    ),
     path("u/<slug:handle>/endorse/", views.skill_endorse_view, name="endorse"),
     path("u/<slug:handle>/unendorse/", views.skill_unendorse_view, name="unendorse"),
     path("u/<slug:handle>/recommend/", views.recommendation_create_view, name="recommend"),

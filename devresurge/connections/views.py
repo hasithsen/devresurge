@@ -359,29 +359,97 @@ class ConnectionListView(LoginRequiredMixin, ListView):
 
 
 class NetworkMapView(LoginRequiredMixin, TemplateView):
-    """Interactive force-directed map of the signed-in user's network."""
+    """Interactive force-directed map of the signed-in user's public network."""
 
     template_name = "connections/network_map.html"
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
         include_mutual = self.request.GET.get("mutual", "1") != "0"
-        graph = build_network_graph(self.request.user, include_mutual=include_mutual)
+        graph = build_network_graph(
+            self.request.user,
+            include_mutual=include_mutual,
+            public_only=True,
+        )
         ctx["graph"] = graph
         ctx["include_mutual"] = include_mutual
         ctx["relations"] = ConnectionRelation.choices
         ctx["graph_json_url"] = reverse("connections:map_data")
+        ctx["is_public_map"] = False
+        ctx["map_profile"] = getattr(self.request.user, "profile", None)
         return ctx
 
 
 @login_required
 @require_GET
 def network_map_data_view(request: HttpRequest) -> JsonResponse:
-    """JSON graph payload for the map (and future clients)."""
+    """JSON graph payload for the owner's map (public accounts only)."""
     include_mutual = request.GET.get("mutual", "1") != "0"
-    graph = build_network_graph(request.user, include_mutual=include_mutual)
+    graph = build_network_graph(
+        request.user,
+        include_mutual=include_mutual,
+        public_only=True,
+    )
     response = JsonResponse(graph)
     response["Cache-Control"] = "private, no-store"
+    return response
+
+
+class PublicNetworkMapView(TemplateView):
+    """Public ego-network map for a listed profile (public accounts only)."""
+
+    template_name = "connections/network_map.html"
+
+    def get_profile(self):
+        from devresurge.profiles.models import Profile
+
+        return get_object_or_404(
+            Profile.objects.filter(is_public=True).select_related("user"),
+            handle=Profile.normalize_handle(self.kwargs["handle"]),
+        )
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        self.profile = self.get_profile()
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        include_mutual = self.request.GET.get("mutual", "1") != "0"
+        profile = self.profile
+        graph = build_network_graph(
+            profile.user,
+            include_mutual=include_mutual,
+            public_only=True,
+        )
+        ctx["graph"] = graph
+        ctx["include_mutual"] = include_mutual
+        ctx["relations"] = ConnectionRelation.choices
+        ctx["graph_json_url"] = reverse(
+            "profiles:network_map_data",
+            kwargs={"handle": profile.handle},
+        )
+        ctx["is_public_map"] = True
+        ctx["map_profile"] = profile
+        return ctx
+
+
+@require_GET
+def public_network_map_data_view(request: HttpRequest, handle: str) -> JsonResponse:
+    """Public JSON graph for a listed profile — never includes private accounts."""
+    from devresurge.profiles.models import Profile
+
+    profile = get_object_or_404(
+        Profile.objects.filter(is_public=True).select_related("user"),
+        handle=Profile.normalize_handle(handle),
+    )
+    include_mutual = request.GET.get("mutual", "1") != "0"
+    graph = build_network_graph(
+        profile.user,
+        include_mutual=include_mutual,
+        public_only=True,
+    )
+    response = JsonResponse(graph)
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
     return response
 
 
@@ -420,3 +488,4 @@ class NotificationListView(LoginRequiredMixin, ListView):
 connection_list_view = ConnectionListView.as_view()
 notification_list_view = NotificationListView.as_view()
 network_map_view = NetworkMapView.as_view()
+public_network_map_view = PublicNetworkMapView.as_view()

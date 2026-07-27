@@ -10,6 +10,11 @@ from .models import Connection
 from .models import ConnectionStatus
 
 
+def _profile_is_public(user) -> bool:
+    profile = getattr(user, "profile", None)
+    return bool(profile is not None and profile.is_public)
+
+
 def _node_from_user(user, *, is_self: bool = False) -> dict[str, Any]:
     profile = getattr(user, "profile", None)
     handle = getattr(profile, "handle", "") or ""
@@ -19,6 +24,7 @@ def _node_from_user(user, *, is_self: bool = False) -> dict[str, Any]:
             avatar = profile.avatar.url
         except ValueError:
             avatar = ""
+    is_public = bool(getattr(profile, "is_public", False))
     return {
         "id": user.pk,
         "handle": handle,
@@ -27,21 +33,30 @@ def _node_from_user(user, *, is_self: bool = False) -> dict[str, Any]:
         "role": profile.get_primary_role_display() if profile is not None else "",
         "location": (profile.location or "") if profile is not None else "",
         "avatar": avatar,
+        # Only link out to public profiles (self always may deep-link when public).
         "url": (
             profile.get_absolute_url()
-            if profile is not None and handle and (is_self or profile.is_public)
+            if profile is not None and handle and (is_self or is_public)
             else ""
         ),
         "open_to_work": bool(getattr(profile, "available_for_hire", False)),
         "is_self": is_self,
-        "is_public": bool(getattr(profile, "is_public", False)),
+        "is_public": is_public,
     }
 
 
-def build_network_graph(user, *, include_mutual: bool = True) -> dict[str, Any]:
+def build_network_graph(
+    user,
+    *,
+    include_mutual: bool = True,
+    public_only: bool = True,
+) -> dict[str, Any]:
     """Return ego network for ``user``.
 
-    Nodes: the viewer + every accepted 1st-degree connection.
+    Nodes: the viewer + accepted 1st-degree connections.
+    When ``public_only`` (default), private accounts are omitted from nodes and
+    edges — required for any map that can be shared or embedded publicly.
+
     Edges: viewer↔peer (with relation), and optionally peer↔peer when two of
     the viewer's connections are also connected to each other.
     """
@@ -55,9 +70,13 @@ def build_network_graph(user, *, include_mutual: bool = True) -> dict[str, Any]:
     nodes_by_id: dict[int, dict[str, Any]] = {user.pk: me}
     edges: list[dict[str, Any]] = []
     peer_ids: list[int] = []
+    private_omitted = 0
 
     for conn in accepted:
         other = conn.other_user(user)
+        if public_only and not _profile_is_public(other):
+            private_omitted += 1
+            continue
         if other.pk not in nodes_by_id:
             nodes_by_id[other.pk] = _node_from_user(other)
             peer_ids.append(other.pk)
@@ -73,7 +92,7 @@ def build_network_graph(user, *, include_mutual: bool = True) -> dict[str, Any]:
 
     mutual_count = 0
     if include_mutual and len(peer_ids) >= 2:
-        # Edges among peers that share an accepted connection.
+        # Edges among peers that share an accepted connection (public set only).
         peer_links = (
             Connection.objects.filter(status=ConnectionStatus.ACCEPTED)
             .filter(
@@ -116,5 +135,6 @@ def build_network_graph(user, *, include_mutual: bool = True) -> dict[str, Any]:
             "connections": len(peer_ids),
             "mutual_edges": mutual_count,
             "relations": relation_counts,
+            "private_omitted": private_omitted,
         },
     }

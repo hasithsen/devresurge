@@ -411,6 +411,8 @@
                href="{% url 'profiles:badge' profile.handle %}"
                target="_blank"
                rel="noopener">badge.svg</a>
+            <a class="dr-btn dr-btn--sm dr-btn--ghost"
+               href="{% url 'profiles:network_map' profile.handle %}">{% trans "network map" %}</a>
           {% endif %}
         </div>
       </div>
