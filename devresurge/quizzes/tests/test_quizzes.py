@@ -141,12 +141,24 @@ def test_achievement_badge_svg_fits_long_copy(seeded_quizzes):
 
     badge = Badge.objects.get(slug="profile_ready")
     svg = render_achievement_badge_svg(badge)
-    assert "Completed every item on the setup.sh checklist." in svg
-    # Width grows past the old fixed 280px canvas.
-    assert 'width="' in svg
+    assert "Completed every item" in svg
+    assert "setup.sh checklist." in svg
+    assert "…" not in svg
     width = int(svg.split('width="', 1)[1].split('"', 1)[0])
-    assert width >= 280
-    assert width <= 520
+    assert width >= 300
+    assert width <= 580
+
+
+def test_all_catalog_badge_svgs_have_full_descriptions(seeded_quizzes):
+    from devresurge.quizzes.badge_svg import render_achievement_badge_svg
+    from devresurge.quizzes.models import Badge
+
+    for badge in Badge.objects.filter(is_active=True):
+        svg = render_achievement_badge_svg(badge)
+        # Every word of the catalog description must appear (may wrap across lines).
+        for word in badge.description.split():
+            assert word in svg, f"{badge.slug} missing {word!r}"
+        assert "…" not in svg, f"{badge.slug} still ellipsizes"
 
 
 def test_badge_holder_svg(client, seeded_quizzes):

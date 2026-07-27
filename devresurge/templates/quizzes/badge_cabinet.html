@@ -39,13 +39,7 @@
           <span class="dr-achieve__icon" aria-hidden="true">{{ row.badge.icon }}</span>
           <span class="dr-achieve__meta">
             <strong>{{ row.badge.title }}</strong>
-            <small>
-              {% if row.award %}
-                {{ row.award.earned_at|date:"Y-m-d" }}
-              {% else %}
-                {{ row.badge.get_category_display }}
-              {% endif %}
-            </small>
+            <small>{{ row.badge.description }}</small>
           </span>
         </a>
       {% empty %}
