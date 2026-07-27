@@ -17,7 +17,7 @@
 {% endblock extra_head %}
 
 {% block content %}
-  <section class="dr-page">
+  <section class="dr-page dr-map-page">
     <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
       {% if is_public_map and map_profile %}
         <a href="{% url 'home' %}">~</a>
@@ -36,9 +36,9 @@
       {% endif %}
     </nav>
 
-    <header class="dr-page__head">
+    <header class="dr-page__head dr-map-page__head">
       <div>
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">graph connections --public --interactive</span></p>
+        <p class="dr-cli dr-map-page__cli"><span class="dr-prompt"></span> <span class="cmd">graph connections --public --interactive</span></p>
         <h1 style="margin: 0;">
           {% if is_public_map and map_profile %}
             {% blocktranslate with handle=map_profile.handle %}@{{ handle }} network{% endblocktranslate %}
@@ -46,13 +46,21 @@
             {% trans "network map" %}
           {% endif %}
         </h1>
-        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
-          {% blocktranslate with n=graph.stats.connections m=graph.stats.mutual_edges %}
-            {{ n }} public connections · {{ m }} mutual links. Drag nodes, scroll to zoom, click to open a profile.
-          {% endblocktranslate %}
+        <p class="dr-map-page__lede">
+          <span class="dr-map-page__stats">
+            {% blocktranslate with n=graph.stats.connections m=graph.stats.mutual_edges %}
+              {{ n }} public · {{ m }} mutual
+            {% endblocktranslate %}
+          </span>
+          <span class="dr-map-page__hint dr-map-page__hint--fine">
+            {% trans "Drag nodes · scroll to zoom · double-click to open" %}
+          </span>
+          <span class="dr-map-page__hint dr-map-page__hint--coarse">
+            {% trans "Pinch to zoom · drag to pan · tap a node to open" %}
+          </span>
         </p>
       </div>
-      <div class="dr-page__head-actions">
+      <div class="dr-page__head-actions dr-map-page__actions">
         {% if is_public_map and map_profile %}
           <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{{ map_profile.get_absolute_url }}">{% trans "profile" %}</a>
           {% if request.user.is_authenticated and map_profile.user_id == request.user.pk %}
@@ -69,11 +77,50 @@
     </header>
 
     <div class="dr-map-layout">
-      <aside class="dr-map-sidebar dr-panel" aria-label="{% translate 'Map controls' %}">
+      {# Canvas first in DOM for mobile-first reading order #}
+      <div class="dr-map-stage dr-panel">
         <header class="dr-panel__header">
           <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">controls.yaml</span>
+          <span class="dr-panel__title">
+            {% if is_public_map and map_profile %}@{{ map_profile.handle }}/network.svg{% else %}network.svg{% endif %}
+          </span>
+          <span class="dr-pill" data-map-status>sim</span>
         </header>
+        <div class="dr-panel__body dr-map-canvas-wrap">
+          <div class="dr-map-toolbar" role="toolbar" aria-label="{% translate 'Map tools' %}">
+            <button type="button" class="dr-btn dr-btn--sm" data-map-fit>{% trans "fit" %}</button>
+            <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-pause>{% trans "pause" %}</button>
+            <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-zoom-in aria-label="{% translate 'Zoom in' %}">+</button>
+            <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-zoom-out aria-label="{% translate 'Zoom out' %}">−</button>
+          </div>
+          <canvas id="dr-network-map"
+                  class="dr-map-canvas"
+                  role="img"
+                  aria-label="{% if is_public_map and map_profile %}{% blocktranslate with handle=map_profile.handle %}Public network map for @{{ handle }}{% endblocktranslate %}{% else %}{% translate 'Interactive network map of your public connections' %}{% endif %}"
+                  data-network-map
+                  data-map-src="{{ graph_json_url }}?mutual={% if include_mutual %}1{% else %}0{% endif %}"
+                  data-map-empty="{% if is_public_map %}{% translate 'No public connections to show yet.' %}{% else %}{% translate 'Connect with a public profile to populate this map.' %}{% endif %}">
+          </canvas>
+          <div class="dr-map-tooltip" data-map-tooltip hidden></div>
+          <div class="dr-map-sheet" data-map-sheet hidden>
+            <div class="dr-map-sheet__body">
+              <div class="dr-map-sheet__meta">
+                <strong data-map-sheet-name></strong>
+                <span data-map-sheet-handle></span>
+              </div>
+              <a class="dr-btn dr-btn--sm dr-btn--primary" data-map-sheet-open href="#">{% trans "open profile" %}</a>
+              <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-sheet-close aria-label="{% translate 'Close' %}">×</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <details class="dr-map-sidebar dr-panel" data-map-controls>
+        <summary class="dr-panel__header dr-map-sidebar__summary">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">{% trans "controls & roster" %}</span>
+          <span class="dr-pill">{{ graph.stats.connections }}</span>
+        </summary>
         <div class="dr-panel__body dr-stack">
           <label class="dr-label" for="dr-map-filter">{% trans "Filter by relation" %}</label>
           <select id="dr-map-filter" class="dr-select" data-map-filter>
@@ -87,11 +134,6 @@
             <input type="checkbox" data-map-mutual {% if include_mutual %}checked{% endif %} />
             <span>{% trans "show mutual edges" %}</span>
           </label>
-
-          <div class="dr-btn-row">
-            <button type="button" class="dr-btn dr-btn--sm" data-map-fit>{% trans "fit" %}</button>
-            <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-pause>{% trans "pause" %}</button>
-          </div>
 
           <p class="dr-helptext" style="margin: 0;">
             {% if is_public_map and map_profile %}
@@ -156,28 +198,7 @@
             </div>
           {% endif %}
         </div>
-      </aside>
-
-      <div class="dr-map-stage dr-panel">
-        <header class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">
-            {% if is_public_map and map_profile %}@{{ map_profile.handle }}/network.svg{% else %}network.svg{% endif %}
-          </span>
-          <span class="dr-pill" data-map-status>sim</span>
-        </header>
-        <div class="dr-panel__body dr-map-canvas-wrap">
-          <canvas id="dr-network-map"
-                  class="dr-map-canvas"
-                  role="img"
-                  aria-label="{% if is_public_map and map_profile %}{% blocktranslate with handle=map_profile.handle %}Public network map for @{{ handle }}{% endblocktranslate %}{% else %}{% translate 'Interactive network map of your public connections' %}{% endif %}"
-                  data-network-map
-                  data-map-src="{{ graph_json_url }}?mutual={% if include_mutual %}1{% else %}0{% endif %}"
-                  data-map-empty="{% if is_public_map %}{% translate 'No public connections to show yet.' %}{% else %}{% translate 'Connect with a public profile to populate this map.' %}{% endif %}">
-          </canvas>
-          <div class="dr-map-tooltip" data-map-tooltip hidden></div>
-        </div>
-      </div>
+      </details>
     </div>
   </section>
 {% endblock content %}

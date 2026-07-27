@@ -27,6 +27,10 @@
     }
   }
 
+  function isCoarsePointer() {
+    return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  }
+
   function NetworkMap(canvas, graph) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -44,18 +48,44 @@
     this.relationFilter = "";
     this.showMutual = true;
     this.raf = 0;
+    this.pointers = new Map();
+    this.pinch = null;
+    this.gesture = null;
     this.tooltip = document.querySelector("[data-map-tooltip]");
+    this.sheet = document.querySelector("[data-map-sheet]");
     this.status = document.querySelector("[data-map-status]");
     this.emptyMsg = canvas.getAttribute("data-map-empty") || "No connections yet.";
+    this.coarse = isCoarsePointer();
 
     this._bindUI();
+    this._syncControlsOpen();
     this._loadGraph(this.graph);
     this._resize();
     this._fit(true);
     this._loop();
 
     window.addEventListener("resize", this._onResizeBound(this), { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", this._onResize.bind(this), { passive: true });
+    }
+    if (typeof ResizeObserver !== "undefined") {
+      var self = this;
+      this._ro = new ResizeObserver(function () { self._onResize(); });
+      this._ro.observe(this.canvas.parentElement);
+    }
   }
+
+  NetworkMap.prototype._syncControlsOpen = function () {
+    var details = document.querySelector("[data-map-controls]");
+    if (!details) return;
+    var mq = window.matchMedia("(min-width: 861px)");
+    function sync() {
+      if (mq.matches) details.setAttribute("open", "");
+    }
+    sync();
+    if (mq.addEventListener) mq.addEventListener("change", sync);
+    else if (mq.addListener) mq.addListener(sync);
+  };
 
   NetworkMap.prototype._bindUI = function () {
     var self = this;
@@ -86,10 +116,22 @@
         if (self.running) self._loop();
       });
     }
+    var zin = document.querySelector("[data-map-zoom-in]");
+    var zout = document.querySelector("[data-map-zoom-out]");
+    if (zin) zin.addEventListener("click", function () { self._zoomAt(1.18); });
+    if (zout) zout.addEventListener("click", function () { self._zoomAt(0.85); });
+
+    var sheetClose = document.querySelector("[data-map-sheet-close]");
+    if (sheetClose) sheetClose.addEventListener("click", function () { self._hideSheet(); });
+
     document.querySelectorAll("[data-map-focus]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = parseInt(btn.getAttribute("data-map-focus"), 10);
         self._focusNode(id);
+        if (self.coarse) {
+          var node = self.nodeById[id];
+          if (node) self._showSheet(node);
+        }
       });
       btn.addEventListener("dblclick", function () {
         var url = btn.getAttribute("data-map-url");
@@ -100,6 +142,17 @@
     canvasEvents(this);
   };
 
+  NetworkMap.prototype._zoomAt = function (factor, sx, sy) {
+    var mx = sx == null ? this.width / 2 : sx;
+    var my = sy == null ? this.height / 2 : sy;
+    var before = this._screenToWorld(mx, my);
+    this.scale = Math.min(3.5, Math.max(0.35, this.scale * factor));
+    var after = this._screenToWorld(mx, my);
+    this.tx += (after.x - before.x) * this.scale;
+    this.ty += (after.y - before.y) * this.scale;
+    this._draw();
+  };
+
   function canvasEvents(map) {
     var c = map.canvas;
 
@@ -108,19 +161,39 @@
       var rect = c.getBoundingClientRect();
       var mx = e.clientX - rect.left;
       var my = e.clientY - rect.top;
-      var before = map._screenToWorld(mx, my);
-      var factor = e.deltaY < 0 ? 1.08 : 0.92;
-      map.scale = Math.min(3.5, Math.max(0.35, map.scale * factor));
-      var after = map._screenToWorld(mx, my);
-      map.tx += (after.x - before.x) * map.scale;
-      map.ty += (after.y - before.y) * map.scale;
-      map._draw();
+      map._zoomAt(e.deltaY < 0 ? 1.08 : 0.92, mx, my);
     }, { passive: false });
 
     c.addEventListener("pointerdown", function (e) {
-      c.setPointerCapture(e.pointerId);
+      map.coarse = isCoarsePointer();
+      map.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { c.setPointerCapture(e.pointerId); } catch (_) {}
+
+      if (map.pointers.size === 2) {
+        map.dragNode = null;
+        map.pan = null;
+        var pts = Array.from(map.pointers.values());
+        var dx = pts[1].x - pts[0].x;
+        var dy = pts[1].y - pts[0].y;
+        map.pinch = {
+          dist: Math.sqrt(dx * dx + dy * dy) || 1,
+          scale: map.scale,
+          cx: (pts[0].x + pts[1].x) / 2,
+          cy: (pts[0].y + pts[1].y) / 2,
+        };
+        map.gesture = null;
+        return;
+      }
+
       var p = map._eventWorld(e);
       var hit = map._hitTest(p.x, p.y);
+      map.gesture = {
+        hit: hit,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        started: Date.now(),
+      };
       if (hit) {
         map.dragNode = hit;
         hit.fx = hit.x;
@@ -133,6 +206,34 @@
     });
 
     c.addEventListener("pointermove", function (e) {
+      if (map.pointers.has(e.pointerId)) {
+        map.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      if (map.pinch && map.pointers.size >= 2) {
+        var pts = Array.from(map.pointers.values());
+        var dx = pts[1].x - pts[0].x;
+        var dy = pts[1].y - pts[0].y;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        var rect = c.getBoundingClientRect();
+        var mx = map.pinch.cx - rect.left;
+        var my = map.pinch.cy - rect.top;
+        var factor = dist / map.pinch.dist;
+        var before = map._screenToWorld(mx, my);
+        map.scale = Math.min(3.5, Math.max(0.35, map.pinch.scale * factor));
+        var after = map._screenToWorld(mx, my);
+        map.tx += (after.x - before.x) * map.scale;
+        map.ty += (after.y - before.y) * map.scale;
+        map._draw();
+        return;
+      }
+
+      if (map.gesture) {
+        var gdx = e.clientX - map.gesture.startX;
+        var gdy = e.clientY - map.gesture.startY;
+        if ((gdx * gdx + gdy * gdy) > 64) map.gesture.moved = true;
+      }
+
       if (map.dragNode) {
         var p = map._eventWorld(e);
         map.dragNode.fx = p.x;
@@ -140,7 +241,7 @@
         map.dragNode.x = p.x;
         map.dragNode.y = p.y;
         map._draw();
-        map._showTooltip(map.dragNode, e);
+        if (!map.coarse) map._showTooltip(map.dragNode, e);
         return;
       }
       if (map.pan) {
@@ -149,6 +250,7 @@
         map._draw();
         return;
       }
+      if (map.coarse) return;
       var w = map._eventWorld(e);
       var hover = map._hitTest(w.x, w.y);
       if (hover !== map.hover) {
@@ -157,22 +259,42 @@
       }
       if (hover) map._showTooltip(hover, e);
       else map._hideTooltip();
-      c.style.cursor = hover ? "pointer" : (map.pan ? "grabbing" : "grab");
+      c.style.cursor = hover ? "pointer" : "grab";
     });
 
     function endPointer(e) {
+      map.pointers.delete(e.pointerId);
+      if (map.pointers.size < 2) map.pinch = null;
+
+      var gesture = map.gesture;
+      var hit = map.dragNode || (gesture && gesture.hit);
+      var wasTap = gesture && !gesture.moved && (Date.now() - gesture.started) < 450;
+
       if (map.dragNode) {
         map.dragNode.fx = null;
         map.dragNode.fy = null;
         map.dragNode = null;
       }
       map.pan = null;
+      map.gesture = null;
       try { c.releasePointerCapture(e.pointerId); } catch (_) {}
+
+      if (wasTap && hit) {
+        map.hover = hit;
+        map._draw();
+        if (map.coarse) {
+          map._hideTooltip();
+          map._showSheet(hit);
+        } else {
+          map._showTooltip(hit, e);
+        }
+      }
     }
     c.addEventListener("pointerup", endPointer);
     c.addEventListener("pointercancel", endPointer);
 
     c.addEventListener("dblclick", function (e) {
+      if (map.coarse) return;
       var w = map._eventWorld(e);
       var hit = map._hitTest(w.x, w.y);
       if (hit && hit.url) window.location.href = hit.url;
@@ -182,6 +304,7 @@
   NetworkMap.prototype._loadGraph = function (graph) {
     this.graph = graph || { nodes: [], edges: [], me_id: null };
     this.nodeById = {};
+    var coarse = this.coarse;
     this.nodes = (graph.nodes || []).map(function (n, i) {
       var angle = (i / Math.max(graph.nodes.length, 1)) * Math.PI * 2;
       var radius = n.is_self ? 0 : 160 + (i % 5) * 18;
@@ -202,7 +325,7 @@
         vy: 0,
         fx: null,
         fy: null,
-        r: n.is_self ? 22 : 16,
+        r: n.is_self ? (coarse ? 26 : 22) : (coarse ? 20 : 16),
         img: null,
       };
       if (n.avatar) {
@@ -233,9 +356,9 @@
 
   NetworkMap.prototype._resize = function () {
     var wrap = this.canvas.parentElement;
-    var w = Math.max(320, wrap.clientWidth || 640);
-    var h = Math.max(360, wrap.clientHeight || 480);
-    var dpr = window.devicePixelRatio || 1;
+    var w = Math.max(280, wrap.clientWidth || 320);
+    var h = Math.max(240, wrap.clientHeight || 320);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     this.canvas.width = Math.floor(w * dpr);
     this.canvas.height = Math.floor(h * dpr);
     this.canvas.style.width = w + "px";
@@ -258,11 +381,13 @@
   };
 
   NetworkMap.prototype._hitTest = function (x, y) {
+    var pad = this.coarse ? 16 : 4;
     for (var i = this.nodes.length - 1; i >= 0; i--) {
       var n = this.nodes[i];
       var dx = n.x - x;
       var dy = n.y - y;
-      if (dx * dx + dy * dy <= (n.r + 4) * (n.r + 4)) return n;
+      var r = n.r + pad;
+      if (dx * dx + dy * dy <= r * r) return n;
     }
     return null;
   };
@@ -501,11 +626,12 @@
     this.ty = -n.y * this.scale;
     this.hover = n;
     this._draw();
-    this._showTooltip(n, null);
+    if (this.coarse) this._showSheet(n);
+    else this._showTooltip(n, null);
   };
 
   NetworkMap.prototype._showTooltip = function (node, event) {
-    if (!this.tooltip) return;
+    if (!this.tooltip || this.coarse) return;
     var lines = [
       "<strong>" + escapeHtml(node.name) + "</strong>",
       node.handle ? "@" + escapeHtml(node.handle) : "",
@@ -518,13 +644,48 @@
     this.tooltip.hidden = false;
     if (event) {
       var rect = this.canvas.getBoundingClientRect();
-      this.tooltip.style.left = (event.clientX - rect.left + 14) + "px";
-      this.tooltip.style.top = (event.clientY - rect.top + 14) + "px";
+      var left = event.clientX - rect.left + 14;
+      var top = event.clientY - rect.top + 14;
+      this.tooltip.style.left = "0px";
+      this.tooltip.style.top = "0px";
+      // Measure then clamp inside the canvas.
+      var tw = this.tooltip.offsetWidth || 160;
+      var th = this.tooltip.offsetHeight || 60;
+      left = Math.max(8, Math.min(left, this.width - tw - 8));
+      top = Math.max(8, Math.min(top, this.height - th - 8));
+      this.tooltip.style.left = left + "px";
+      this.tooltip.style.top = top + "px";
     }
   };
 
   NetworkMap.prototype._hideTooltip = function () {
     if (this.tooltip) this.tooltip.hidden = true;
+  };
+
+  NetworkMap.prototype._showSheet = function (node) {
+    if (!this.sheet || !node) return;
+    var nameEl = this.sheet.querySelector("[data-map-sheet-name]");
+    var handleEl = this.sheet.querySelector("[data-map-sheet-handle]");
+    var openEl = this.sheet.querySelector("[data-map-sheet-open]");
+    if (nameEl) nameEl.textContent = node.name || "";
+    if (handleEl) {
+      handleEl.textContent = node.handle
+        ? "@" + node.handle + (node.is_self ? " · you" : "")
+        : (node.is_self ? "you" : "");
+    }
+    if (openEl) {
+      if (node.url) {
+        openEl.href = node.url;
+        openEl.hidden = false;
+      } else {
+        openEl.hidden = true;
+      }
+    }
+    this.sheet.hidden = false;
+  };
+
+  NetworkMap.prototype._hideSheet = function () {
+    if (this.sheet) this.sheet.hidden = true;
   };
 
   function escapeHtml(s) {
