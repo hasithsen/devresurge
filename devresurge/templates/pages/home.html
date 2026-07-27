@@ -2,8 +2,8 @@
 
 {% load i18n %}
 
-{% block title %}DevResurge — terminal profiles for tech professionals{% endblock title %}
-{% block meta_description %}DevResurge — a minimal terminal-styled home for developer profiles. Spin up your handle, link your projects, share with one URL.{% endblock meta_description %}
+{% block title %}DevResurge — technical profiles complementary to LinkedIn{% endblock title %}
+{% block meta_description %}DevResurge is the README of your career: projects, verified skills, and open-to intents. Keep LinkedIn for the network — publish your signal here.{% endblock meta_description %}
 
 {% block content %}
 <div class="dr-page" style="padding-top: 0.5rem;">
@@ -11,10 +11,10 @@
     <div class="dr-hero__inner">
       <div>
         <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami --as developer</span></p>
-        <h1>build a profile<br />that reads like a <span style="color: var(--accent);">README</span>.</h1>
+        <h1>your technical README.<br /><span style="color: var(--accent);">LinkedIn stays the network.</span></h1>
         <p class="dr-lede">
-          DevResurge is a tiny, terminal-styled home for tech folks. Spin up a public profile,
-          list your stack, link your projects and socials — no bloat, just signal.
+          DevResurge is complementary to LinkedIn: ship a signal-dense profile — stack, projects,
+          experience, quiz-backed badges, peer endorsements — without the feed noise.
         </p>
         <div class="dr-btn-row">
           {% if request.user.is_authenticated %}
@@ -55,15 +55,14 @@
             <span class="dr-dots"><span></span><span></span><span></span></span>
             <span class="dr-panel__title">~/devresurge — zsh</span>
           </div>
-          <pre><span class="muted">$</span> devresurge init
-<span class="ok">✓</span> handle      <span class="muted">→</span> your-handle
-<span class="ok">✓</span> headline    <span class="muted">→</span> "Backend engineer · Python &amp; Go"
-<span class="ok">✓</span> stack       <span class="muted">→</span> [python, django, postgres, aws]
-<span class="ok">✓</span> projects    <span class="muted">→</span> 4 added
-<span class="ok">✓</span> socials     <span class="muted">→</span> github · linkedin · website
+          <pre><span class="muted">$</span> cat positioning.md
+<span class="ok">✓</span> LinkedIn   <span class="muted">→</span> network, jobs, companies
+<span class="ok">✓</span> DevResurge <span class="muted">→</span> stack, projects, verified skill
+<span class="ok">✓</span> bridge     <span class="muted">→</span> link both; recruiters get signal
 
-<span class="muted">$</span> devresurge publish
-<span class="ok">live</span> at <span class="muted">/u/your-handle</span>
+<span class="muted">$</span> open-to --list
+work · collaborate · mentor · learning
+
 <span class="muted">$</span> _</pre>
         </div>
       </div>
@@ -79,7 +78,7 @@
           <div class="dr-profile-card__head">
             <span class="dr-avatar">
               {% if profile.avatar %}
-                <img src="{{ profile.avatar.url }}" alt="" />
+                <img src="{{ profile.avatar.url }}" alt="" loading="lazy" />
               {% else %}
                 {{ profile.initials }}
               {% endif %}
@@ -97,23 +96,8 @@
             {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
             {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">open to work</strong></span>{% endif %}
           </div>
-          {% if profile.tech_stack_list %}
-            <div class="dr-tags">
-              {% for tag in profile.tech_stack_list|slice:":4" %}
-                <span class="dr-tag">{{ tag }}</span>
-              {% endfor %}
-              {% if profile.tech_stack_list|length > 4 %}
-                <span class="dr-tag dr-tag--ghost">+{{ profile.tech_stack_list|length|add:"-4" }}</span>
-              {% endif %}
-            </div>
-          {% endif %}
         </a>
       {% endfor %}
-    </div>
-  {% else %}
-    <div class="dr-empty">
-      <div class="dr-emoji">∅</div>
-      <p>No profiles yet. Be the first to <a href="{% url 'account_signup' %}">spin one up</a>.</p>
     </div>
   {% endif %}
 </div>

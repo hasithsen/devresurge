@@ -11,15 +11,19 @@ from django.db import IntegrityError
 from django.db import transaction
 from django.http import HttpRequest
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
+from django.views.generic import TemplateView
 
 from .emails import send_notification_email
+from .graph import build_network_graph
 from .models import Connection
 from .models import ConnectionRelation
 from .models import ConnectionStatus
@@ -354,6 +358,33 @@ class ConnectionListView(LoginRequiredMixin, ListView):
         return ctx
 
 
+class NetworkMapView(LoginRequiredMixin, TemplateView):
+    """Interactive force-directed map of the signed-in user's network."""
+
+    template_name = "connections/network_map.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        include_mutual = self.request.GET.get("mutual", "1") != "0"
+        graph = build_network_graph(self.request.user, include_mutual=include_mutual)
+        ctx["graph"] = graph
+        ctx["include_mutual"] = include_mutual
+        ctx["relations"] = ConnectionRelation.choices
+        ctx["graph_json_url"] = reverse("connections:map_data")
+        return ctx
+
+
+@login_required
+@require_GET
+def network_map_data_view(request: HttpRequest) -> JsonResponse:
+    """JSON graph payload for the map (and future clients)."""
+    include_mutual = request.GET.get("mutual", "1") != "0"
+    graph = build_network_graph(request.user, include_mutual=include_mutual)
+    response = JsonResponse(graph)
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
 class NotificationListView(LoginRequiredMixin, ListView):
     """Inbox of in-app notifications; marks them read on view."""
 
@@ -388,3 +419,4 @@ class NotificationListView(LoginRequiredMixin, ListView):
 
 connection_list_view = ConnectionListView.as_view()
 notification_list_view = NotificationListView.as_view()
+network_map_view = NetworkMapView.as_view()

@@ -185,6 +185,8 @@ class NotificationKind(models.TextChoices):
     CONNECTION_ACCEPTED = "connection_accepted", _("Connection accepted")
     BADGE_EARNED = "badge_earned", _("Badge earned")
     QUIZ_PASSED = "quiz_passed", _("Quiz passed")
+    SKILL_ENDORSED = "skill_endorsed", _("Skill endorsed")
+    RECOMMENDATION = "recommendation", _("Recommendation")
 
 
 class NotificationQuerySet(models.QuerySet):

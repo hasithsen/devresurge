@@ -74,18 +74,24 @@
         <article class="dr-panel" style="margin-bottom: 1.25rem;">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
-            <span class="dr-panel__title">contact</span>
+            <span class="dr-panel__title">contact &amp; open-to</span>
           </header>
           <div class="dr-panel__body">
             {% include "profiles/_field.html" with field=form.website_url %}
-            <div class="dr-grid dr-grid--3">
+            {% include "profiles/_field.html" with field=form.open_to_note %}
+            <div class="dr-grid dr-grid--2">
               {% include "profiles/_field.html" with field=form.show_email %}
-              {% include "profiles/_field.html" with field=form.available_for_hire %}
               {% include "profiles/_field.html" with field=form.is_public %}
+              {% include "profiles/_field.html" with field=form.available_for_hire %}
+              {% include "profiles/_field.html" with field=form.open_to_collaborate %}
+              {% include "profiles/_field.html" with field=form.open_to_mentor %}
+              {% include "profiles/_field.html" with field=form.open_to_learning %}
             </div>
+            <p class="dr-helptext" style="margin-top: 0.5rem;">
+              {% trans "Tip: add your LinkedIn under links/ so recruiters can jump to your career network — DevResurge stays the technical README." %}
+            </p>
           </div>
         </article>
-
         <div class="dr-form-actions">
           <button type="submit" class="dr-btn dr-btn--primary">{% trans "save changes" %}</button>
           <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:dashboard' %}">{% trans "cancel" %}</a>

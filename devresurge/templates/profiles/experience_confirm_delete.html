@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}delete experience — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <div class="dr-narrow">
+      <article class="dr-panel">
+        <header class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">rm experience</span>
+        </header>
+        <div class="dr-panel__body dr-stack">
+          <p>{% blocktranslate with title=object.title company=object.company %}Delete <strong>{{ title }}</strong> at {{ company }}?{% endblocktranslate %}</p>
+          <form method="post">
+            {% csrf_token %}
+            <div class="dr-btn-row">
+              <button type="submit" class="dr-btn dr-btn--danger">{% trans "delete" %}</button>
+              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:experience_list' %}">{% trans "cancel" %}</a>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+{% endblock content %}

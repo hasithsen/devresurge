@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}education — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>education</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls education/</span></p>
+        <h1 style="margin: 0;">{% trans "education" %}</h1>
+      </div>
+      <div class="dr-page__head-actions">
+        <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:education_create' %}">+ {% trans "school" %}</a>
+      </div>
+    </header>
+
+    {% if education_list %}
+      <ul class="dr-timeline" style="margin-top: 1.25rem;">
+        {% for edu in education_list %}
+          <li class="dr-timeline__item">
+            <div class="dr-timeline__head">
+              <strong>{{ edu.school }}</strong>
+              {% if edu.degree_label %}<span class="dr-timeline__org">{{ edu.degree_label }}</span>{% endif %}
+              {% if edu.year_label %}<span class="dr-timeline__when">{{ edu.year_label }}</span>{% endif %}
+            </div>
+            <div class="dr-btn-row">
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:education_update' edu.pk %}">{% trans "edit" %}</a>
+              <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:education_delete' edu.pk %}">{% trans "delete" %}</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty" style="margin-top: 1.25rem;">
+        <p>{% trans "No education entries yet." %}</p>
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:education_create' %}">{% trans "add education" %}</a>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

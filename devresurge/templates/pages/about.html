@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}About — DevResurge{% endblock title %}
-{% block meta_description %}About DevResurge — a tiny opinionated home for tech professionals' profiles.{% endblock meta_description %}
+{% block meta_description %}DevResurge complements LinkedIn: technical profiles, projects, quizzes, and peer endorsements without the feed.{% endblock meta_description %}
 
 {% block content %}
   <section class="dr-page">
@@ -17,14 +19,26 @@
           <h1># DevResurge</h1>
           <p>
             DevResurge is a small, opinionated home for the tech crowd. Profiles read like
-            a <code>README</code> — handle, headline, stack, projects, socials. Nothing more,
-            nothing less.
+            a <code>README</code> — handle, headline, stack, experience, projects, badges,
+            peer endorsements. Nothing more, nothing less.
+          </p>
+
+          <h2>## complementary to LinkedIn</h2>
+          <p>
+            Keep LinkedIn for your career network, jobs, and company graph. Use DevResurge for
+            <strong>technical signal</strong> recruiters and collaborators actually need: what you
+            ship, what you can prove (quizzes), who vouches for your stack, and what you’re open to
+            (work, collaborate, mentor).
+          </p>
+          <p>
+            Link both. Your DevResurge page can deep-link to LinkedIn; your LinkedIn featured
+            section can point here. Two surfaces, one identity — no feed to manage.
           </p>
 
           <h2>## why?</h2>
           <p>
-            Most "portfolio" sites either drown you in plugins or look like a CMS demo. We
-            wanted something fast, accessible, and a little nostalgic — a terminal you
+            Most portfolio sites drown you in plugins. LinkedIn buries signal under noise.
+            We wanted something fast, accessible, and a little nostalgic — a terminal you
             can publish.
           </p>
 

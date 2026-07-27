@@ -134,6 +134,27 @@ class Profile(models.Model):
     website_url = models.URLField(_("website"), max_length=300, blank=True)
     show_email = models.BooleanField(_("show email publicly"), default=False)
     available_for_hire = models.BooleanField(_("open to work"), default=False)
+    open_to_collaborate = models.BooleanField(
+        _("open to collaborate"),
+        default=False,
+        help_text=_("Side projects, OSS, or consulting together."),
+    )
+    open_to_mentor = models.BooleanField(
+        _("open to mentor"),
+        default=False,
+        help_text=_("Happy to mentor others."),
+    )
+    open_to_learning = models.BooleanField(
+        _("seeking mentorship"),
+        default=False,
+        help_text=_("Looking for guidance from more senior folks."),
+    )
+    open_to_note = models.CharField(
+        _("open-to note"),
+        max_length=200,
+        blank=True,
+        help_text=_("Optional one-liner for recruiters / collaborators."),
+    )
     is_public = models.BooleanField(_("publicly listed"), default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -233,6 +254,10 @@ class Profile(models.Model):
         has_links = bool(self.website_url) or (
             self.social_links.exists() if self.pk else False
         )
+        has_experience = self.experiences.exists() if self.pk else False
+        has_linkedin = False
+        if self.pk:
+            has_linkedin = self.social_links.filter(platform=SocialPlatform.LINKEDIN).exists()
         return [
             {
                 "key": "display_name",
@@ -265,6 +290,12 @@ class Profile(models.Model):
                 "url_name": "profiles:edit",
             },
             {
+                "key": "experience",
+                "label": _("Work experience"),
+                "done": has_experience,
+                "url_name": "profiles:experience_create",
+            },
+            {
                 "key": "projects",
                 "label": _("At least one project"),
                 "done": has_projects,
@@ -274,6 +305,12 @@ class Profile(models.Model):
                 "key": "links",
                 "label": _("Social or website link"),
                 "done": has_links,
+                "url_name": "profiles:link_create",
+            },
+            {
+                "key": "linkedin",
+                "label": _("LinkedIn link (bridge)"),
+                "done": has_linkedin,
                 "url_name": "profiles:link_create",
             },
             {
@@ -312,14 +349,42 @@ class Profile(models.Model):
             meta.append(f"{self.years_experience} yr experience")
         if self.available_for_hire:
             meta.append("open to work")
+        if self.open_to_collaborate:
+            meta.append("open to collaborate")
+        if self.open_to_mentor:
+            meta.append("open to mentor")
+        if self.open_to_learning:
+            meta.append("seeking mentorship")
         lines.append(" · ".join(meta))
         lines.append("")
+        if self.open_to_note:
+            lines.extend([f"> {self.open_to_note}", ""])
 
         if self.tech_stack_list:
             lines.extend(["## Stack", "", ", ".join(f"`{t}`" for t in self.tech_stack_list), ""])
 
         if self.bio:
             lines.extend(["## About", "", self.bio.strip(), ""])
+
+        experiences = list(self.experiences.all()) if self.pk else []
+        if experiences:
+            lines.extend(["## Experience", ""])
+            for exp in experiences:
+                when = exp.date_range_label
+                lines.append(f"### {exp.title} · {exp.company}")
+                lines.append("")
+                lines.append(f"*{when}*")
+                if exp.description:
+                    lines.append("")
+                    lines.append(exp.description.strip())
+                lines.append("")
+
+        education = list(self.education.all()) if self.pk else []
+        if education:
+            lines.extend(["## Education", ""])
+            for edu in education:
+                lines.append(f"- **{edu.school}** — {edu.degree_label}" + (f" ({edu.year_label})" if edu.year_label else ""))
+            lines.append("")
 
         projects = list(self.projects.all()) if self.pk else []
         if projects:
@@ -344,6 +409,15 @@ class Profile(models.Model):
                     lines.append(" · ".join(extras))
                 lines.append("")
 
+        recommendations = list(self.recommendations_received.filter(is_public=True)[:5]) if self.pk else []
+        if recommendations:
+            lines.extend(["## Recommendations", ""])
+            for rec in recommendations:
+                author = rec.author.profile.public_name if hasattr(rec.author, "profile") else "a peer"
+                lines.append(f"> {rec.body.strip()}")
+                lines.append(f"> — {author}")
+                lines.append("")
+
         links: list[str] = []
         if self.website_url:
             links.append(f"- [Website]({self.website_url})")
@@ -356,8 +430,38 @@ class Profile(models.Model):
             lines.extend(["## Links", "", *links, ""])
 
         if base_url:
-            lines.extend(["---", "", f"Profile: {base_url}{self.get_absolute_url()}", ""])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    f"Profile: {base_url}{self.get_absolute_url()}",
+                    "",
+                    "_Technical signal on DevResurge — career network on LinkedIn._",
+                    "",
+                ],
+            )
         return "\n".join(lines)
+
+    @property
+    def open_to_labels(self) -> list[str]:
+        """Human labels for active open-to intents."""
+        labels: list[str] = []
+        if self.available_for_hire:
+            labels.append(str(_("open to work")))
+        if self.open_to_collaborate:
+            labels.append(str(_("collaborate")))
+        if self.open_to_mentor:
+            labels.append(str(_("mentor")))
+        if self.open_to_learning:
+            labels.append(str(_("seeking mentor")))
+        return labels
+
+    def linkedin_url(self) -> str:
+        if not self.pk:
+            return ""
+        link = self.social_links.filter(platform=SocialPlatform.LINKEDIN).first()
+        return link.url if link else ""
+
 
 
 class ProjectLink(models.Model):
@@ -445,6 +549,218 @@ class SocialLink(models.Model):
     @property
     def display_label(self) -> str:
         return self.label or self.get_platform_display()
+
+
+class WorkExperience(models.Model):
+    """A role on the career timeline — LinkedIn-complementary, signal-first."""
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="experiences",
+    )
+    title = models.CharField(_("title"), max_length=120)
+    company = models.CharField(_("company"), max_length=120)
+    location = models.CharField(_("location"), max_length=120, blank=True)
+    description = models.TextField(
+        _("description"),
+        blank=True,
+        help_text=_("What you shipped — Markdown-lite plain text is fine."),
+    )
+    start_year = models.PositiveSmallIntegerField(
+        _("start year"),
+        validators=[MinValueValidator(1970), MaxValueValidator(2100)],
+    )
+    start_month = models.PositiveSmallIntegerField(
+        _("start month"),
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+    end_year = models.PositiveSmallIntegerField(
+        _("end year"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1970), MaxValueValidator(2100)],
+    )
+    end_month = models.PositiveSmallIntegerField(
+        _("end month"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+    is_current = models.BooleanField(_("current role"), default=False)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "-start_year", "-start_month")
+        verbose_name = _("work experience")
+        verbose_name_plural = _("work experience")
+
+    def __str__(self) -> str:
+        return f"{self.title} @ {self.company}"
+
+    def clean(self) -> None:
+        super().clean()
+        if self.is_current:
+            self.end_year = None
+            self.end_month = None
+        elif self.end_year and self.start_year:
+            if (self.end_year, self.end_month or 12) < (self.start_year, self.start_month):
+                raise ValidationError(_("End date must be after start date."))
+
+    @property
+    def date_range_label(self) -> str:
+        start = f"{self.start_year}-{self.start_month:02d}"
+        if self.is_current or not self.end_year:
+            return f"{start} — present"
+        end = f"{self.end_year}-{self.end_month or 12:02d}"
+        return f"{start} — {end}"
+
+
+class Education(models.Model):
+    """School / bootcamp entry for the public timeline."""
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="education",
+    )
+    school = models.CharField(_("school"), max_length=160)
+    degree = models.CharField(
+        _("degree"),
+        max_length=120,
+        blank=True,
+        help_text=_("e.g. BSc Computer Science, Bootcamp"),
+    )
+    field = models.CharField(_("field of study"), max_length=120, blank=True)
+    start_year = models.PositiveSmallIntegerField(
+        _("start year"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1970), MaxValueValidator(2100)],
+    )
+    end_year = models.PositiveSmallIntegerField(
+        _("end year"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1970), MaxValueValidator(2100)],
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "-end_year", "-start_year")
+        verbose_name = _("education")
+        verbose_name_plural = _("education")
+
+    def __str__(self) -> str:
+        return self.school
+
+    @property
+    def degree_label(self) -> str:
+        parts = [p for p in (self.degree, self.field) if p]
+        return " · ".join(parts) if parts else ""
+
+    @property
+    def year_label(self) -> str:
+        if self.start_year and self.end_year:
+            return f"{self.start_year}–{self.end_year}"
+        if self.end_year:
+            return str(self.end_year)
+        if self.start_year:
+            return f"{self.start_year}–"
+        return ""
+
+
+class SkillEndorsement(models.Model):
+    """A connection vouching for one skill on another member's stack.
+
+    Only accepted connections may endorse, and only skills listed on the
+    profile's tech_stack. This is peer signal — complementary to LinkedIn's
+    looser endorsement model.
+    """
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="endorsements",
+    )
+    endorser = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="endorsements_given",
+    )
+    skill = models.CharField(_("skill"), max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _("skill endorsement")
+        verbose_name_plural = _("skill endorsements")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("profile", "endorser", "skill"),
+                name="profiles_endorsement_unique",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "skill"], name="profiles_endorse_skill_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.endorser_id} → {self.profile_id}:{self.skill}"
+
+    def clean(self) -> None:
+        super().clean()
+        skill = (self.skill or "").strip().lower()
+        self.skill = skill
+        if self.profile_id and skill not in self.profile.tech_stack_list:
+            raise ValidationError(_("Skill must be on the member's tech stack."))
+        if self.profile_id and self.endorser_id == self.profile.user_id:
+            raise ValidationError(_("You can't endorse yourself."))
+
+
+class Recommendation(models.Model):
+    """A short written recommendation from an accepted connection."""
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="recommendations_received",
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="recommendations_written",
+    )
+    relationship = models.CharField(
+        _("relationship"),
+        max_length=80,
+        blank=True,
+        help_text=_("e.g. Worked together at Acme, mentored on Django"),
+    )
+    body = models.TextField(_("recommendation"), max_length=800)
+    is_public = models.BooleanField(_("visible on profile"), default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _("recommendation")
+        verbose_name_plural = _("recommendations")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("profile", "author"),
+                name="profiles_recommendation_unique_author",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"rec by {self.author_id} → {self.profile_id}"
+
+    def clean(self) -> None:
+        super().clean()
+        if self.profile_id and self.author_id == self.profile.user_id:
+            raise ValidationError(_("You can't recommend yourself."))
 
 
 class AnalyticsEventQuerySet(models.QuerySet):

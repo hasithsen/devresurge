@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}delete education — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <div class="dr-narrow">
+      <article class="dr-panel">
+        <div class="dr-panel__body dr-stack">
+          <p>{% blocktranslate with school=object.school %}Delete <strong>{{ school }}</strong>?{% endblocktranslate %}</p>
+          <form method="post">
+            {% csrf_token %}
+            <div class="dr-btn-row">
+              <button type="submit" class="dr-btn dr-btn--danger">{% trans "delete" %}</button>
+              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:education_list' %}">{% trans "cancel" %}</a>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+{% endblock content %}

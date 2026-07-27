@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% load i18n static %}
+
+{% block title %}~/connections/map — DevResurge{% endblock title %}
+{% block meta_description %}Interactive map of your DevResurge connection network.{% endblock meta_description %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{% url 'connections:list' %}">connections</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>map</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">graph connections --interactive</span></p>
+        <h1 style="margin: 0;">{% trans "network map" %}</h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
+          {% blocktranslate with n=graph.stats.connections m=graph.stats.mutual_edges %}
+            {{ n }} connections · {{ m }} mutual links among them. Drag nodes, scroll to zoom, click to open a profile.
+          {% endblocktranslate %}
+        </p>
+      </div>
+      <div class="dr-page__head-actions">
+        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "list view" %}</a>
+        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
+      </div>
+    </header>
+
+    <div class="dr-map-layout">
+      <aside class="dr-map-sidebar dr-panel" aria-label="{% translate 'Map controls' %}">
+        <header class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">controls.yaml</span>
+        </header>
+        <div class="dr-panel__body dr-stack">
+          <label class="dr-label" for="dr-map-filter">{% trans "Filter by relation" %}</label>
+          <select id="dr-map-filter" class="dr-select" data-map-filter>
+            <option value="">{% trans "all relations" %}</option>
+            {% for value, label in relations %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <label class="dr-check">
+            <input type="checkbox" data-map-mutual {% if include_mutual %}checked{% endif %} />
+            <span>{% trans "show mutual edges" %}</span>
+          </label>
+
+          <div class="dr-btn-row">
+            <button type="button" class="dr-btn dr-btn--sm" data-map-fit>{% trans "fit" %}</button>
+            <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-pause>{% trans "pause" %}</button>
+          </div>
+
+          <p class="dr-helptext" style="margin: 0;">
+            {% trans "You are the center node. Solid edges are your links; dashed edges are connections between your peers." %}
+          </p>
+
+          <div class="dr-map-legend" aria-hidden="true">
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--self"></i> {% trans "you" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "connection" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--hire"></i> {% trans "open to work" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-line"></i> {% trans "direct" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-line dr-map-line--mutual"></i> {% trans "mutual" %}</span>
+          </div>
+
+          <h2 class="dr-map-list-title">{% trans "roster" %}</h2>
+          <ul class="dr-map-roster" data-map-roster>
+            {% for node in graph.nodes %}
+              {% if not node.is_self %}
+                <li>
+                  <button type="button"
+                          class="dr-map-roster__btn"
+                          data-map-focus="{{ node.id }}"
+                          {% if node.url %}data-map-url="{{ node.url }}"{% endif %}>
+                    <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+                      {% if node.avatar %}<img src="{{ node.avatar }}" alt="" />{% else %}{{ node.initials }}{% endif %}
+                    </span>
+                    <span>
+                      <strong>{{ node.name }}</strong>
+                      {% if node.handle %}<span class="dr-conn__handle">@{{ node.handle }}</span>{% endif %}
+                    </span>
+                  </button>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          {% if graph.stats.connections == 0 %}
+            <div class="dr-empty">
+              <p>{% trans "No connections yet — find people and send a request." %}</p>
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:browse' %}">{% trans "browse" %}</a>
+            </div>
+          {% endif %}
+        </div>
+      </aside>
+
+      <div class="dr-map-stage dr-panel">
+        <header class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">network.svg</span>
+          <span class="dr-pill" data-map-status>sim</span>
+        </header>
+        <div class="dr-panel__body dr-map-canvas-wrap">
+          <canvas id="dr-network-map"
+                  class="dr-map-canvas"
+                  role="img"
+                  aria-label="{% translate 'Interactive network map of your connections' %}"
+                  data-network-map
+                  data-map-src="{% url 'connections:map_data' %}?mutual={% if include_mutual %}1{% else %}0{% endif %}"
+                  data-map-empty="{% translate 'Connect with someone to populate this map.' %}">
+          </canvas>
+          <div class="dr-map-tooltip" data-map-tooltip hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}
+
+{% block javascript %}
+  {{ block.super }}
+  {{ graph|json_script:"dr-network-graph-data" }}
+  <script defer src="{% static 'js/network-map.js' %}"></script>
+{% endblock javascript %}

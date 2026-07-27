@@ -231,11 +231,20 @@ def test_readiness_complete_when_fully_filled():
         SimpleUploadedFile("a.png", png, content_type="image/png"),
         save=True,
     )
+    from devresurge.profiles.models import WorkExperience
     from devresurge.profiles.tests.factories import ProjectLinkFactory
     from devresurge.profiles.tests.factories import SocialLinkFactory
 
     ProjectLinkFactory(profile=profile)
-    SocialLinkFactory(profile=profile)
+    SocialLinkFactory(profile=profile, platform="linkedin", url="https://linkedin.com/in/x")
+    WorkExperience.objects.create(
+        profile=profile,
+        title="Engineer",
+        company="Acme",
+        start_year=2020,
+        start_month=1,
+        is_current=True,
+    )
     readiness = profile.readiness()
     assert readiness["complete"] is True
     assert readiness["pct"] == 100

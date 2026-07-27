@@ -6,6 +6,8 @@ app_name = "connections"
 
 urlpatterns = [
     path("", views.connection_list_view, name="list"),
+    path("map/", views.network_map_view, name="map"),
+    path("map/data.json", views.network_map_data_view, name="map_data"),
     path("notifications/", views.notification_list_view, name="notifications"),
     path("request/<int:user_id>/", views.connection_request_view, name="request"),
     path("<int:pk>/accept/", views.connection_accept_view, name="accept"),

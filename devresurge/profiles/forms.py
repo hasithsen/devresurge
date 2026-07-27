@@ -11,9 +11,12 @@ from .models import ALLOWED_AVATAR_EXTENSIONS
 from .models import HANDLE_MAX_LENGTH
 from .models import HANDLE_MIN_LENGTH
 from .models import MAX_AVATAR_BYTES
+from .models import Education
 from .models import Profile
 from .models import ProjectLink
+from .models import Recommendation
 from .models import SocialLink
+from .models import WorkExperience
 
 _ALLOWED_AVATAR_MIME = {
     "image/jpeg",
@@ -39,6 +42,10 @@ class ProfileForm(forms.ModelForm):
             "website_url",
             "show_email",
             "available_for_hire",
+            "open_to_collaborate",
+            "open_to_mentor",
+            "open_to_learning",
+            "open_to_note",
             "is_public",
         )
         widgets = {
@@ -162,3 +169,68 @@ class SocialLinkForm(forms.ModelForm):
         except ValidationError as exc:
             raise ValidationError(_("Enter a valid URL.")) from exc
         return url
+
+
+class WorkExperienceForm(forms.ModelForm):
+    class Meta:
+        model = WorkExperience
+        fields = (
+            "title",
+            "company",
+            "location",
+            "description",
+            "start_year",
+            "start_month",
+            "end_year",
+            "end_month",
+            "is_current",
+        )
+        widgets = {
+            "description": forms.Textarea(
+                attrs={"rows": 4, "placeholder": "Shipped X, led Y, reduced Z…"},
+            ),
+            "title": forms.TextInput(attrs={"placeholder": "Senior Backend Engineer"}),
+            "company": forms.TextInput(attrs={"placeholder": "Acme"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("is_current"):
+            cleaned["end_year"] = None
+            cleaned["end_month"] = None
+        return cleaned
+
+
+class EducationForm(forms.ModelForm):
+    class Meta:
+        model = Education
+        fields = ("school", "degree", "field", "start_year", "end_year")
+        widgets = {
+            "school": forms.TextInput(attrs={"placeholder": "University / Bootcamp"}),
+            "degree": forms.TextInput(attrs={"placeholder": "BSc / Certificate"}),
+            "field": forms.TextInput(attrs={"placeholder": "Computer Science"}),
+        }
+
+
+class RecommendationForm(forms.ModelForm):
+    class Meta:
+        model = Recommendation
+        fields = ("relationship", "body")
+        widgets = {
+            "relationship": forms.TextInput(
+                attrs={"placeholder": "Worked together on API platform"},
+            ),
+            "body": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "placeholder": "What they’re strong at, and how you know.",
+                    "maxlength": 800,
+                },
+            ),
+        }
+
+    def clean_body(self) -> str:
+        body = (self.cleaned_data.get("body") or "").strip()
+        if len(body) < 40:
+            raise ValidationError(_("Write at least a couple of sentences (40+ chars)."))
+        return body

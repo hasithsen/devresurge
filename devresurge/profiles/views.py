@@ -9,14 +9,17 @@ from typing import Any
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import DatabaseError
+from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Case
 from django.db.models import Count
 from django.db.models import IntegerField
+from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Value
 from django.db.models import When
@@ -44,18 +47,28 @@ from django.views.generic import TemplateView
 from django.views.generic import UpdateView
 
 from devresurge.connections.models import Connection
+from devresurge.connections.models import ConnectionStatus
+from devresurge.connections.models import Notification
+from devresurge.connections.models import NotificationKind
 
 from .badges import render_profile_badge_svg
+from .forms import EducationForm
 from .forms import ProfileForm
 from .forms import ProjectLinkForm
+from .forms import RecommendationForm
 from .forms import SocialLinkForm
+from .forms import WorkExperienceForm
+from .models import Education
 from .models import LinkClick
 from .models import LinkKind
 from .models import PrimaryRole
 from .models import Profile
 from .models import ProfileView as ProfileViewEvent
 from .models import ProjectLink
+from .models import Recommendation
+from .models import SkillEndorsement
 from .models import SocialLink
+from .models import WorkExperience
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -326,6 +339,11 @@ class ProfileBrowseView(ListView):
     def hire_only(self) -> bool:
         return (self.request.GET.get("hire") or "").strip() in {"1", "true", "yes", "on"}
 
+    def intent(self) -> str:
+        raw = (self.request.GET.get("intent") or "").strip()
+        allowed = {"hire", "collaborate", "mentor", "learning"}
+        return raw if raw in allowed else ""
+
     def get_queryset(self) -> QuerySet[Profile]:
         qs = (
             Profile.objects.filter(is_public=True)
@@ -344,19 +362,25 @@ class ProfileBrowseView(ListView):
             )
         if role and role in PrimaryRole.values:
             qs = qs.filter(primary_role=role)
-        if self.hire_only():
+        intent = self.intent()
+        if intent == "hire" or self.hire_only():
             qs = qs.filter(available_for_hire=True)
-        # Surface hireable profiles first when browsing the open-to-work lane;
-        # otherwise keep the default recency ordering from the model Meta.
-        if self.hire_only():
+        elif intent == "collaborate":
+            qs = qs.filter(open_to_collaborate=True)
+        elif intent == "mentor":
+            qs = qs.filter(open_to_mentor=True)
+        elif intent == "learning":
+            qs = qs.filter(open_to_learning=True)
+        if intent or self.hire_only():
             return qs.order_by("-updated_at")
-        return qs.order_by("-available_for_hire", "-updated_at")
+        return qs.order_by("-available_for_hire", "-open_to_collaborate", "-updated_at")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
         ctx["q"] = self.request.GET.get("q", "")
         ctx["role"] = self.request.GET.get("role", "")
-        ctx["hire"] = self.hire_only()
+        ctx["hire"] = self.hire_only() or self.intent() == "hire"
+        ctx["intent"] = self.intent() or ("hire" if self.hire_only() else "")
         ctx["roles"] = PrimaryRole.choices
         return ctx
 
@@ -373,7 +397,18 @@ class ProfilePublicView(DetailView):
     def get_queryset(self) -> QuerySet[Profile]:
         return (
             Profile.objects.select_related("user")
-            .prefetch_related("social_links", "projects")
+            .prefetch_related(
+                "social_links",
+                "projects",
+                "experiences",
+                "education",
+                Prefetch(
+                    "recommendations_received",
+                    queryset=Recommendation.objects.filter(is_public=True).select_related(
+                        "author__profile",
+                    ),
+                ),
+            )
         )
 
     def get_object(self, queryset: QuerySet[Profile] | None = None) -> Profile:
@@ -442,6 +477,63 @@ class ProfilePublicView(DetailView):
             .select_related("badge")
             .order_by("badge__order", "-earned_at")
         )
+
+        # Endorsement counts per skill + which the viewer already gave.
+        endorsement_counts = {
+            row["skill"]: row["c"]
+            for row in (
+                SkillEndorsement.objects.filter(profile=profile)
+                .values("skill")
+                .annotate(c=Count("id"))
+            )
+        }
+        ctx["skill_endorsements"] = [
+            {"skill": skill, "count": endorsement_counts.get(skill, 0)}
+            for skill in profile.tech_stack_list
+        ]
+        ctx["my_endorsed_skills"] = set()
+        ctx["is_connected"] = state == "connected"
+        ctx["recommendation_form"] = None
+        ctx["existing_recommendation"] = None
+        ctx["mutual_connections"] = []
+        ctx["linkedin_url"] = profile.linkedin_url()
+
+        if viewer.is_authenticated and viewer.pk != profile.user_id:
+            ctx["my_endorsed_skills"] = set(
+                SkillEndorsement.objects.filter(
+                    profile=profile,
+                    endorser=viewer,
+                ).values_list("skill", flat=True),
+            )
+            if state == "connected":
+                ctx["recommendation_form"] = RecommendationForm()
+                ctx["existing_recommendation"] = Recommendation.objects.filter(
+                    profile=profile,
+                    author=viewer,
+                ).first()
+                # Mutual accepted connections (shared network).
+                my_peers = set(
+                    Connection.objects.involving(viewer)
+                    .accepted()
+                    .values_list("requester_id", "addressee_id"),
+                )
+                my_ids: set[int] = set()
+                for a, b in my_peers:
+                    my_ids.add(b if a == viewer.pk else a)
+                their_peers = set(
+                    Connection.objects.involving(profile.user)
+                    .accepted()
+                    .values_list("requester_id", "addressee_id"),
+                )
+                their_ids: set[int] = set()
+                for a, b in their_peers:
+                    their_ids.add(b if a == profile.user_id else a)
+                mutual_ids = (my_ids & their_ids) - {viewer.pk, profile.user_id}
+                if mutual_ids:
+                    ctx["mutual_connections"] = list(
+                        Profile.objects.filter(user_id__in=mutual_ids, is_public=True)
+                        .select_related("user")[:8],
+                    )
         return ctx
 
 
@@ -801,6 +893,202 @@ def link_reorder_view(request: HttpRequest) -> HttpResponse:
     return _reorder(request, SocialLink)
 
 
+# ---------------------------------------------------------------------------
+# Experience + education CRUD
+# ---------------------------------------------------------------------------
+
+
+class ExperienceListView(LoginRequiredMixin, ListView):
+    model = WorkExperience
+    template_name = "profiles/experience_list.html"
+    context_object_name = "experiences"
+
+    def get_queryset(self):
+        return _get_or_create_profile(self.request.user).experiences.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        ctx["profile"] = _get_or_create_profile(self.request.user)
+        return ctx
+
+
+class ExperienceCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = WorkExperience
+    form_class = WorkExperienceForm
+    template_name = "profiles/experience_form.html"
+    success_url = reverse_lazy("profiles:experience_list")
+    success_message = _("Experience added.")
+
+    def form_valid(self, form):
+        form.instance.profile = _get_or_create_profile(self.request.user)
+        return super().form_valid(form)
+
+
+class ExperienceUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
+    model = WorkExperience
+    form_class = WorkExperienceForm
+    template_name = "profiles/experience_form.html"
+    success_url = reverse_lazy("profiles:experience_list")
+    success_message = _("Experience updated.")
+
+
+class ExperienceDeleteView(_OwnerScopedMixin, DeleteView):
+    model = WorkExperience
+    template_name = "profiles/experience_confirm_delete.html"
+    success_url = reverse_lazy("profiles:experience_list")
+
+
+class EducationListView(LoginRequiredMixin, ListView):
+    model = Education
+    template_name = "profiles/education_list.html"
+    context_object_name = "education_list"
+
+    def get_queryset(self):
+        return _get_or_create_profile(self.request.user).education.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        ctx["profile"] = _get_or_create_profile(self.request.user)
+        return ctx
+
+
+class EducationCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Education
+    form_class = EducationForm
+    template_name = "profiles/education_form.html"
+    success_url = reverse_lazy("profiles:education_list")
+    success_message = _("Education added.")
+
+    def form_valid(self, form):
+        form.instance.profile = _get_or_create_profile(self.request.user)
+        return super().form_valid(form)
+
+
+class EducationUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
+    model = Education
+    form_class = EducationForm
+    template_name = "profiles/education_form.html"
+    success_url = reverse_lazy("profiles:education_list")
+    success_message = _("Education updated.")
+
+
+class EducationDeleteView(_OwnerScopedMixin, DeleteView):
+    model = Education
+    template_name = "profiles/education_confirm_delete.html"
+    success_url = reverse_lazy("profiles:education_list")
+
+
+# ---------------------------------------------------------------------------
+# Endorsements + recommendations (connection-gated)
+# ---------------------------------------------------------------------------
+
+
+def _require_accepted_connection(viewer, profile_user) -> Connection | None:
+    conn = Connection.between(viewer, profile_user)
+    if conn is None or not conn.is_accepted:
+        return None
+    return conn
+
+
+@login_required
+@require_POST
+def skill_endorse_view(request: HttpRequest, handle: str) -> HttpResponse:
+    profile = get_object_or_404(
+        Profile.objects.filter(is_public=True),
+        handle=Profile.normalize_handle(handle),
+    )
+    fallback = profile.get_absolute_url()
+    if profile.user_id == request.user.pk:
+        messages.error(request, _("You can't endorse yourself."))
+        return redirect(fallback)
+    if _require_accepted_connection(request.user, profile.user) is None:
+        messages.error(request, _("Connect first to endorse skills."))
+        return redirect(fallback)
+
+    skill = (request.POST.get("skill") or "").strip().lower()
+    if skill not in profile.tech_stack_list:
+        messages.error(request, _("That skill isn't on their stack."))
+        return redirect(fallback)
+
+    try:
+        with transaction.atomic():
+            _, created = SkillEndorsement.objects.get_or_create(
+                profile=profile,
+                endorser=request.user,
+                skill=skill,
+            )
+    except IntegrityError:
+        created = False
+
+    if created:
+        Notification.objects.create(
+            recipient=profile.user,
+            actor=request.user,
+            kind=NotificationKind.SKILL_ENDORSED,
+            payload=skill,
+        )
+        messages.success(request, _("Endorsed %(skill)s.") % {"skill": skill})
+    else:
+        messages.info(request, _("You already endorsed that skill."))
+    return redirect(fallback)
+
+
+@login_required
+@require_POST
+def skill_unendorse_view(request: HttpRequest, handle: str) -> HttpResponse:
+    profile = get_object_or_404(
+        Profile,
+        handle=Profile.normalize_handle(handle),
+    )
+    skill = (request.POST.get("skill") or "").strip().lower()
+    SkillEndorsement.objects.filter(
+        profile=profile,
+        endorser=request.user,
+        skill=skill,
+    ).delete()
+    messages.info(request, _("Endorsement removed."))
+    return redirect(profile.get_absolute_url())
+
+
+@login_required
+@require_POST
+def recommendation_create_view(request: HttpRequest, handle: str) -> HttpResponse:
+    profile = get_object_or_404(
+        Profile.objects.filter(is_public=True),
+        handle=Profile.normalize_handle(handle),
+    )
+    fallback = profile.get_absolute_url()
+    if profile.user_id == request.user.pk:
+        messages.error(request, _("You can't recommend yourself."))
+        return redirect(fallback)
+    if _require_accepted_connection(request.user, profile.user) is None:
+        messages.error(request, _("Connect first to write a recommendation."))
+        return redirect(fallback)
+
+    existing = Recommendation.objects.filter(profile=profile, author=request.user).first()
+    form = RecommendationForm(request.POST, instance=existing)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect(fallback)
+
+    rec = form.save(commit=False)
+    rec.profile = profile
+    rec.author = request.user
+    rec.is_public = True
+    rec.save()
+    if existing is None:
+        Notification.objects.create(
+            recipient=profile.user,
+            actor=request.user,
+            kind=NotificationKind.RECOMMENDATION,
+            payload=profile.handle,
+        )
+        messages.success(request, _("Recommendation published."))
+    else:
+        messages.success(request, _("Recommendation updated."))
+    return redirect(fallback)
+
+
 # Function aliases (cookiecutter convention)
 home_view = HomeView.as_view()
 profile_browse_view = ProfileBrowseView.as_view()
@@ -816,6 +1104,14 @@ link_list_view = SocialLinkListView.as_view()
 link_create_view = SocialLinkCreateView.as_view()
 link_update_view = SocialLinkUpdateView.as_view()
 link_delete_view = SocialLinkDeleteView.as_view()
+experience_list_view = ExperienceListView.as_view()
+experience_create_view = ExperienceCreateView.as_view()
+experience_update_view = ExperienceUpdateView.as_view()
+experience_delete_view = ExperienceDeleteView.as_view()
+education_list_view = EducationListView.as_view()
+education_create_view = EducationCreateView.as_view()
+education_update_view = EducationUpdateView.as_view()
+education_delete_view = EducationDeleteView.as_view()
 # `project_reorder_view`, `link_reorder_view`, `link_click_view`,
-# `profile_export_readme_view` and `profile_badge_view` are already
-# module-level functions.
+# `profile_export_readme_view`, `profile_badge_view`, endorse/recommend
+# helpers are already module-level functions.

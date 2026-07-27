@@ -1,7 +1,7 @@
 # DevResurge
 
-Terminal-styled developer profiles for the tech crowd. Spin up a public profile, list
-your stack, attach projects, link your socials.
+Terminal-styled developer profiles — the technical README that complements LinkedIn.
+Spin up a public profile, list your stack, attach projects, verify skills, link your career network.
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -10,14 +10,21 @@ License: MIT
 
 ## Features
 
-- **Public profile** at `/u/<handle>/` — avatar, headline, bio, tech stack, projects, social links.
+- **Public profile** at `/u/<handle>/` — avatar, headline, bio, tech stack, **experience &
+  education timeline**, projects, social links, peer recommendations, and quiz badges.
   Includes canonical link, `Person` JSON-LD, OpenGraph + Twitter cards (with avatar fallback).
   Handles are **case-insensitive**: they're stored lowercase, uniqueness is enforced at the DB
   with a `Lower("handle")` constraint, and `/u/Ada/` 301-redirects to the canonical `/u/ada/`.
   Bios render a **safe Markdown subset** (headings, lists, bold/italic, code, http(s)/mailto links).
-- **Owner dashboard** at `/me/` with self-service editors for profile, projects, and links, a
-  one-click copy-share-URL chip, a **profile readiness checklist** (`setup.sh`) that tracks what's
-  still missing, **README.md export**, and an embeddable **SVG badge** for GitHub READMEs.
+  Link LinkedIn on your profile for a one-click bridge — DevResurge = signal, LinkedIn = network.
+- **Open-to intents** — open to work, collaborate, mentor, or seeking mentorship, plus an optional
+  note. Directory filters by intent so hiring managers and collaborators find the right people.
+- **Peer skill endorsements** — accepted connections can vouch for skills on your stack (counts
+  show publicly). Written **recommendations** from connections appear on your profile.
+- **Owner dashboard** at `/me/` with self-service editors for profile, experience, education,
+  projects, and links, a one-click copy-share-URL chip, a **profile readiness checklist**
+  (`setup.sh`) that tracks what's still missing (including LinkedIn bridge), **README.md export**,
+  and an embeddable **SVG badge** for GitHub READMEs.
 - **Privacy-first analytics** at `/me/analytics/` — daily views, unique visitors, busiest day,
   referrer breakdown and **outbound link clicks** over a 7/30/90-day window, rendered as a
   dependency-free CSS bar chart. Visitors are tracked via a salted, irreversible fingerprint
@@ -30,7 +37,9 @@ License: MIT
   accepts/declines from an in-app inbox at `/connections/notifications/` (unread badge in the
   navbar). Accepted links show editable relation status; either party can **block**. Accepting
   links both users, notifies the requester, and can unlock network badges. Emails are opt-out
-  under `/users/~settings/`.
+  under `/users/~settings/`. An interactive **network map** at `/connections/map/` renders your
+  ego graph (drag, zoom, relation filter, mutual edges between peers) with a JSON data endpoint
+  for the canvas client.
 - **Quizzes & achievement badges** — skill quizzes at `/quizzes/` (Python, Git, Django starters,
   seeded via `seed_quizzes`). Pass at 80% to earn badges shown on your public profile and in the
   badge cabinet. Profile milestones (ready, shipper, open to work) and network milestones
@@ -73,6 +82,7 @@ Then visit <http://localhost:8000>.
 | `/u/<handle>/badge.svg`             | Embeddable SVG profile badge       |
 | `/c/`                               | Link-click beacon (POST)           |
 | `/connections/`                     | Your network + pending requests    |
+| `/connections/map/`                 | Interactive network map            |
 | `/connections/notifications/`       | In-app notification inbox          |
 | `/quizzes/`                         | Skill quizzes                      |
 | `/quizzes/badges/`                  | Achievement badge cabinet          |
@@ -82,6 +92,8 @@ Then visit <http://localhost:8000>.
 | `/me/edit/`                         | Edit your profile                  |
 | `/me/analytics/`                    | Views + link-click analytics (90d) |
 | `/me/export/readme.md`              | Download profile as README.md      |
+| `/me/experience/` (+ new/edit/delete) | Career timeline                    |
+| `/me/education/` (+ new/edit/delete)  | Education entries                  |
 | `/me/projects/` (+ new/edit/delete) | Manage project links               |
 | `/me/links/` (+ new/edit/delete)    | Manage social / website links      |
 | `/admin/`                           | Django admin                       |

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}experience — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>experience</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls experience/</span></p>
+        <h1 style="margin: 0;">{% trans "experience" %}</h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
+          {% trans "Career timeline for recruiters — keep it signal-dense, not corporate filler." %}
+        </p>
+      </div>
+      <div class="dr-page__head-actions">
+        <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:experience_create' %}">+ {% trans "role" %}</a>
+      </div>
+    </header>
+
+    {% if experiences %}
+      <ul class="dr-timeline" style="margin-top: 1.25rem;">
+        {% for exp in experiences %}
+          <li class="dr-timeline__item">
+            <div class="dr-timeline__head">
+              <strong>{{ exp.title }}</strong>
+              <span class="dr-timeline__org">{{ exp.company }}</span>
+              <span class="dr-timeline__when">{{ exp.date_range_label }}</span>
+            </div>
+            {% if exp.location %}<p class="dr-timeline__loc">{{ exp.location }}</p>{% endif %}
+            {% if exp.description %}<p class="dr-timeline__body">{{ exp.description }}</p>{% endif %}
+            <div class="dr-btn-row">
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:experience_update' exp.pk %}">{% trans "edit" %}</a>
+              <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:experience_delete' exp.pk %}">{% trans "delete" %}</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty" style="margin-top: 1.25rem;">
+        <p>{% trans "No roles yet. Add your current or most recent position." %}</p>
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:experience_create' %}">{% trans "add experience" %}</a>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

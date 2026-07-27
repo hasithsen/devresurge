@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{% if form.instance.pk %}edit{% else %}new{% endif %} education — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{% url 'profiles:education_list' %}">education</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>{% if form.instance.pk %}edit{% else %}new{% endif %}</span>
+    </nav>
+
+    <div class="dr-narrow dr-narrow--wide">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <article class="dr-panel">
+          <div class="dr-panel__body">
+            {% include "profiles/_field.html" with field=form.school %}
+            <div class="dr-grid dr-grid--2">
+              {% include "profiles/_field.html" with field=form.degree %}
+              {% include "profiles/_field.html" with field=form.field %}
+            </div>
+            <div class="dr-grid dr-grid--2">
+              {% include "profiles/_field.html" with field=form.start_year %}
+              {% include "profiles/_field.html" with field=form.end_year %}
+            </div>
+          </div>
+        </article>
+        <div class="dr-form-actions" style="margin-top: 1rem;">
+          <button type="submit" class="dr-btn dr-btn--primary">{% trans "save" %}</button>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:education_list' %}">{% trans "cancel" %}</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock content %}
