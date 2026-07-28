@@ -1,4 +1,4 @@
-{% load allauth %}
+{% load allauth i18n %}
 
 {% if attrs.type == "textarea" %}
   <div class="dr-field">
@@ -34,6 +34,40 @@
              type="{{ attrs.type }}" />
       <span>{% slot label %}{% endslot %}</span>
     </label>
+    {% if slots.help_text %}
+      <div class="dr-helptext">{% slot help_text %}{% endslot %}</div>
+    {% endif %}
+    {% if slots.errors %}
+      <ul class="dr-errors">{% slot errors %}{% endslot %}</ul>
+    {% endif %}
+  </div>
+{% elif attrs.type == "password" %}
+  <div class="dr-field">
+    <label class="dr-label" for="{{ attrs.id }}">
+      {% slot label %}{% endslot %}{% if attrs.required %}<span class="req">*</span>{% endif %}
+    </label>
+    <div class="dr-password">
+      <input {% if attrs.required %}required{% endif %}
+             {% if attrs.disabled %}disabled{% endif %}
+             {% if attrs.readonly %}readonly{% endif %}
+             {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+             {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+             {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+             {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+             value="{{ attrs.value|default_if_none:'' }}"
+             type="password"
+             class="dr-input dr-password__input"
+             data-password-input />
+      <button type="button"
+              class="dr-password__toggle"
+              data-password-toggle
+              aria-controls="{{ attrs.id }}"
+              aria-pressed="false"
+              aria-label="{% translate 'Show password' %}">
+        <span class="dr-password__icon" aria-hidden="true"></span>
+        <span data-password-label>{% trans "show" %}</span>
+      </button>
+    </div>
     {% if slots.help_text %}
       <div class="dr-helptext">{% slot help_text %}{% endslot %}</div>
     {% endif %}

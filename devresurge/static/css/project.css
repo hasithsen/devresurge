@@ -981,6 +981,65 @@ form ul.errorlist li::before {
   margin-top: 0.3rem;
 }
 
+.dr-password {
+  position: relative;
+  display: block;
+}
+
+.dr-password input,
+.dr-password__input {
+  padding-right: 4.5rem;
+}
+
+.dr-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: color 120ms var(--ease), border-color 120ms var(--ease),
+    background-color 120ms var(--ease);
+}
+
+.dr-password__toggle:hover,
+.dr-password__toggle:focus-visible {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: color-mix(in oklab, var(--bg-elev-2) 80%, transparent);
+  outline: none;
+}
+
+.dr-password__toggle:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.dr-password__toggle[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.dr-password__icon::before {
+  content: "◐";
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.dr-password__toggle[aria-pressed="true"] .dr-password__icon::before {
+  content: "◉";
+}
+
 .dr-check {
   display: inline-flex;
   align-items: center;

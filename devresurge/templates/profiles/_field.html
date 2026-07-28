@@ -1,4 +1,5 @@
 {# Render a single bound form field with terminal styling. #}
+{% load i18n %}
 {% spaceless %}
   <div class="dr-field">
     {% if field.field.widget.input_type == "checkbox" %}
@@ -6,6 +7,20 @@
         {{ field }}
         <span>{{ field.label }}</span>
       </label>
+    {% elif field.field.widget.input_type == "password" %}
+      <label class="dr-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      <div class="dr-password">
+        {{ field }}
+        <button type="button"
+                class="dr-password__toggle"
+                data-password-toggle
+                aria-controls="{{ field.id_for_label }}"
+                aria-pressed="false"
+                aria-label="{% translate 'Show password' %}">
+          <span class="dr-password__icon" aria-hidden="true"></span>
+          <span data-password-label>{% trans "show" %}</span>
+        </button>
+      </div>
     {% else %}
       <label class="dr-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
       {{ field }}

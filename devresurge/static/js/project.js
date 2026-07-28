@@ -572,6 +572,67 @@
     });
   }
 
+  function initPasswordPeek() {
+    var showLabel = "show";
+    var hideLabel = "hide";
+    var showAria = "Show password";
+    var hideAria = "Hide password";
+
+    function bindToggle(btn) {
+      if (btn.getAttribute("data-bound") === "1") return;
+      btn.setAttribute("data-bound", "1");
+      btn.addEventListener("click", function () {
+        var wrap = btn.closest(".dr-password");
+        var input = (wrap && wrap.querySelector("input")) || null;
+        if (!input) {
+          var controls = btn.getAttribute("aria-controls");
+          if (controls) input = document.getElementById(controls);
+        }
+        if (!input) return;
+
+        var revealing = input.type === "password";
+        input.type = revealing ? "text" : "password";
+        btn.setAttribute("aria-pressed", revealing ? "true" : "false");
+        btn.setAttribute("aria-label", revealing ? hideAria : showAria);
+        var label = btn.querySelector("[data-password-label]");
+        if (label) label.textContent = revealing ? hideLabel : showLabel;
+      });
+    }
+
+    document.querySelectorAll("[data-password-toggle]").forEach(bindToggle);
+
+    document.querySelectorAll('input[type="password"]').forEach(function (input) {
+      if (input.closest(".dr-password") || input.hasAttribute("data-no-peek")) return;
+      if (input.disabled || input.readOnly) return;
+
+      var wrap = document.createElement("div");
+      wrap.className = "dr-password";
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+      input.classList.add("dr-input", "dr-password__input");
+      input.setAttribute("data-password-input", "");
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dr-password__toggle";
+      btn.setAttribute("data-password-toggle", "");
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", showAria);
+      if (input.id) btn.setAttribute("aria-controls", input.id);
+
+      var icon = document.createElement("span");
+      icon.className = "dr-password__icon";
+      icon.setAttribute("aria-hidden", "true");
+      var label = document.createElement("span");
+      label.setAttribute("data-password-label", "");
+      label.textContent = showLabel;
+      btn.appendChild(icon);
+      btn.appendChild(label);
+      wrap.appendChild(btn);
+      bindToggle(btn);
+    });
+  }
+
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -585,6 +646,7 @@
     initNav();
     initAlerts();
     initCopyButtons();
+    initPasswordPeek();
     initAvatarPreview();
     initAutoFade();
     initSortable();
