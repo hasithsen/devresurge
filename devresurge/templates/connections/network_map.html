@@ -80,171 +80,119 @@
                 · {% blocktranslate count counter=graph.stats.open_to_work %}{{ counter }} open to work{% plural %}{{ counter }} open to work{% endblocktranslate %}
               {% endif %}
             </span>
-            <span class="dr-map-page__hint dr-map-page__hint--fine">
-              {% trans "Drag · scroll zoom · double-click opens" %}
-            </span>
-            <span class="dr-map-page__hint dr-map-page__hint--coarse">
-              {% trans "Pinch · drag · tap opens" %}
-            </span>
-          </p>
-          <p class="dr-map-page__value">
-            {% if is_explore_map %}
-              {% trans "Live public graph — who is open to work, collaborate, or mentor. LinkedIn keeps the career network; this is the signal layer." %}
-            {% elif is_public_map %}
-              {% trans "Technical network proof — peers, relations, and open-to intents. Complements LinkedIn’s career graph." %}
-            {% else %}
-              {% trans "Preview your public graph before publishing. LinkedIn stays the career network; this map is shareable signal." %}
-            {% endif %}
+            <span class="dr-map-page__hint dr-map-page__hint--fine">{% trans "drag · zoom · dbl-click" %}</span>
+            <span class="dr-map-page__hint dr-map-page__hint--coarse">{% trans "pinch · drag · tap" %}</span>
           </p>
         </div>
         <div class="dr-map-page__actions">
           {% if is_explore_map %}
             {% if map_share %}
-              <a class="dr-btn dr-btn--sm"
-                 href="{{ map_share.linkedin }}"
-                 target="_blank"
-                 rel="noopener noreferrer">{% trans "LinkedIn" %}</a>
               <button type="button"
                       class="dr-btn dr-btn--sm dr-btn--ghost dr-copy"
                       data-copy="{{ map_share.page_url }}"
                       aria-label="{% translate 'Copy map link' %}">
-                <span data-copy-label>{% trans "copy link" %}</span>
+                <span data-copy-label>{% trans "copy" %}</span>
               </button>
             {% endif %}
-            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "profiles" %}</a>
             {% if request.user.is_authenticated %}
               {% if request.user.profile.is_public %}
                 <a class="dr-btn dr-btn--sm" href="{% url 'profiles:network_map' request.user.profile.handle %}">{% trans "your map" %}</a>
               {% else %}
                 <a class="dr-btn dr-btn--sm" href="{% url 'connections:map' %}">{% trans "your map" %}</a>
               {% endif %}
+            {% elif ACCOUNT_ALLOW_REGISTRATION %}
+              <a class="dr-btn dr-btn--sm" href="{% url 'account_signup' %}">{% trans "join" %}</a>
             {% endif %}
           {% elif is_public_map and map_profile %}
-            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:explore_map' %}">{% trans "explore all" %}</a>
+            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:explore_map' %}">{% trans "explore" %}</a>
             <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{{ map_profile.get_absolute_url }}">{% trans "profile" %}</a>
             {% if map_share %}
-              <a class="dr-btn dr-btn--sm"
-                 href="{{ map_share.linkedin }}"
-                 target="_blank"
-                 rel="noopener noreferrer">{% trans "LinkedIn" %}</a>
               <button type="button"
                       class="dr-btn dr-btn--sm dr-btn--ghost dr-copy"
                       data-copy="{{ map_share.page_url }}"
                       aria-label="{% translate 'Copy map link' %}">
-                <span data-copy-label>{% trans "copy link" %}</span>
+                <span data-copy-label>{% trans "copy" %}</span>
               </button>
             {% endif %}
-            {% if request.user.is_authenticated and map_profile.user_id == request.user.pk %}
-              <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "manage" %}</a>
-            {% endif %}
           {% else %}
-            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "publish profile" %}</a>
+            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "publish" %}</a>
             <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
           {% endif %}
         </div>
       </header>
 
       {% if is_explore_map and not request.user.is_authenticated %}
-        <div class="dr-map-join" role="region" aria-label="{% translate 'Join DevResurge' %}">
-          <div class="dr-map-join__copy">
-            <strong>{% trans "Want a node on this map?" %}</strong>
-            <span>{% trans "Publish a signal-dense profile, connect with peers, and share proof next to LinkedIn." %}</span>
-          </div>
-          <div class="dr-map-join__actions">
-            {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <a class="dr-btn dr-btn--primary" href="{% url 'account_signup' %}">{% trans "create your profile" %}</a>
-            {% endif %}
-            <a class="dr-btn dr-btn--ghost" href="{% url 'account_login' %}">{% trans "login" %}</a>
-          </div>
+        <div class="dr-map-banner" role="region" aria-label="{% translate 'Join DevResurge' %}">
+          <span>{% trans "Claim a node — publish signal next to LinkedIn." %}</span>
+          {% if ACCOUNT_ALLOW_REGISTRATION %}
+            <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'account_signup' %}">{% trans "join" %}</a>
+          {% endif %}
+          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'account_login' %}">{% trans "login" %}</a>
         </div>
       {% elif is_explore_map and request.user.is_authenticated and not request.user.profile.is_public %}
-        <div class="dr-map-join" role="region" aria-label="{% translate 'Publish your map' %}">
-          <div class="dr-map-join__copy">
-            <strong>{% trans "Your map isn’t public yet" %}</strong>
-            <span>{% trans "Turn on “publicly listed” to appear here and claim your shareable /u/handle/map/." %}</span>
-          </div>
-          <div class="dr-map-join__actions">
-            <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">{% trans "publish profile" %}</a>
-          </div>
+        <div class="dr-map-banner" role="region" aria-label="{% translate 'Publish your map' %}">
+          <span>{% trans "Turn on public listing to appear on this map." %}</span>
+          <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:edit' %}">{% trans "publish" %}</a>
         </div>
       {% elif invite_landing and map_profile %}
-        <div class="dr-map-invite-landing" role="region" aria-label="{% translate 'Connect invite' %}">
-          <div class="dr-map-invite-landing__copy">
-            <strong>
-              {% blocktranslate with handle=map_profile.handle %}
-                @{{ handle }} invited you to connect
-              {% endblocktranslate %}
-            </strong>
-            <span>
-              {% trans "Explore their public network map, then send a connection request — technical signal next to LinkedIn." %}
-            </span>
-          </div>
-          <div class="dr-map-invite-landing__actions">
-            {% if request.user.is_authenticated %}
-              {% if connect_state == 'connected' %}
-                <span class="dr-pill dr-pill--ok">{% trans "already connected" %}</span>
-                <a class="dr-btn dr-btn--sm" href="{{ map_profile.get_absolute_url }}">{% trans "view profile" %}</a>
-              {% elif connect_state == 'outgoing' %}
-                <span class="dr-pill">{% trans "request pending" %}</span>
-                <a class="dr-btn dr-btn--sm" href="{{ map_profile.get_absolute_url }}">{% trans "view profile" %}</a>
-              {% elif connect_state == 'incoming' %}
-                <form method="post" action="{% url 'connections:accept' connection.pk %}">
+        <div class="dr-map-banner dr-map-banner--invite" role="region" aria-label="{% translate 'Connect invite' %}">
+          <span>
+            {% blocktranslate with handle=map_profile.handle %}
+              @{{ handle }} invited you to connect
+            {% endblocktranslate %}
+          </span>
+          {% if request.user.is_authenticated %}
+            {% if connect_state == 'connected' %}
+              <span class="dr-pill dr-pill--ok">{% trans "connected" %}</span>
+            {% elif connect_state == 'outgoing' %}
+              <span class="dr-pill">{% trans "pending" %}</span>
+            {% elif connect_state == 'incoming' %}
+              <form method="post" action="{% url 'connections:accept' connection.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept" %}</button>
+              </form>
+            {% elif can_connect %}
+              <details class="dr-connect">
+                <summary class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</summary>
+                <form method="post" action="{% url 'connections:request' map_profile.user_id %}" class="dr-connect__form">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-                  <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept request" %}</button>
+                  <p class="dr-connect__title">{% trans "Send connection request" %}</p>
+                  <label class="dr-label" for="map-connect-relation">{% trans "Relation" %}</label>
+                  <select class="dr-select" id="map-connect-relation" name="relation">
+                    {% for value, label in relations %}
+                      <option value="{{ value }}" {% if value == 'peer' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <label class="dr-label" for="map-connect-message">{% trans "Note (optional)" %}</label>
+                  <input class="dr-input"
+                         id="map-connect-message"
+                         name="message"
+                         maxlength="280"
+                         placeholder="{% translate 'Found you via your network map…' %}"
+                         autocomplete="off" />
+                  <button type="submit" class="dr-btn dr-btn--primary">{% trans "Send request" %}</button>
                 </form>
-              {% elif can_connect %}
-                <details class="dr-connect" open>
-                  <summary class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</summary>
-                  <form method="post" action="{% url 'connections:request' map_profile.user_id %}" class="dr-connect__form">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-                    <p class="dr-connect__title">{% trans "Send connection request" %}</p>
-                    <label class="dr-label" for="map-connect-relation">{% trans "Relation" %}</label>
-                    <select class="dr-select" id="map-connect-relation" name="relation">
-                      {% for value, label in relations %}
-                        <option value="{{ value }}" {% if value == 'peer' %}selected{% endif %}>{{ label }}</option>
-                      {% endfor %}
-                    </select>
-                    <label class="dr-label" for="map-connect-message">{% trans "Note (optional)" %}</label>
-                    <input class="dr-input"
-                           id="map-connect-message"
-                           name="message"
-                           maxlength="280"
-                           placeholder="{% translate 'Found you via your network map…' %}"
-                           autocomplete="off" />
-                    <button type="submit" class="dr-btn dr-btn--primary">{% trans "Send request" %}</button>
-                  </form>
-                </details>
-              {% else %}
-                <a class="dr-btn dr-btn--sm" href="{{ map_profile.get_absolute_url }}">{% trans "view profile" %}</a>
-              {% endif %}
+              </details>
             {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <a class="dr-btn dr-btn--primary"
-                   href="{% url 'account_signup' %}?next={{ connect_profile_url|urlencode }}">{% trans "join & connect" %}</a>
-              {% endif %}
-              <a class="dr-btn dr-btn--ghost"
-                 href="{% url 'account_login' %}?next={{ connect_profile_url|urlencode }}">{% trans "login to connect" %}</a>
+              <a class="dr-btn dr-btn--sm" href="{{ map_profile.get_absolute_url }}">{% trans "profile" %}</a>
             {% endif %}
-          </div>
+          {% else %}
+            {% if ACCOUNT_ALLOW_REGISTRATION %}
+              <a class="dr-btn dr-btn--sm dr-btn--primary"
+                 href="{% url 'account_signup' %}?next={{ connect_profile_url|urlencode }}">{% trans "join & connect" %}</a>
+            {% endif %}
+            <a class="dr-btn dr-btn--sm dr-btn--ghost"
+               href="{% url 'account_login' %}?next={{ connect_profile_url|urlencode }}">{% trans "login to connect" %}</a>
+          {% endif %}
         </div>
       {% elif not is_public_map %}
-        <div class="dr-alert dr-alert--warning dr-map-page__alert">
-          <span class="dr-alert__body">
-            {% trans "Private preview — only you can see this. Publish your profile to get a shareable map at /u/your-handle/map/." %}
-          </span>
+        <div class="dr-map-banner dr-map-banner--warn" role="status">
+          <span>{% trans "Private preview — publish to share /u/your-handle/map/." %}</span>
         </div>
       {% endif %}
     </div>
-
-    {% if map_invite %}
-      {% if map_profile or is_explore_map and is_map_owner %}
-        <div class="dr-container">
-          {% include "connections/_map_invite_share.html" %}
-        </div>
-      {% endif %}
-    {% endif %}
 
     <div class="dr-map-layout">
       <div class="dr-map-stage">
@@ -288,7 +236,7 @@
                 {% if is_public_map and map_profile %}@{{ map_profile.handle }}{% else %}{% trans "you" %}{% endif %}
               </span>
             {% endif %}
-            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "developer" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "dev" %}</span>
             <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--hire"></i> {% trans "hire" %}</span>
             <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--collab"></i> {% trans "collab" %}</span>
             <span class="dr-map-legend__item"><i class="dr-map-line"></i> {% trans "link" %}</span>
@@ -299,134 +247,115 @@
         </div>
       </div>
 
-      <details class="dr-map-sidebar" data-map-controls>
+      <details class="dr-map-sidebar" data-map-controls open>
         <summary class="dr-map-sidebar__summary">
           <span class="dr-map-sidebar__label">{% trans "filters & people" %}</span>
           <span class="dr-pill">{{ graph.stats.people|default:graph.stats.connections }}</span>
         </summary>
-        <div class="dr-map-sidebar__body dr-stack">
-          <label class="dr-label" for="dr-map-filter">{% trans "Relation" %}</label>
-          <select id="dr-map-filter" class="dr-select" data-map-filter>
-            <option value="">{% trans "all" %}</option>
-            {% for value, label in relations %}
-              <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-          </select>
 
-          <fieldset class="dr-map-intents">
-            <legend class="dr-label">{% trans "Open to" %}</legend>
-            <label class="dr-check">
-              <input type="checkbox" data-map-intent="hire" />
-              <span>{% trans "work" %}{% if graph.stats.open_to_work %} · {{ graph.stats.open_to_work }}{% endif %}</span>
-            </label>
-            <label class="dr-check">
-              <input type="checkbox" data-map-intent="collaborate" />
-              <span>{% trans "collaborate" %}{% if graph.stats.open_to_collaborate %} · {{ graph.stats.open_to_collaborate }}{% endif %}</span>
-            </label>
-            <label class="dr-check">
-              <input type="checkbox" data-map-intent="mentor" />
-              <span>{% trans "mentor" %}{% if graph.stats.open_to_mentor %} · {{ graph.stats.open_to_mentor }}{% endif %}</span>
-            </label>
-            <label class="dr-check">
-              <input type="checkbox" data-map-intent="learning" />
-              <span>{% trans "learning" %}{% if graph.stats.open_to_learning %} · {{ graph.stats.open_to_learning }}{% endif %}</span>
-            </label>
-          </fieldset>
-
-          {% if not is_explore_map %}
-            <label class="dr-check">
-              <input type="checkbox" data-map-mutual {% if include_mutual %}checked{% endif %} />
-              <span>{% trans "show links between connections" %}</span>
-            </label>
-          {% endif %}
-
-          <p class="dr-helptext dr-map-sidebar__help">
-            {% if is_explore_map %}
-              {% trans "Public accounts only. Filter by relation or open-to intent, then open a profile." %}
-              {% if graph.stats.capped %}
-                {% blocktranslate with shown=graph.stats.people total=graph.stats.total_public_linked %}
-                  Showing {{ shown }} of {{ total }} linked developers.
-                {% endblocktranslate %}
-              {% endif %}
-            {% elif is_public_map and map_profile %}
-              {% blocktranslate with handle=map_profile.handle %}
-                Centered on @{{ handle }}. Only publicly listed accounts are shown — LinkedIn-style career graph stays there; this is technical network signal.
-              {% endblocktranslate %}
-            {% else %}
-              {% trans "Centered on you. Only publicly listed connections appear — private accounts stay off the map." %}
+        <div class="dr-map-sidebar__panel">
+          {% if map_invite %}
+            {% if map_profile or is_explore_map and is_map_owner %}
+              {% include "connections/_map_invite_share.html" %}
             {% endif %}
-          </p>
-
-          {% if not is_public_map and graph.stats.private_omitted %}
-            <p class="dr-helptext dr-map-sidebar__help dr-map-sidebar__help--dim">
-              {% blocktranslate count counter=graph.stats.private_omitted %}
-                {{ counter }} private connection hidden.
-              {% plural %}
-                {{ counter }} private connections hidden.
-              {% endblocktranslate %}
-            </p>
           {% endif %}
 
-          <h2 class="dr-map-list-title">{% trans "people" %}</h2>
-          <ul class="dr-map-roster" data-map-roster>
-            {% for node in graph.nodes %}
-              {% if is_explore_map or not node.is_self %}
-                <li>
-                  <button type="button"
-                          class="dr-map-roster__btn"
-                          data-map-focus="{{ node.id }}"
-                          {% if node.url %}data-map-url="{{ node.url }}"{% endif %}>
-                    <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
-                      {% if node.avatar %}<img src="{{ node.avatar }}" alt="" />{% else %}{{ node.initials }}{% endif %}
-                    </span>
-                    <span>
-                      <strong>{{ node.name }}</strong>
-                      {% if node.handle %}<span class="dr-conn__handle">@{{ node.handle }}</span>{% endif %}
-                    </span>
-                  </button>
-                </li>
-              {% endif %}
-            {% endfor %}
-          </ul>
-          {% if graph.stats.connections == 0 %}
-            <div class="dr-empty">
-              {% if is_explore_map %}
-                <p>{% trans "The public map is empty — publish and connect to start the graph." %}</p>
-                {% if ACCOUNT_ALLOW_REGISTRATION and not request.user.is_authenticated %}
-                  <a class="dr-btn dr-btn--sm" href="{% url 'account_signup' %}">{% trans "join" %}</a>
+          <div class="dr-map-sidebar__filters">
+            <label class="dr-label" for="dr-map-filter">{% trans "Relation" %}</label>
+            <select id="dr-map-filter" class="dr-select" data-map-filter>
+              <option value="">{% trans "all" %}</option>
+              {% for value, label in relations %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+
+            <fieldset class="dr-map-intents">
+              <legend class="dr-label">{% trans "Open to" %}</legend>
+              <div class="dr-map-intents__row">
+                <label class="dr-map-chip">
+                  <input type="checkbox" data-map-intent="hire" />
+                  <span>{% trans "work" %}{% if graph.stats.open_to_work %} {{ graph.stats.open_to_work }}{% endif %}</span>
+                </label>
+                <label class="dr-map-chip">
+                  <input type="checkbox" data-map-intent="collaborate" />
+                  <span>{% trans "collab" %}{% if graph.stats.open_to_collaborate %} {{ graph.stats.open_to_collaborate }}{% endif %}</span>
+                </label>
+                <label class="dr-map-chip">
+                  <input type="checkbox" data-map-intent="mentor" />
+                  <span>{% trans "mentor" %}{% if graph.stats.open_to_mentor %} {{ graph.stats.open_to_mentor }}{% endif %}</span>
+                </label>
+                <label class="dr-map-chip">
+                  <input type="checkbox" data-map-intent="learning" />
+                  <span>{% trans "learn" %}{% if graph.stats.open_to_learning %} {{ graph.stats.open_to_learning }}{% endif %}</span>
+                </label>
+              </div>
+            </fieldset>
+
+            {% if not is_explore_map %}
+              <label class="dr-check dr-map-sidebar__mutual">
+                <input type="checkbox" data-map-mutual {% if include_mutual %}checked{% endif %} />
+                <span>{% trans "mutual links" %}</span>
+              </label>
+            {% endif %}
+
+            {% if is_explore_map and graph.stats.capped %}
+              <p class="dr-helptext dr-map-sidebar__note">
+                {% blocktranslate with shown=graph.stats.people total=graph.stats.total_public_linked %}
+                  Showing {{ shown }} of {{ total }}.
+                {% endblocktranslate %}
+              </p>
+            {% elif not is_public_map and graph.stats.private_omitted %}
+              <p class="dr-helptext dr-map-sidebar__note">
+                {% blocktranslate count counter=graph.stats.private_omitted %}
+                  {{ counter }} private hidden.
+                {% plural %}
+                  {{ counter }} private hidden.
+                {% endblocktranslate %}
+              </p>
+            {% endif %}
+          </div>
+
+          <div class="dr-map-sidebar__people">
+            <h2 class="dr-map-list-title">{% trans "people" %}</h2>
+            <ul class="dr-map-roster" data-map-roster>
+              {% for node in graph.nodes %}
+                {% if is_explore_map or not node.is_self %}
+                  <li>
+                    <button type="button"
+                            class="dr-map-roster__btn"
+                            data-map-focus="{{ node.id }}"
+                            {% if node.url %}data-map-url="{{ node.url }}"{% endif %}>
+                      <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+                        {% if node.avatar %}<img src="{{ node.avatar }}" alt="" />{% else %}{{ node.initials }}{% endif %}
+                      </span>
+                      <span>
+                        <strong>{{ node.name }}</strong>
+                        {% if node.handle %}<span class="dr-conn__handle">@{{ node.handle }}</span>{% endif %}
+                      </span>
+                    </button>
+                  </li>
                 {% endif %}
-              {% elif is_public_map %}
-                <p>{% trans "No public connections on this map yet." %}</p>
-              {% else %}
-                <p>{% trans "No public connections yet — find people and send a request." %}</p>
-                <a class="dr-btn dr-btn--sm" href="{% url 'profiles:browse' %}">{% trans "browse" %}</a>
-              {% endif %}
-            </div>
-          {% endif %}
+              {% endfor %}
+            </ul>
+            {% if graph.stats.connections == 0 %}
+              <div class="dr-empty dr-map-sidebar__empty">
+                {% if is_explore_map %}
+                  <p>{% trans "Empty map — publish and connect to seed it." %}</p>
+                  {% if ACCOUNT_ALLOW_REGISTRATION and not request.user.is_authenticated %}
+                    <a class="dr-btn dr-btn--sm" href="{% url 'account_signup' %}">{% trans "join" %}</a>
+                  {% endif %}
+                {% elif is_public_map %}
+                  <p>{% trans "No public connections yet." %}</p>
+                {% else %}
+                  <p>{% trans "No public connections yet." %}</p>
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:browse' %}">{% trans "browse" %}</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
         </div>
       </details>
     </div>
-
-    {% if is_explore_map %}
-      <div class="dr-container dr-map-page__foot">
-        <div class="dr-map-join dr-map-join--foot">
-          <div class="dr-map-join__copy">
-            <strong>{% trans "Ship signal. Keep LinkedIn for the career graph." %}</strong>
-            <span>{% trans "Stack, projects, badges, peer endorsements — then share your map." %}</span>
-          </div>
-          <div class="dr-map-join__actions">
-            {% if request.user.is_authenticated %}
-              <a class="dr-btn dr-btn--primary" href="{% url 'profiles:dashboard' %}">{% trans "open your terminal" %}</a>
-            {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <a class="dr-btn dr-btn--primary" href="{% url 'account_signup' %}">{% trans "create your profile" %}</a>
-              {% endif %}
-              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "browse profiles" %}</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    {% endif %}
   </section>
 {% endblock main_wrap %}
 
