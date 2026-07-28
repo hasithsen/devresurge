@@ -21,8 +21,8 @@
             <a class="dr-btn dr-btn--primary" href="{% url 'profiles:dashboard' %}">
               <span aria-hidden="true">›</span> {% translate 'open your terminal' %}
             </a>
-            <a class="dr-btn" href="{% url 'profiles:explore_map' %}">
-              {% translate 'explore the map' %}
+            <a class="dr-btn" href="{% url 'profiles:browse' %}">
+              {% translate 'browse profiles' %}
             </a>
           {% else %}
             {% if ACCOUNT_ALLOW_REGISTRATION %}
@@ -30,8 +30,8 @@
                 <span aria-hidden="true">›</span> {% translate 'create your profile' %}
               </a>
             {% endif %}
-            <a class="dr-btn" href="{% url 'profiles:explore_map' %}">
-              {% translate 'explore the map' %}
+            <a class="dr-btn" href="{% url 'profiles:browse' %}">
+              {% translate 'browse profiles' %}
             </a>
           {% endif %}
         </div>
@@ -76,15 +76,20 @@ peers · mutuals · hire intents
   </section>
 
   <section class="dr-home-map" aria-labelledby="home-map-title">
-    <h2 class="dr-section-title" id="home-map-title">
-      <span class="dr-prompt"></span> {% trans "public connection maps" %}
-    </h2>
-    <p class="dr-home-map__lede">
-      {% trans "LinkedIn holds the career graph. DevResurge maps your public technical network — peers, mutuals, and who is open to work, collaborate, or mentor." %}
-    </p>
-    <div class="dr-btn-row" style="margin-bottom: 1rem;">
-      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:explore_map' %}">{% trans "explore live map" %}</a>
+    <div class="dr-home-map__head">
+      <div class="dr-home-map__intro">
+        <h2 class="dr-section-title" id="home-map-title">
+          <span class="dr-prompt"></span> {% trans "public connection maps" %}
+        </h2>
+        <p class="dr-home-map__lede">
+          {% trans "LinkedIn holds the career graph. DevResurge maps public peers, mutuals, and open-to intents." %}
+        </p>
+      </div>
+      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:explore_map' %}">
+        {% trans "explore live map" %}
+      </a>
     </div>
+
     {% if featured_maps %}
       <div class="dr-home-map__grid">
         {% for item in featured_maps %}
@@ -130,14 +135,15 @@ peers · mutuals · hire intents
       <div class="dr-panel dr-home-map__empty">
         <div class="dr-panel__body">
           <p style="margin: 0;">
-            {% trans "Publish your profile, connect with public peers, and your map becomes shareable proof next to LinkedIn." %}
+            {% trans "Be early — publish, connect with public peers, and your map becomes shareable proof next to LinkedIn." %}
           </p>
           <div class="dr-btn-row" style="margin-top: 0.85rem;">
-            <a class="dr-btn dr-btn--primary" href="{% url 'profiles:explore_map' %}">{% trans "open the map" %}</a>
             {% if request.user.is_authenticated %}
-              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
+              <a class="dr-btn" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
+            {% elif ACCOUNT_ALLOW_REGISTRATION %}
+              <a class="dr-btn" href="{% url 'account_signup' %}">{% trans "create your profile" %}</a>
             {% else %}
-              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "explore developers" %}</a>
+              <a class="dr-btn" href="{% url 'profiles:browse' %}">{% trans "browse profiles" %}</a>
             {% endif %}
           </div>
         </div>
