@@ -514,7 +514,7 @@ class ProfilePublicView(DetailView):
         ctx["existing_recommendation"] = None
         ctx["mutual_connections"] = []
         ctx["linkedin_url"] = profile.linkedin_url()
-        ctx["network_stats"] = None
+        ctx["map_peer_count"] = 0
         ctx["map_share"] = None
         ctx["map_invite"] = None
         ctx["is_owner"] = viewer.is_authenticated and viewer.pk == profile.user_id
@@ -524,12 +524,26 @@ class ProfilePublicView(DetailView):
             "yes",
         }
         if profile.is_public and profile.handle:
-            from devresurge.connections.graph import build_network_graph
+            from django.db.models import Q
+
+            from devresurge.connections.models import Connection
             from devresurge.connections.share import build_map_invite_share_links
             from devresurge.connections.share import build_map_share_links
 
-            network = build_network_graph(profile.user, public_only=True)
-            ctx["network_stats"] = network["stats"]
+            ctx["map_peer_count"] = (
+                Connection.objects.accepted()
+                .filter(
+                    Q(
+                        requester_id=profile.user_id,
+                        addressee__profile__is_public=True,
+                    )
+                    | Q(
+                        addressee_id=profile.user_id,
+                        requester__profile__is_public=True,
+                    ),
+                )
+                .count()
+            )
             map_path = reverse("profiles:network_map", kwargs={"handle": profile.handle})
             map_url = self.request.build_absolute_uri(map_path)
             ctx["map_share"] = build_map_share_links(

@@ -78,15 +78,7 @@
   }
 
   NetworkMap.prototype._syncControlsOpen = function () {
-    var details = document.querySelector("[data-map-controls]");
-    if (!details) return;
-    var mq = window.matchMedia("(min-width: 861px)");
-    function sync() {
-      if (mq.matches) details.setAttribute("open", "");
-    }
-    sync();
-    if (mq.addEventListener) mq.addEventListener("change", sync);
-    else if (mq.addListener) mq.addListener(sync);
+    /* Sidebar is a fixed aside with its own scroll region — nothing to sync. */
   };
 
   NetworkMap.prototype._bindUI = function () {

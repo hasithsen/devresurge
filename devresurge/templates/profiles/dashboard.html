@@ -30,12 +30,28 @@
           <span data-copy-label>badge.svg</span>
         </button>
         <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:export_readme' %}">readme.md</a>
-        <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:network_map' profile.handle %}">{% trans "network map" %}</a>
-        <a class="dr-btn dr-btn--sm" href="{% url 'profiles:network_map' profile.handle %}?invite=1">{% trans "invite to connect" %}</a>
-      {% else %}
-        <a class="dr-btn dr-btn--sm" href="{% url 'connections:map' %}">{% trans "preview map" %}</a>
       {% endif %}
     </div>
+
+    {% if profile.is_public %}
+      <a class="dr-dash-mapcta" href="{% url 'profiles:network_map' profile.handle %}">
+        <span class="dr-dash-mapcta__copy">
+          <span class="dr-dash-mapcta__kicker">{% trans "network map" %}</span>
+          <span class="dr-dash-mapcta__title">{% trans "Open your public graph" %}</span>
+          <span class="dr-dash-mapcta__meta">{% trans "Share peers, mutuals, and open-to signal — next to LinkedIn." %}</span>
+        </span>
+        <span class="dr-dash-mapcta__go" aria-hidden="true">→</span>
+      </a>
+    {% else %}
+      <a class="dr-dash-mapcta dr-dash-mapcta--muted" href="{% url 'connections:map' %}">
+        <span class="dr-dash-mapcta__copy">
+          <span class="dr-dash-mapcta__kicker">{% trans "network map" %}</span>
+          <span class="dr-dash-mapcta__title">{% trans "Preview your map" %}</span>
+          <span class="dr-dash-mapcta__meta">{% trans "Publish your profile to share /u/handle/map/." %}</span>
+        </span>
+        <span class="dr-dash-mapcta__go" aria-hidden="true">→</span>
+      </a>
+    {% endif %}
 
     {% if not profile.is_public %}
       <div class="dr-alert dr-alert--warning" style="margin-bottom: 1.25rem;">

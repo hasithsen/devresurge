@@ -167,13 +167,13 @@ def build_network_graph(
     }
 
 
-def build_explore_graph(*, limit: int = 72) -> dict[str, Any]:
+def build_explore_graph(*, limit: int = 120) -> dict[str, Any]:
     """Public community graph for anonymous exploration.
 
     Only publicly listed accounts and edges between them. Capped by degree so
     the canvas stays usable while still showcasing real network signal.
     """
-    limit = max(8, min(int(limit or 72), 120))
+    limit = max(8, min(int(limit or 120), 200))
     public_links = list(
         Connection.objects.filter(status=ConnectionStatus.ACCEPTED)
         .filter(
