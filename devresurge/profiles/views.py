@@ -325,6 +325,23 @@ class HomeView(TemplateView):
         )
         ctx["profile_count"] = Profile.objects.filter(is_public=True).count()
         ctx["project_count"] = ProjectLink.objects.count()
+
+        # Showcase public maps that actually have connections (LinkedIn complement).
+        from devresurge.connections.graph import build_network_graph
+
+        featured_maps: list[dict[str, Any]] = []
+        for profile in (
+            Profile.objects.filter(is_public=True)
+            .select_related("user")
+            .order_by("-updated_at")[:24]
+        ):
+            graph = build_network_graph(profile.user, public_only=True)
+            if graph["stats"]["connections"] < 1:
+                continue
+            featured_maps.append({"profile": profile, "stats": graph["stats"]})
+            if len(featured_maps) >= 3:
+                break
+        ctx["featured_maps"] = featured_maps
         return ctx
 
 
@@ -497,6 +514,33 @@ class ProfilePublicView(DetailView):
         ctx["existing_recommendation"] = None
         ctx["mutual_connections"] = []
         ctx["linkedin_url"] = profile.linkedin_url()
+        ctx["network_stats"] = None
+        ctx["map_share"] = None
+        ctx["map_invite"] = None
+        ctx["is_owner"] = viewer.is_authenticated and viewer.pk == profile.user_id
+        ctx["open_connect"] = (self.request.GET.get("connect") or "").strip() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if profile.is_public and profile.handle:
+            from devresurge.connections.graph import build_network_graph
+            from devresurge.connections.share import build_map_invite_share_links
+            from devresurge.connections.share import build_map_share_links
+
+            network = build_network_graph(profile.user, public_only=True)
+            ctx["network_stats"] = network["stats"]
+            map_path = reverse("profiles:network_map", kwargs={"handle": profile.handle})
+            map_url = self.request.build_absolute_uri(map_path)
+            ctx["map_share"] = build_map_share_links(
+                page_url=map_url,
+                handle=profile.handle,
+            )
+            ctx["map_invite"] = build_map_invite_share_links(
+                page_url=f"{map_url}?invite=1",
+                handle=profile.handle,
+                name=profile.public_name,
+            )
 
         if viewer.is_authenticated and viewer.pk != profile.user_id:
             ctx["my_endorsed_skills"] = set(

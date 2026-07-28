@@ -23,12 +23,16 @@ from django.views.generic import ListView
 from django.views.generic import TemplateView
 
 from .emails import send_notification_email
+from .graph import build_explore_graph
 from .graph import build_network_graph
 from .models import Connection
 from .models import ConnectionRelation
 from .models import ConnectionStatus
 from .models import Notification
 from .models import NotificationKind
+from .share import build_explore_share_links
+from .share import build_map_invite_share_links
+from .share import build_map_share_links
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -69,10 +73,41 @@ def _safe_redirect_back(request: HttpRequest, default: str) -> HttpResponse:
 
 
 def _parse_relation(raw: str | None) -> str:
-    value = (raw or "").strip()
-    if value in ConnectionRelation.values:
-        return value
-    return ConnectionRelation.PEER
+    allowed = {c.value for c in ConnectionRelation}
+    value = (raw or ConnectionRelation.PEER).strip().lower()
+    return value if value in allowed else ConnectionRelation.PEER
+
+
+def _connect_context(viewer, profile_user) -> dict[str, Any]:
+    """Return connect UI state for ``viewer`` toward ``profile_user``."""
+    can_connect = viewer.is_authenticated and viewer.pk != profile_user.pk
+    connection = None
+    state = "none"
+    if can_connect:
+        connection = Connection.between(viewer, profile_user)
+        if connection is not None:
+            if connection.is_blocked:
+                if connection.requester_id == viewer.pk:
+                    state = "blocked"
+                else:
+                    can_connect = False
+                    connection = None
+                    state = "none"
+            elif connection.is_accepted:
+                state = "connected"
+            elif connection.is_pending:
+                state = (
+                    "outgoing"
+                    if connection.requester_id == viewer.pk
+                    else "incoming"
+                )
+            elif connection.status == ConnectionStatus.DECLINED:
+                state = "none"
+    return {
+        "can_connect": can_connect,
+        "connection": connection,
+        "connect_state": state,
+    }
 
 
 def _parse_message(raw: str | None) -> str:
@@ -395,7 +430,12 @@ class NetworkMapView(LoginRequiredMixin, TemplateView):
         ctx["relations"] = ConnectionRelation.choices
         ctx["graph_json_url"] = reverse("connections:map_data")
         ctx["is_public_map"] = False
+        ctx["is_explore_map"] = False
         ctx["map_profile"] = getattr(self.request.user, "profile", None)
+        ctx["map_share"] = None
+        ctx["map_invite"] = None
+        ctx["invite_landing"] = False
+        ctx["is_map_owner"] = True
         return ctx
 
 
@@ -448,7 +488,35 @@ class PublicNetworkMapView(TemplateView):
             kwargs={"handle": profile.handle},
         )
         ctx["is_public_map"] = True
+        ctx["is_explore_map"] = False
         ctx["map_profile"] = profile
+        map_path = reverse("profiles:network_map", kwargs={"handle": profile.handle})
+        map_url = self.request.build_absolute_uri(map_path)
+        ctx["map_share"] = build_map_share_links(
+            page_url=map_url,
+            handle=profile.handle,
+        )
+        invite_url = f"{map_url}?invite=1"
+        ctx["map_invite"] = build_map_invite_share_links(
+            page_url=invite_url,
+            handle=profile.handle,
+            name=profile.public_name,
+        )
+        invite_flag = (self.request.GET.get("invite") or "").strip() in {
+            "1",
+            "true",
+            "yes",
+            "connect",
+        }
+        viewer = self.request.user
+        is_owner = viewer.is_authenticated and viewer.pk == profile.user_id
+        ctx["is_map_owner"] = is_owner
+        ctx["invite_landing"] = invite_flag and not is_owner
+        connect = _connect_context(viewer, profile.user)
+        ctx.update(connect)
+        ctx["relations"] = ConnectionRelation.choices
+        profile_path = reverse("profiles:public", kwargs={"handle": profile.handle})
+        ctx["connect_profile_url"] = f"{profile_path}?connect=1"
         return ctx
 
 
@@ -467,6 +535,53 @@ def public_network_map_data_view(request: HttpRequest, handle: str) -> JsonRespo
         include_mutual=include_mutual,
         public_only=True,
     )
+    response = JsonResponse(graph)
+    response["Cache-Control"] = "public, max-age=60, must-revalidate"
+    return response
+
+
+class ExploreMapView(TemplateView):
+    """Anonymous-friendly public map of connected DevResurge profiles."""
+
+    template_name = "connections/network_map.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        graph = build_explore_graph()
+        ctx["graph"] = graph
+        ctx["include_mutual"] = False
+        ctx["relations"] = ConnectionRelation.choices
+        ctx["graph_json_url"] = reverse("profiles:explore_map_data")
+        ctx["is_public_map"] = True
+        ctx["is_explore_map"] = True
+        ctx["map_profile"] = None
+        map_url = self.request.build_absolute_uri(reverse("profiles:explore_map"))
+        ctx["map_share"] = build_explore_share_links(page_url=map_url)
+        ctx["map_invite"] = None
+        ctx["invite_landing"] = False
+        ctx["is_map_owner"] = False
+        viewer = self.request.user
+        if viewer.is_authenticated:
+            profile = getattr(viewer, "profile", None)
+            if profile is not None and profile.is_public and profile.handle:
+                invite_path = reverse(
+                    "profiles:network_map",
+                    kwargs={"handle": profile.handle},
+                )
+                invite_url = f"{self.request.build_absolute_uri(invite_path)}?invite=1"
+                ctx["map_invite"] = build_map_invite_share_links(
+                    page_url=invite_url,
+                    handle=profile.handle,
+                    name=profile.public_name,
+                )
+                ctx["is_map_owner"] = True
+        return ctx
+
+
+@require_GET
+def explore_map_data_view(request: HttpRequest) -> JsonResponse:
+    """JSON payload for the public community explore map."""
+    graph = build_explore_graph()
     response = JsonResponse(graph)
     response["Cache-Control"] = "public, max-age=60, must-revalidate"
     return response
@@ -508,3 +623,4 @@ connection_list_view = ConnectionListView.as_view()
 notification_list_view = NotificationListView.as_view()
 network_map_view = NetworkMapView.as_view()
 public_network_map_view = PublicNetworkMapView.as_view()
+explore_map_view = ExploreMapView.as_view()

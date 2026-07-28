@@ -30,6 +30,10 @@
           <span data-copy-label>badge.svg</span>
         </button>
         <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:export_readme' %}">readme.md</a>
+        <a class="dr-btn dr-btn--sm dr-btn--primary" href="{% url 'profiles:network_map' profile.handle %}">{% trans "network map" %}</a>
+        <a class="dr-btn dr-btn--sm" href="{% url 'profiles:network_map' profile.handle %}?invite=1">{% trans "invite to connect" %}</a>
+      {% else %}
+        <a class="dr-btn dr-btn--sm" href="{% url 'connections:map' %}">{% trans "preview map" %}</a>
       {% endif %}
     </div>
 
@@ -76,7 +80,12 @@
         <a href="{% url 'profiles:education_list' %}"><span>education</span><span class="dr-dash__hint">{{ profile.education.count }}</span></a>
         <a href="{% url 'profiles:link_list' %}"><span>links</span><span class="dr-dash__hint">{{ profile.social_links.count }}</span></a>
         <a href="{% url 'profiles:analytics' %}"><span>analytics</span><span class="dr-dash__hint">{{ views_30d }} views</span></a>
-        <a href="{% url 'connections:list' %}"><span>network</span><span class="dr-dash__hint">{% if unread_notification_count %}{{ unread_notification_count }} new{% else %}map{% endif %}</span></a>
+        <a href="{% url 'connections:list' %}"><span>network</span><span class="dr-dash__hint">{% if unread_notification_count %}{{ unread_notification_count }} new{% else %}peers{% endif %}</span></a>
+        {% if profile.is_public %}
+          <a href="{% url 'profiles:network_map' profile.handle %}"><span>map</span><span class="dr-dash__hint">{% trans "public" %}</span></a>
+        {% else %}
+          <a href="{% url 'connections:map' %}"><span>map</span><span class="dr-dash__hint">{% trans "preview" %}</span></a>
+        {% endif %}
         <a href="{% url 'quizzes:list' %}"><span>quizzes</span><span class="dr-dash__hint">{{ quiz_count }}</span></a>
       </nav>
 

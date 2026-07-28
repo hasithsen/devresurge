@@ -43,6 +43,12 @@ def test_public_profile_view_returns_for_public_profile(client):
     profile = ProfileFactory(is_public=True)
     response = client.get(reverse("profiles:public", kwargs={"handle": profile.handle}))
     assert response.status_code == HTTPStatus.OK
+    assert response.context["network_stats"] is not None
+    assert response.context["map_invite"] is not None
+    assert "invite=1" in response.context["map_invite"]["page_url"]
+    assert b"dr-network-showcase" in response.content
+    assert b"open network map" in response.content
+    assert b"linkedin.com/sharing" in response.content
 
 
 def test_public_profile_view_404s_when_private_and_not_owner(client):

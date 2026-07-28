@@ -1,0 +1,47 @@
+{% load i18n %}
+<aside class="dr-map-invite" aria-labelledby="dr-map-invite-title">
+  <div class="dr-map-invite__head">
+    <h2 class="dr-map-invite__title" id="dr-map-invite-title">{% trans "invite to connect" %}</h2>
+    <p class="dr-map-invite__lede">
+      {% blocktranslate with handle=map_invite.handle %}
+        Share this link so people land on @{{ handle }}’s map and can connect — LinkedIn, X, WhatsApp, email, or anywhere.
+      {% endblocktranslate %}
+    </p>
+  </div>
+  <div class="dr-share-row dr-map-invite__link">
+    <code id="dr-map-invite-url">{{ map_invite.page_url }}</code>
+    <button type="button"
+            class="dr-copy"
+            data-copy-from="#dr-map-invite-url"
+            aria-label="{% translate 'Copy invite link' %}">
+      <span class="dr-copy__icon" aria-hidden="true"></span>
+      <span data-copy-label>{% trans "copy invite" %}</span>
+    </button>
+  </div>
+  <nav class="dr-share-btns" aria-label="{% translate 'Share connect invite' %}">
+    <span class="dr-share-btns__label">{% translate "share" %}</span>
+    <a class="dr-share-btn"
+       href="{{ map_invite.linkedin }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       data-share="linkedin">LinkedIn</a>
+    <a class="dr-share-btn"
+       href="{{ map_invite.x }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       data-share="x">X</a>
+    <a class="dr-share-btn"
+       href="{{ map_invite.whatsapp }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       data-share="whatsapp">WhatsApp</a>
+    <a class="dr-share-btn"
+       href="{{ map_invite.reddit }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       data-share="reddit">Reddit</a>
+    <a class="dr-share-btn"
+       href="{{ map_invite.email }}"
+       data-share="email">{% translate "email" %}</a>
+  </nav>
+</aside>

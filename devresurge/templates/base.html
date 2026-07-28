@@ -92,6 +92,10 @@
                    {% if 'browse' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/profiles</a>
               </li>
               <li>
+                <a href="{% url 'profiles:explore_map' %}"
+                   {% if request.resolver_match.url_name == 'explore_map' or request.resolver_match.url_name == 'network_map' %}aria-current="page"{% endif %}>~/map</a>
+              </li>
+              <li>
                 <a href="{% url 'quizzes:list' %}"
                    {% if request.resolver_match.namespace == 'quizzes' %}aria-current="page"{% endif %}>~/quizzes</a>
               </li>
@@ -155,6 +159,7 @@
           <div class="dr-container">
             <span class="dr-prompt"></span> exit 0 ·
             <a href="{% url 'about' %}">about</a> ·
+            <a href="{% url 'profiles:explore_map' %}">map</a> ·
             <a href="{% url 'quizzes:badges' %}">badges</a> ·
             <a href="mailto:contact@devresurge.com">contact</a>
           </div>

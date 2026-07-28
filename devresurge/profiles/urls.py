@@ -8,6 +8,8 @@ app_name = "profiles"
 
 urlpatterns = [
     path("u/", views.profile_browse_view, name="browse"),
+    path("map/", connection_views.explore_map_view, name="explore_map"),
+    path("map/data.json", connection_views.explore_map_data_view, name="explore_map_data"),
     path("u/<slug:handle>/badge.svg", views.profile_badge_view, name="badge"),
     path(
         "u/<slug:handle>/map/",

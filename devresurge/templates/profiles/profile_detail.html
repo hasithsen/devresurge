@@ -80,7 +80,7 @@
               </form>
             </div>
           {% else %}
-            <details class="dr-connect">
+            <details class="dr-connect"{% if open_connect %} open{% endif %}>
               <summary class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</summary>
               <form method="post" action="{% url 'connections:request' profile.user_id %}" class="dr-connect__form">
                 {% csrf_token %}
@@ -168,6 +168,88 @@
             {% endif %}
           </div>
         </div>
+
+        {% if profile.is_public and network_stats %}
+          <section class="dr-network-showcase" aria-labelledby="network-showcase-title">
+            <div class="dr-network-showcase__head">
+              <h2 class="dr-section-title" id="network-showcase-title">{% trans "network" %}</h2>
+              <p class="dr-network-showcase__lede">
+                {% trans "Public connection map — proof that complements LinkedIn’s career graph." %}
+              </p>
+            </div>
+            <div class="dr-network-showcase__panel">
+              <div class="dr-network-showcase__stats">
+                <div class="dr-network-showcase__stat">
+                  <span class="dr-network-showcase__value">{{ network_stats.connections }}</span>
+                  <span class="dr-network-showcase__label">{% trans "public peers" %}</span>
+                </div>
+                <div class="dr-network-showcase__stat">
+                  <span class="dr-network-showcase__value">{{ network_stats.mutual_edges }}</span>
+                  <span class="dr-network-showcase__label">{% trans "mutual links" %}</span>
+                </div>
+                <div class="dr-network-showcase__stat">
+                  <span class="dr-network-showcase__value">{{ network_stats.open_to_work }}</span>
+                  <span class="dr-network-showcase__label">{% trans "open to work" %}</span>
+                </div>
+                {% if network_stats.open_to_collaborate or network_stats.open_to_mentor %}
+                  <div class="dr-network-showcase__stat">
+                    <span class="dr-network-showcase__value">{{ network_stats.open_to_collaborate|add:network_stats.open_to_mentor }}</span>
+                    <span class="dr-network-showcase__label">{% trans "collab / mentor" %}</span>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="dr-network-showcase__actions">
+                <a class="dr-btn dr-btn--primary" href="{% url 'profiles:network_map' profile.handle %}">
+                  {% trans "open network map" %}
+                </a>
+                {% if map_invite %}
+                  <a class="dr-btn"
+                     href="{% url 'profiles:network_map' profile.handle %}?invite=1">
+                    {% if is_owner %}{% trans "invite to connect" %}{% else %}{% trans "connect via map" %}{% endif %}
+                  </a>
+                {% endif %}
+                {% if map_share %}
+                  <a class="dr-btn dr-btn--ghost"
+                     href="{{ map_share.linkedin }}"
+                     target="_blank"
+                     rel="noopener noreferrer">
+                    {% trans "share on LinkedIn" %}
+                  </a>
+                  <button type="button"
+                          class="dr-btn dr-btn--ghost dr-copy"
+                          data-copy="{% if map_invite %}{{ map_invite.page_url }}{% else %}{{ map_share.page_url }}{% endif %}"
+                          aria-label="{% translate 'Copy map invite link' %}">
+                    <span data-copy-label>{% if map_invite %}{% trans "copy invite" %}{% else %}{% trans "copy map link" %}{% endif %}</span>
+                  </button>
+                {% endif %}
+                {% if linkedin_url %}
+                  <a class="dr-btn dr-btn--ghost"
+                     href="{{ linkedin_url }}"
+                     rel="noopener nofollow ugc"
+                     target="_blank"
+                     data-track-kind="social">
+                    {% trans "LinkedIn profile ↗" %}
+                  </a>
+                {% endif %}
+              </div>
+              {% if map_invite and is_owner %}
+                <div class="dr-network-showcase__invite">
+                  {% include "connections/_map_invite_share.html" %}
+                </div>
+              {% endif %}
+              {% if mutual_connections %}
+                <p class="dr-network-showcase__mutuals">
+                  {% blocktranslate count counter=mutual_connections|length %}
+                    {{ counter }} mutual with you:
+                  {% plural %}
+                    {{ counter }} mutuals with you:
+                  {% endblocktranslate %}
+                  {% for m in mutual_connections %}<a href="{{ m.get_absolute_url }}">@{{ m.handle }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                </p>
+              {% endif %}
+            </div>
+          </section>
+        {% endif %}
 
         {% if skill_endorsements %}
           <div>

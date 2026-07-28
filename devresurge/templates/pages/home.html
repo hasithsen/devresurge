@@ -21,14 +21,17 @@
             <a class="dr-btn dr-btn--primary" href="{% url 'profiles:dashboard' %}">
               <span aria-hidden="true">›</span> {% translate 'open your terminal' %}
             </a>
+            <a class="dr-btn" href="{% url 'profiles:explore_map' %}">
+              {% translate 'explore the map' %}
+            </a>
           {% else %}
             {% if ACCOUNT_ALLOW_REGISTRATION %}
               <a class="dr-btn dr-btn--primary" href="{% url 'account_signup' %}">
                 <span aria-hidden="true">›</span> {% translate 'create your profile' %}
               </a>
             {% endif %}
-            <a class="dr-btn" href="{% url 'profiles:browse' %}">
-              {% translate 'explore developers' %}
+            <a class="dr-btn" href="{% url 'profiles:explore_map' %}">
+              {% translate 'explore the map' %}
             </a>
           {% endif %}
         </div>
@@ -63,10 +66,83 @@
 <span class="muted">$</span> open-to --list
 work · collaborate · mentor · learning
 
+<span class="muted">$</span> map --public
+peers · mutuals · hire intents
+
 <span class="muted">$</span> _</pre>
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="dr-home-map" aria-labelledby="home-map-title">
+    <h2 class="dr-section-title" id="home-map-title">
+      <span class="dr-prompt"></span> {% trans "public connection maps" %}
+    </h2>
+    <p class="dr-home-map__lede">
+      {% trans "LinkedIn holds the career graph. DevResurge maps your public technical network — peers, mutuals, and who is open to work, collaborate, or mentor." %}
+    </p>
+    <div class="dr-btn-row" style="margin-bottom: 1rem;">
+      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:explore_map' %}">{% trans "explore live map" %}</a>
+    </div>
+    {% if featured_maps %}
+      <div class="dr-home-map__grid">
+        {% for item in featured_maps %}
+          <a class="dr-home-map__card" href="{% url 'profiles:network_map' item.profile.handle %}">
+            <div class="dr-home-map__card-head">
+              <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+                {% if item.profile.avatar %}
+                  <img src="{{ item.profile.avatar.url }}" alt="" loading="lazy" />
+                {% else %}
+                  {{ item.profile.initials }}
+                {% endif %}
+              </span>
+              <div>
+                <div class="dr-home-map__name">@{{ item.profile.handle }}</div>
+                <div class="dr-home-map__meta">
+                  {% blocktranslate count counter=item.stats.connections %}
+                    {{ counter }} public connection
+                  {% plural %}
+                    {{ counter }} public connections
+                  {% endblocktranslate %}
+                  {% if item.stats.mutual_edges %}
+                    · {% blocktranslate count counter=item.stats.mutual_edges %}{{ counter }} mutual{% plural %}{{ counter }} mutual{% endblocktranslate %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="dr-home-map__signals">
+              {% if item.stats.open_to_work %}
+                <span class="dr-tag">{% blocktranslate count counter=item.stats.open_to_work %}{{ counter }} open to work{% plural %}{{ counter }} open to work{% endblocktranslate %}</span>
+              {% endif %}
+              {% if item.stats.open_to_collaborate %}
+                <span class="dr-tag dr-tag--ghost">{% blocktranslate count counter=item.stats.open_to_collaborate %}{{ counter }} collab{% plural %}{{ counter }} collab{% endblocktranslate %}</span>
+              {% endif %}
+              {% if item.stats.open_to_mentor %}
+                <span class="dr-tag dr-tag--ghost">{% blocktranslate count counter=item.stats.open_to_mentor %}{{ counter }} mentor{% plural %}{{ counter }} mentor{% endblocktranslate %}</span>
+              {% endif %}
+              <span class="dr-home-map__cta">{% trans "open map →" %}</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="dr-panel dr-home-map__empty">
+        <div class="dr-panel__body">
+          <p style="margin: 0;">
+            {% trans "Publish your profile, connect with public peers, and your map becomes shareable proof next to LinkedIn." %}
+          </p>
+          <div class="dr-btn-row" style="margin-top: 0.85rem;">
+            <a class="dr-btn dr-btn--primary" href="{% url 'profiles:explore_map' %}">{% trans "open the map" %}</a>
+            {% if request.user.is_authenticated %}
+              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
+            {% else %}
+              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">{% trans "explore developers" %}</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </section>
 
   <h2 class="dr-section-title"><span class="dr-prompt"></span> ls --recent profiles/</h2>

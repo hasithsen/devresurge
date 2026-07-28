@@ -46,6 +46,7 @@
     this.pan = null;
     this.hover = null;
     this.relationFilter = "";
+    this.intentFilters = [];
     this.showMutual = true;
     this.raf = 0;
     this.pointers = new Map();
@@ -55,6 +56,7 @@
     this.sheet = document.querySelector("[data-map-sheet]");
     this.status = document.querySelector("[data-map-status]");
     this.emptyMsg = canvas.getAttribute("data-map-empty") || "No connections yet.";
+    this.dataSrc = canvas.getAttribute("data-map-src") || "";
     this.coarse = isCoarsePointer();
 
     this._bindUI();
@@ -98,13 +100,22 @@
     }
     var mutual = document.querySelector("[data-map-mutual]");
     if (mutual) {
+      this.showMutual = mutual.checked;
       mutual.addEventListener("change", function () {
         self.showMutual = mutual.checked;
-        var url = new URL(window.location.href);
-        url.searchParams.set("mutual", self.showMutual ? "1" : "0");
-        window.location.href = url.toString();
+        self._reloadGraph({ mutual: self.showMutual ? "1" : "0" });
       });
     }
+
+    document.querySelectorAll("[data-map-intent]").forEach(function (box) {
+      box.addEventListener("change", function () {
+        self.intentFilters = Array.prototype.slice
+          .call(document.querySelectorAll("[data-map-intent]:checked"))
+          .map(function (el) { return el.getAttribute("data-map-intent"); })
+          .filter(Boolean);
+        self._draw();
+      });
+    });
     var fitBtn = document.querySelector("[data-map-fit]");
     if (fitBtn) fitBtn.addEventListener("click", function () { self._fit(false); });
     var pauseBtn = document.querySelector("[data-map-pause]");
@@ -140,6 +151,49 @@
     });
 
     canvasEvents(this);
+  };
+
+  NetworkMap.prototype._reloadGraph = function (params) {
+    var self = this;
+    if (!this.dataSrc) {
+      this._draw();
+      return;
+    }
+    var url;
+    try {
+      url = new URL(this.dataSrc, window.location.origin);
+    } catch (_) {
+      this._draw();
+      return;
+    }
+    Object.keys(params || {}).forEach(function (key) {
+      url.searchParams.set(key, params[key]);
+    });
+    this.dataSrc = url.pathname + url.search;
+    this.canvas.setAttribute("data-map-src", this.dataSrc);
+    if (this.status) this.status.textContent = "load";
+    fetch(url.toString(), { credentials: "same-origin", headers: { Accept: "application/json" } })
+      .then(function (res) {
+        if (!res.ok) throw new Error("map fetch failed");
+        return res.json();
+      })
+      .then(function (graph) {
+        var keepRunning = self.running;
+        self._loadGraph(graph);
+        self._fit(true);
+        if (self.status) self.status.textContent = keepRunning ? "sim" : "paused";
+        self._draw();
+        if (keepRunning && !self.raf) self._loop();
+        try {
+          var page = new URL(window.location.href);
+          page.searchParams.set("mutual", self.showMutual ? "1" : "0");
+          window.history.replaceState({}, "", page.pathname + page.search);
+        } catch (_) { /* ignore */ }
+      })
+      .catch(function () {
+        if (self.status) self.status.textContent = "err";
+        self._draw();
+      });
   };
 
   NetworkMap.prototype._zoomAt = function (factor, sx, sy) {
@@ -318,6 +372,10 @@
         avatar: n.avatar || "",
         url: n.url || "",
         open_to_work: !!n.open_to_work,
+        open_to_collaborate: !!n.open_to_collaborate,
+        open_to_mentor: !!n.open_to_mentor,
+        open_to_learning: !!n.open_to_learning,
+        intents: Array.isArray(n.intents) ? n.intents.slice() : [],
         is_self: !!n.is_self,
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
@@ -390,6 +448,33 @@
       if (dx * dx + dy * dy <= r * r) return n;
     }
     return null;
+  };
+
+  NetworkMap.prototype._nodeMatchesIntent = function (node) {
+    if (!this.intentFilters.length) return true;
+    if (node.is_self) return true;
+    var intents = node.intents || [];
+    for (var i = 0; i < this.intentFilters.length; i++) {
+      if (intents.indexOf(this.intentFilters[i]) !== -1) return true;
+    }
+    return false;
+  };
+
+  NetworkMap.prototype._relationColor = function (relation, accent, warn, muted) {
+    switch (relation) {
+      case "collaborator":
+        return cssVar("--link", accent);
+      case "mentor":
+      case "mentee":
+        return warn;
+      case "recruiter":
+      case "hiring":
+        return cssVar("--accent-strong", warn);
+      case "friend":
+        return muted;
+      default:
+        return accent;
+    }
   };
 
   NetworkMap.prototype._visibleEdges = function () {
@@ -535,8 +620,8 @@
         ctx.globalAlpha = 0.55;
       } else {
         ctx.setLineDash([]);
-        ctx.strokeStyle = accent;
-        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = this._relationColor(e.relation, accent, warn, muted);
+        ctx.globalAlpha = 0.8;
       }
       ctx.lineWidth = (e.kind === "mutual" ? 1.2 : 1.8) / this.scale;
       ctx.stroke();
@@ -548,22 +633,31 @@
     for (var n = 0; n < this.nodes.length; n++) {
       var node = this.nodes[n];
       if (!visible[node.id] && !node.is_self) continue;
+      var intentOk = this._nodeMatchesIntent(node);
       var isHover = this.hover === node;
       var r = node.r + (isHover ? 3 : 0);
+      var ring = accent;
+      if (!node.is_self) {
+        if (node.open_to_work) ring = warn;
+        else if (node.open_to_collaborate) ring = cssVar("--link", accent);
+        else if (node.open_to_mentor || node.open_to_learning) ring = cssVar("--accent-strong", warn);
+      }
+
+      ctx.globalAlpha = intentOk ? 1 : 0.18;
 
       ctx.beginPath();
       ctx.arc(node.x, node.y, r + 3, 0, Math.PI * 2);
-      ctx.fillStyle = node.is_self ? accent : (node.open_to_work ? warn : border);
-      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = node.is_self ? accent : ring;
+      ctx.globalAlpha = intentOk ? 0.25 : 0.08;
       ctx.fill();
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = intentOk ? 1 : 0.18;
 
       ctx.beginPath();
       ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
       ctx.fillStyle = cssVar("--bg", "#0b0f0d");
       ctx.fill();
       ctx.lineWidth = 2 / this.scale;
-      ctx.strokeStyle = node.is_self ? accent : (node.open_to_work ? warn : accent);
+      ctx.strokeStyle = node.is_self ? accent : ring;
       ctx.stroke();
 
       if (node.img && node.img.complete && node.img.naturalWidth) {
@@ -587,6 +681,7 @@
       ctx.textBaseline = "top";
       var label = node.handle ? "@" + node.handle : node.name;
       ctx.fillText(label, node.x, node.y + r + 6);
+      ctx.globalAlpha = 1;
     }
 
     ctx.restore();
@@ -630,14 +725,42 @@
     else this._showTooltip(n, null);
   };
 
+  NetworkMap.prototype._peerRelation = function (node) {
+    if (!node || node.is_self) return null;
+    var me = this.graph.me_id;
+    for (var i = 0; i < this.edges.length; i++) {
+      var e = this.edges[i];
+      if (e.kind !== "direct") continue;
+      if (
+        (e.source === me && e.target === node.id) ||
+        (e.target === me && e.source === node.id)
+      ) {
+        return { relation: e.relation, label: e.label || e.relation };
+      }
+    }
+    return null;
+  };
+
+  NetworkMap.prototype._intentLabels = function (node) {
+    var labels = [];
+    if (node.open_to_work) labels.push("open to work");
+    if (node.open_to_collaborate) labels.push("collaborate");
+    if (node.open_to_mentor) labels.push("mentor");
+    if (node.open_to_learning) labels.push("learning");
+    return labels;
+  };
+
   NetworkMap.prototype._showTooltip = function (node, event) {
     if (!this.tooltip || this.coarse) return;
+    var rel = this._peerRelation(node);
+    var intents = this._intentLabels(node);
     var lines = [
       "<strong>" + escapeHtml(node.name) + "</strong>",
       node.handle ? "@" + escapeHtml(node.handle) : "",
       node.role ? escapeHtml(node.role) : "",
       node.location ? escapeHtml(node.location) : "",
-      node.open_to_work ? "open to work" : "",
+      rel ? escapeHtml(rel.label) : "",
+      intents.length ? escapeHtml(intents.join(" · ")) : "",
       node.is_self ? "(you)" : "double-click to open",
     ].filter(Boolean);
     this.tooltip.innerHTML = lines.join("<br>");
@@ -648,7 +771,6 @@
       var top = event.clientY - rect.top + 14;
       this.tooltip.style.left = "0px";
       this.tooltip.style.top = "0px";
-      // Measure then clamp inside the canvas.
       var tw = this.tooltip.offsetWidth || 160;
       var th = this.tooltip.offsetHeight || 60;
       left = Math.max(8, Math.min(left, this.width - tw - 8));
@@ -666,12 +788,23 @@
     if (!this.sheet || !node) return;
     var nameEl = this.sheet.querySelector("[data-map-sheet-name]");
     var handleEl = this.sheet.querySelector("[data-map-sheet-handle]");
+    var extraEl = this.sheet.querySelector("[data-map-sheet-extra]");
     var openEl = this.sheet.querySelector("[data-map-sheet-open]");
+    var rel = this._peerRelation(node);
+    var intents = this._intentLabels(node);
     if (nameEl) nameEl.textContent = node.name || "";
     if (handleEl) {
       handleEl.textContent = node.handle
         ? "@" + node.handle + (node.is_self ? " · you" : "")
         : (node.is_self ? "you" : "");
+    }
+    if (extraEl) {
+      var bits = [];
+      if (rel && rel.label) bits.push(rel.label);
+      if (intents.length) bits.push(intents.join(" · "));
+      if (node.role) bits.push(node.role);
+      extraEl.textContent = bits.join(" · ");
+      extraEl.hidden = !bits.length;
     }
     if (openEl) {
       if (node.url) {

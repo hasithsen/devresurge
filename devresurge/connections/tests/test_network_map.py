@@ -97,6 +97,9 @@ def test_network_map_json_payload(client):
     assert data["stats"]["connections"] == 2
     assert data["stats"]["mutual_edges"] == 1
     assert data["stats"]["private_omitted"] == 0
+    assert "open_to_work" in data["stats"]
+    peer_nodes = [n for n in data["nodes"] if not n["is_self"]]
+    assert all("intents" in n for n in peer_nodes)
 
 
 def test_build_network_graph_omits_private_peers():
@@ -148,6 +151,25 @@ def test_map_data_hides_emails(client):
     assert peer.email not in body
 
 
+def test_build_network_graph_exposes_open_to_intents():
+    me = UserFactory()
+    peer = UserFactory()
+    peer.profile.is_public = True
+    peer.profile.available_for_hire = True
+    peer.profile.open_to_collaborate = True
+    peer.profile.save()
+    _accept(me, peer)
+
+    graph = build_network_graph(me, public_only=True)
+    node = next(n for n in graph["nodes"] if n["id"] == peer.pk)
+    assert node["open_to_work"] is True
+    assert node["open_to_collaborate"] is True
+    assert "hire" in node["intents"]
+    assert "collaborate" in node["intents"]
+    assert graph["stats"]["open_to_work"] == 1
+    assert graph["stats"]["open_to_collaborate"] == 1
+
+
 def test_public_network_map_is_anonymous(client):
     host = UserFactory()
     peer = UserFactory()
@@ -164,8 +186,11 @@ def test_public_network_map_is_anonymous(client):
     assert b"dr-network-map" in response.content
     assert b"dr-main--map" in response.content
     assert b"dr-map-canvas-wrap" in response.content
+    assert b"linkedin.com/sharing" in response.content
+    assert b"data-map-intent" in response.content
     assert peer.profile.handle.encode() in response.content
     assert response.context["is_public_map"] is True
+    assert response.context["map_share"] is not None
     assert b"my map" not in response.content
     assert b"public map" not in response.content
 
@@ -209,6 +234,124 @@ def test_public_network_map_json_excludes_private_peers(client):
     assert private.profile.handle not in body
 
 
+def test_explore_map_is_anonymous(client):
+    a = UserFactory()
+    b = UserFactory()
+    a.profile.is_public = True
+    a.profile.save()
+    b.profile.is_public = True
+    b.profile.available_for_hire = True
+    b.profile.save()
+    _accept(a, b)
+
+    response = client.get(reverse("profiles:explore_map"))
+    assert response.status_code == HTTPStatus.OK
+    assert response.context["is_explore_map"] is True
+    assert b"dr-network-map" in response.content
+    assert b"explore the network" in response.content
+    assert b"Want a node on this map?" in response.content
+    assert a.profile.handle.encode() in response.content
+    assert b.profile.handle.encode() in response.content
+
+
+def test_explore_map_json_public_only(client):
+    public_a = UserFactory()
+    public_b = UserFactory()
+    private = UserFactory()
+    public_a.profile.is_public = True
+    public_a.profile.save()
+    public_b.profile.is_public = True
+    public_b.profile.save()
+    private.profile.is_public = False
+    private.profile.save()
+    _accept(public_a, public_b)
+    _accept(public_a, private)
+
+    response = client.get(reverse("profiles:explore_map_data"))
+    assert response.status_code == HTTPStatus.OK
+    assert response["Cache-Control"].startswith("public")
+    data = response.json()
+    ids = {n["id"] for n in data["nodes"]}
+    assert public_a.pk in ids
+    assert public_b.pk in ids
+    assert private.pk not in ids
+    assert data["me_id"] is None
+    assert data["stats"]["people"] == 2
+
+
+def test_build_explore_graph_caps_and_stats():
+    from devresurge.connections.graph import build_explore_graph
+
+    host = UserFactory()
+    host.profile.is_public = True
+    host.profile.save()
+    peers = []
+    for _ in range(3):
+        peer = UserFactory()
+        peer.profile.is_public = True
+        peer.profile.available_for_hire = True
+        peer.profile.save()
+        peers.append(peer)
+        _accept(host, peer)
+
+    graph = build_explore_graph(limit=10)
+    assert graph["stats"]["people"] >= 4
+    assert graph["stats"]["open_to_work"] >= 3
+    assert graph["stats"]["links"] >= 3
+    assert all(not n["is_self"] for n in graph["nodes"])
+
+
+def test_public_network_map_invite_share_and_landing(client):
+    host = UserFactory()
+    guest = UserFactory()
+    host.profile.is_public = True
+    host.profile.save()
+    guest.profile.is_public = True
+    guest.profile.save()
+
+    url = reverse("profiles:network_map", kwargs={"handle": host.profile.handle})
+    anon = client.get(url)
+    assert anon.status_code == HTTPStatus.OK
+    assert anon.context["map_invite"] is not None
+    assert "invite=1" in anon.context["map_invite"]["page_url"]
+    assert "wa.me" in anon.context["map_invite"]["whatsapp"]
+    assert b"invite to connect" in anon.content
+    assert b"copy invite" in anon.content
+
+    landing = client.get(url, {"invite": "1"})
+    assert landing.status_code == HTTPStatus.OK
+    assert landing.context["invite_landing"] is True
+    assert b"invited you to connect" in landing.content
+    assert b"join &amp; connect" in landing.content or b"login to connect" in landing.content
+
+    client.force_login(guest)
+    guest_landing = client.get(url, {"invite": "1"})
+    assert guest_landing.context["invite_landing"] is True
+    assert guest_landing.context["can_connect"] is True
+    assert b"Send connection request" in guest_landing.content or b"Connect" in guest_landing.content
+
+    client.force_login(host)
+    owner = client.get(url, {"invite": "1"})
+    assert owner.context["invite_landing"] is False
+    assert owner.context["is_map_owner"] is True
+
+
+def test_build_map_invite_share_links():
+    from devresurge.connections.share import build_map_invite_share_links
+
+    links = build_map_invite_share_links(
+        page_url="https://example.com/u/ada/map/?invite=1",
+        handle="ada",
+        name="Ada",
+    )
+    assert "invite=1" in links["page_url"]
+    assert "linkedin.com/sharing" in links["linkedin"]
+    assert "twitter.com/intent/tweet" in links["x"]
+    assert "wa.me" in links["whatsapp"]
+    assert links["email"].startswith("mailto:")
+    assert "Connect with Ada" in links["caption"] or "Connect with" in links["caption"]
+
+
 def test_sitemap_includes_public_network_maps(client):
     public = UserFactory()
     private = UserFactory()
@@ -224,3 +367,7 @@ def test_sitemap_includes_public_network_maps(client):
     private_map = reverse("profiles:network_map", kwargs={"handle": private.profile.handle})
     assert public_map in body
     assert private_map not in body
+
+    static = client.get(reverse("sitemap"), {"section": "static"})
+    assert static.status_code == HTTPStatus.OK
+    assert reverse("profiles:explore_map") in static.content.decode()
