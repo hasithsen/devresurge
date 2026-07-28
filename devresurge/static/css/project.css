@@ -76,29 +76,7 @@
   --grid: rgba(31, 122, 58, 0.05);
 }
 
-/* Auto-pref before JS hydrates so the first paint matches preference. ----- */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    color-scheme: light;
-    --bg: #f5f6f2;
-    --bg-elev: #ffffff;
-    --bg-elev-2: #ecefe8;
-    --panel: rgba(255, 255, 255, 0.85);
-    --border: #d8ddd2;
-    --border-strong: #b5beae;
-    --text: #1a1f1c;
-    --text-muted: #545b54;
-    --text-dim: #8a9389;
-    --accent: #1f7a3a;
-    --accent-soft: rgba(31, 122, 58, 0.1);
-    --accent-strong: #145024;
-    --link: #1356a1;
-    --selection-bg: rgba(31, 122, 58, 0.2);
-    --selection-fg: #0b0f0d;
-    --scanline: rgba(0, 0, 0, 0.02);
-    --grid: rgba(31, 122, 58, 0.05);
-  }
-}
+/* Light only when explicitly requested via [data-theme="light"]. ----------- */
 
 * {
   box-sizing: border-box;
