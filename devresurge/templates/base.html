@@ -123,9 +123,9 @@
           </div>
         </header>
 
-        <main class="dr-main">
-          <div class="dr-container">
-            {% if messages %}
+        <main class="dr-main{% block main_class %}{% endblock main_class %}">
+          {% if messages %}
+            <div class="dr-container">
               <div class="dr-stack" role="status" aria-live="polite">
                 {% for message in messages %}
                   <div class="dr-alert {% if message.tags %}dr-alert--{{ message.tags }}{% endif %}"
@@ -140,11 +140,15 @@
                   </div>
                 {% endfor %}
               </div>
-            {% endif %}
-            {% block main %}
-              {% block content %}{% endblock content %}
-            {% endblock main %}
-          </div>
+            </div>
+          {% endif %}
+          {% block main_wrap %}
+            <div class="dr-container">
+              {% block main %}
+                {% block content %}{% endblock content %}
+              {% endblock main %}
+            </div>
+          {% endblock main_wrap %}
         </main>
 
         <footer class="dr-footer">

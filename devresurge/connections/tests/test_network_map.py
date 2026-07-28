@@ -65,6 +65,8 @@ def test_private_owner_map_renders_preview(client):
     assert response.status_code == HTTPStatus.OK
     assert b"Private preview" in response.content
     assert b"dr-network-map" in response.content
+    assert b"dr-main--map" in response.content
+    assert b"dr-map-stage" in response.content
     assert peer.profile.handle.encode() in response.content
     assert response.context["is_public_map"] is False
 
@@ -160,6 +162,8 @@ def test_public_network_map_is_anonymous(client):
     response = client.get(url)
     assert response.status_code == HTTPStatus.OK
     assert b"dr-network-map" in response.content
+    assert b"dr-main--map" in response.content
+    assert b"dr-map-canvas-wrap" in response.content
     assert peer.profile.handle.encode() in response.content
     assert response.context["is_public_map"] is True
     assert b"my map" not in response.content

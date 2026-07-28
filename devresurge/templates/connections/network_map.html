@@ -7,6 +7,9 @@
 {% block og_title %}{% if is_public_map and map_profile %}@{{ map_profile.handle }} · network — DevResurge{% else %}Network map — DevResurge{% endif %}{% endblock og_title %}
 {% block og_description %}{% if is_public_map and map_profile %}Public connections around @{{ map_profile.handle }}.{% else %}Preview your network before publishing.{% endif %}{% endblock og_description %}
 
+{% block bodyclass %}dr-map-body{% endblock bodyclass %}
+{% block main_class %} dr-main--map{% endblock main_class %}
+
 {% block extra_head %}
   {{ block.super }}
   {% if is_public_map and map_profile %}
@@ -16,91 +19,90 @@
   {% endif %}
 {% endblock extra_head %}
 
-{% block content %}
-  <section class="dr-page dr-map-page">
-    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
-      {% if is_public_map and map_profile %}
-        <a href="{% url 'home' %}">~</a>
-        <span class="dr-crumb__sep">/</span>
-        <a href="{% url 'profiles:browse' %}">profiles</a>
-        <span class="dr-crumb__sep">/</span>
-        <a href="{{ map_profile.get_absolute_url }}">@{{ map_profile.handle }}</a>
-        <span class="dr-crumb__sep">/</span>
-        <span>map</span>
-      {% else %}
-        <a href="{% url 'profiles:dashboard' %}">~/me</a>
-        <span class="dr-crumb__sep">/</span>
-        <a href="{% url 'connections:list' %}">connections</a>
-        <span class="dr-crumb__sep">/</span>
-        <span>map</span>
-      {% endif %}
-    </nav>
-
-    <header class="dr-page__head dr-map-page__head">
-      <div>
-        <h1 style="margin: 0;">
-          {% if is_public_map and map_profile %}
-            {% blocktranslate with handle=map_profile.handle %}@{{ handle }}’s network{% endblocktranslate %}
-          {% else %}
-            {% trans "your network" %}
-          {% endif %}
-        </h1>
-        <p class="dr-map-page__lede">
-          <span class="dr-map-page__stats">
-            {% blocktranslate count counter=graph.stats.connections %}
-              {{ counter }} public connection
-            {% plural %}
-              {{ counter }} public connections
-            {% endblocktranslate %}
-            {% if graph.stats.mutual_edges %}
-              · {% blocktranslate count counter=graph.stats.mutual_edges %}{{ counter }} mutual link{% plural %}{{ counter }} mutual links{% endblocktranslate %}
-            {% endif %}
-          </span>
-          <span class="dr-map-page__hint dr-map-page__hint--fine">
-            {% trans "Drag · scroll to zoom · double-click to open" %}
-          </span>
-          <span class="dr-map-page__hint dr-map-page__hint--coarse">
-            {% trans "Pinch · drag · tap to open" %}
-          </span>
-        </p>
-      </div>
-      <div class="dr-page__head-actions dr-map-page__actions">
+{% block main_wrap %}
+  <section class="dr-map-page">
+    <div class="dr-container dr-map-page__chrome">
+      <nav class="dr-crumb dr-map-page__crumb" aria-label="{% translate 'Breadcrumb' %}">
         {% if is_public_map and map_profile %}
-          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{{ map_profile.get_absolute_url }}">{% trans "profile" %}</a>
-          {% if request.user.is_authenticated and map_profile.user_id == request.user.pk %}
-            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "manage" %}</a>
-            <button type="button"
-                    class="dr-btn dr-btn--sm dr-copy"
-                    data-copy="{{ request.scheme }}://{{ request.get_host }}{% url 'profiles:network_map' map_profile.handle %}"
-                    aria-label="{% translate 'Copy map link' %}">
-              <span data-copy-label>{% trans "copy link" %}</span>
-            </button>
-          {% endif %}
+          <a href="{% url 'home' %}">~</a>
+          <span class="dr-crumb__sep">/</span>
+          <a href="{{ map_profile.get_absolute_url }}">@{{ map_profile.handle }}</a>
+          <span class="dr-crumb__sep">/</span>
+          <span>map</span>
         {% else %}
-          <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "publish profile" %}</a>
-          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
+          <a href="{% url 'profiles:dashboard' %}">~/me</a>
+          <span class="dr-crumb__sep">/</span>
+          <a href="{% url 'connections:list' %}">connections</a>
+          <span class="dr-crumb__sep">/</span>
+          <span>map</span>
         {% endif %}
-      </div>
-    </header>
+      </nav>
 
-    {% if not is_public_map %}
-      <div class="dr-alert dr-alert--warning" style="margin-bottom: 0.85rem;">
-        <span class="dr-alert__body">
-          {% trans "Private preview — only you can see this. Publish your profile to get a shareable map at /u/your-handle/map/." %}
-        </span>
-      </div>
-    {% endif %}
+      <header class="dr-map-page__head">
+        <div class="dr-map-page__title">
+          <h1>
+            {% if is_public_map and map_profile %}
+              {% blocktranslate with handle=map_profile.handle %}@{{ handle }}’s network{% endblocktranslate %}
+            {% else %}
+              {% trans "your network" %}
+            {% endif %}
+          </h1>
+          <p class="dr-map-page__lede">
+            <span class="dr-map-page__stats">
+              {% blocktranslate count counter=graph.stats.connections %}
+                {{ counter }} public connection
+              {% plural %}
+                {{ counter }} public connections
+              {% endblocktranslate %}
+              {% if graph.stats.mutual_edges %}
+                · {% blocktranslate count counter=graph.stats.mutual_edges %}{{ counter }} mutual{% plural %}{{ counter }} mutual{% endblocktranslate %}
+              {% endif %}
+            </span>
+            <span class="dr-map-page__hint dr-map-page__hint--fine">
+              {% trans "Drag · scroll zoom · double-click opens" %}
+            </span>
+            <span class="dr-map-page__hint dr-map-page__hint--coarse">
+              {% trans "Pinch · drag · tap opens" %}
+            </span>
+          </p>
+        </div>
+        <div class="dr-map-page__actions">
+          {% if is_public_map and map_profile %}
+            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{{ map_profile.get_absolute_url }}">{% trans "profile" %}</a>
+            {% if request.user.is_authenticated and map_profile.user_id == request.user.pk %}
+              <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "manage" %}</a>
+              <button type="button"
+                      class="dr-btn dr-btn--sm dr-copy"
+                      data-copy="{{ request.scheme }}://{{ request.get_host }}{% url 'profiles:network_map' map_profile.handle %}"
+                      aria-label="{% translate 'Copy map link' %}">
+                <span data-copy-label>{% trans "copy link" %}</span>
+              </button>
+            {% endif %}
+          {% else %}
+            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "publish profile" %}</a>
+            <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
+          {% endif %}
+        </div>
+      </header>
+
+      {% if not is_public_map %}
+        <div class="dr-alert dr-alert--warning dr-map-page__alert">
+          <span class="dr-alert__body">
+            {% trans "Private preview — only you can see this. Publish your profile to get a shareable map at /u/your-handle/map/." %}
+          </span>
+        </div>
+      {% endif %}
+    </div>
 
     <div class="dr-map-layout">
-      <div class="dr-map-stage dr-panel">
-        <header class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">
-            {% if is_public_map and map_profile %}map/@{{ map_profile.handle }}{% else %}map/preview{% endif %}
-          </span>
-          <span class="dr-pill" data-map-status>sim</span>
-        </header>
-        <div class="dr-panel__body dr-map-canvas-wrap">
+      <div class="dr-map-stage">
+        <div class="dr-map-canvas-wrap">
+          <div class="dr-map-stage__badge" aria-hidden="true">
+            <span class="dr-map-stage__path">
+              {% if is_public_map and map_profile %}map/@{{ map_profile.handle }}{% else %}map/preview{% endif %}
+            </span>
+            <span class="dr-pill" data-map-status>sim</span>
+          </div>
           <div class="dr-map-toolbar" role="toolbar" aria-label="{% translate 'Map tools' %}">
             <button type="button" class="dr-btn dr-btn--sm" data-map-fit>{% trans "fit" %}</button>
             <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-pause>{% trans "pause" %}</button>
@@ -126,16 +128,25 @@
               <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-sheet-close aria-label="{% translate 'Close' %}">×</button>
             </div>
           </div>
+          <div class="dr-map-hud" aria-hidden="true">
+            <span class="dr-map-legend__item">
+              <i class="dr-map-swatch dr-map-swatch--self"></i>
+              {% if is_public_map and map_profile %}@{{ map_profile.handle }}{% else %}{% trans "you" %}{% endif %}
+            </span>
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "connection" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--hire"></i> {% trans "hire" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-line"></i> {% trans "direct" %}</span>
+            <span class="dr-map-legend__item"><i class="dr-map-line dr-map-line--mutual"></i> {% trans "mutual" %}</span>
+          </div>
         </div>
       </div>
 
-      <details class="dr-map-sidebar dr-panel" data-map-controls>
-        <summary class="dr-panel__header dr-map-sidebar__summary">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">{% trans "filters & people" %}</span>
+      <details class="dr-map-sidebar" data-map-controls>
+        <summary class="dr-map-sidebar__summary">
+          <span class="dr-map-sidebar__label">{% trans "filters & people" %}</span>
           <span class="dr-pill">{{ graph.stats.connections }}</span>
         </summary>
-        <div class="dr-panel__body dr-stack">
+        <div class="dr-map-sidebar__body dr-stack">
           <label class="dr-label" for="dr-map-filter">{% trans "Relation" %}</label>
           <select id="dr-map-filter" class="dr-select" data-map-filter>
             <option value="">{% trans "all" %}</option>
@@ -149,7 +160,7 @@
             <span>{% trans "show links between connections" %}</span>
           </label>
 
-          <p class="dr-helptext" style="margin: 0;">
+          <p class="dr-helptext dr-map-sidebar__help">
             {% if is_public_map and map_profile %}
               {% blocktranslate with handle=map_profile.handle %}
                 Centered on @{{ handle }}. Only publicly listed accounts are shown.
@@ -160,7 +171,7 @@
           </p>
 
           {% if not is_public_map and graph.stats.private_omitted %}
-            <p class="dr-helptext" style="margin: 0; color: var(--text-dim);">
+            <p class="dr-helptext dr-map-sidebar__help dr-map-sidebar__help--dim">
               {% blocktranslate count counter=graph.stats.private_omitted %}
                 {{ counter }} private connection hidden.
               {% plural %}
@@ -168,17 +179,6 @@
               {% endblocktranslate %}
             </p>
           {% endif %}
-
-          <div class="dr-map-legend" aria-hidden="true">
-            <span class="dr-map-legend__item">
-              <i class="dr-map-swatch dr-map-swatch--self"></i>
-              {% if is_public_map and map_profile %}@{{ map_profile.handle }}{% else %}{% trans "you" %}{% endif %}
-            </span>
-            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "connection" %}</span>
-            <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--hire"></i> {% trans "open to work" %}</span>
-            <span class="dr-map-legend__item"><i class="dr-map-line"></i> {% trans "direct" %}</span>
-            <span class="dr-map-legend__item"><i class="dr-map-line dr-map-line--mutual"></i> {% trans "mutual" %}</span>
-          </div>
 
           <h2 class="dr-map-list-title">{% trans "people" %}</h2>
           <ul class="dr-map-roster" data-map-roster>
@@ -215,7 +215,7 @@
       </details>
     </div>
   </section>
-{% endblock content %}
+{% endblock main_wrap %}
 
 {% block javascript %}
   {{ block.super }}
