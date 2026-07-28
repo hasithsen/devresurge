@@ -1,7 +1,10 @@
 {% load i18n %}
-<nav class="dr-share-btns" aria-label="{% translate 'Share badge' %}">
-  <span class="dr-share-btns__label">{% translate "share" %}</span>
-  <a class="dr-share-btn"
+<nav class="dr-share-btns{% if prominent %} dr-share-btns--prominent{% endif %}"
+     aria-label="{% translate 'Share badge' %}">
+  {% if not hide_label %}
+    <span class="dr-share-btns__label">{% translate "share" %}</span>
+  {% endif %}
+  <a class="dr-share-btn{% if prominent %} dr-share-btn--primary{% endif %}"
      href="{{ share.linkedin }}"
      target="_blank"
      rel="noopener noreferrer"
@@ -16,6 +19,13 @@
     X
   </a>
   <a class="dr-share-btn"
+     href="{{ share.whatsapp }}"
+     target="_blank"
+     rel="noopener noreferrer"
+     data-share="whatsapp">
+    WhatsApp
+  </a>
+  <a class="dr-share-btn"
      href="{{ share.reddit }}"
      target="_blank"
      rel="noopener noreferrer"
@@ -27,4 +37,12 @@
      data-share="email">
     {% translate "email" %}
   </a>
+  {% if share.page_url %}
+    <button type="button"
+            class="dr-share-btn dr-copy"
+            data-copy="{{ share.page_url }}"
+            aria-label="{% translate 'Copy badge link' %}">
+      <span data-copy-label>{% translate "copy link" %}</span>
+    </button>
+  {% endif %}
 </nav>

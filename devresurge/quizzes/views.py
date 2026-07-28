@@ -151,11 +151,61 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
             percent=percent,
             passed=passed,
         )
-        awarded = evaluate_quiz_badges(request.user, attempt) if passed else []
+    awarded = evaluate_quiz_badges(request.user, attempt) if passed else []
 
-    share_awards = []
-    for ub in awarded:
-        share_awards.append(
+    celebrate = None
+    extra_awards = []
+    if passed and quiz.badge_slug:
+        quiz_badge = Badge.objects.filter(slug=quiz.badge_slug, is_active=True).first()
+        holds_quiz_badge = bool(
+            quiz_badge
+            and (
+                any(ub.badge_id == quiz_badge.pk for ub in awarded)
+                or UserBadge.objects.filter(
+                    user=request.user,
+                    badge=quiz_badge,
+                ).exists()
+            )
+        )
+        if quiz_badge and holds_quiz_badge:
+            newly = next((ub for ub in awarded if ub.badge_id == quiz_badge.pk), None)
+            profile = getattr(request.user, "profile", None)
+            page_url = request.build_absolute_uri(quiz_badge.get_absolute_url())
+            share = build_badge_share_links(
+                page_url=page_url,
+                title=quiz_badge.title,
+                description=quiz_badge.description,
+                earned=True,
+            )
+            show_holder = bool(profile is not None and profile.is_public and profile.handle)
+            if show_holder:
+                preview_svg_url = reverse(
+                    "quizzes:badge_holder_svg",
+                    kwargs={"slug": quiz_badge.slug, "handle": profile.handle},
+                )
+            else:
+                preview_svg_url = reverse(
+                    "quizzes:badge_svg",
+                    kwargs={"slug": quiz_badge.slug},
+                )
+            celebrate = {
+                "badge": quiz_badge,
+                "award": newly,
+                "is_new": newly is not None,
+                "share": share,
+                "preview_svg_url": preview_svg_url,
+                "show_holder": show_holder,
+                "holder_handle": profile.handle if show_holder else None,
+            }
+            extra_awards = [ub for ub in awarded if ub.badge_id != quiz_badge.pk]
+        else:
+            extra_awards = list(awarded)
+    elif awarded:
+        extra_awards = list(awarded)
+
+    share_extras = []
+    for ub in extra_awards:
+        share_extras.append(
             {
                 "award": ub,
                 "share": build_badge_share_links(
@@ -168,10 +218,16 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
         )
 
     if passed:
-        messages.success(
-            request,
-            f"Passed at {percent}% — nice work.",
-        )
+        if celebrate and celebrate["is_new"]:
+            messages.success(
+                request,
+                f"Passed at {percent}% — badge unlocked. Share it.",
+            )
+        else:
+            messages.success(
+                request,
+                f"Passed at {percent}% — nice work.",
+            )
     else:
         messages.info(
             request,
@@ -186,7 +242,8 @@ def _grade_attempt(request: HttpRequest, quiz: Quiz, questions: list) -> HttpRes
             "attempt": attempt,
             "review": review,
             "awarded": awarded,
-            "share_awards": share_awards,
+            "celebrate": celebrate,
+            "share_extras": share_extras,
         },
     )
 

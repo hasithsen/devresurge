@@ -29,27 +29,76 @@
           <span class="dr-prompt"></span>
           <span class="cmd">score {{ attempt.score }}/{{ attempt.total }} → {{ attempt.percent }}%</span>
         </p>
-        {% if awarded %}
-          <div class="dr-achieve-row">
-            {% for ub in awarded %}
-              <a class="dr-achieve" href="{{ ub.badge.get_absolute_url }}" title="{{ ub.badge.description }}">
-                <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
-                <span>{{ ub.badge.title }}</span>
-              </a>
+
+        {% if celebrate %}
+          <section class="dr-badge-celebrate" aria-labelledby="badge-celebrate-title">
+            <div class="dr-badge-celebrate__head">
+              <div class="dr-badge-celebrate__copy">
+                <p class="dr-badge-celebrate__kicker">
+                  {% if celebrate.is_new %}
+                    {% trans "badge unlocked" %}
+                  {% else %}
+                    {% trans "you hold this badge" %}
+                  {% endif %}
+                </p>
+                <h2 class="dr-badge-celebrate__title" id="badge-celebrate-title">
+                  {{ celebrate.badge.title }}
+                </h2>
+                <p class="dr-badge-celebrate__lede">
+                  {% if celebrate.is_new %}
+                    {% trans "Share your proof on LinkedIn and beyond — technical signal next to your career graph." %}
+                  {% else %}
+                    {% trans "Passed again — share the badge anytime." %}
+                  {% endif %}
+                </p>
+              </div>
+              <div class="dr-badge-celebrate__preview">
+                <img src="{{ celebrate.preview_svg_url }}"
+                     alt="{% blocktranslate with title=celebrate.badge.title %}{{ title }} badge{% endblocktranslate %}"
+                     loading="lazy"
+                     width="320"
+                     height="80" />
+              </div>
+            </div>
+            {% include "quizzes/_badge_share.html" with share=celebrate.share prominent=True hide_label=True %}
+            <div class="dr-share-row dr-badge-celebrate__link">
+              <code id="dr-result-badge-url">{{ celebrate.share.page_url }}</code>
+              <button type="button"
+                      class="dr-copy"
+                      data-copy-from="#dr-result-badge-url"
+                      aria-label="{% translate 'Copy badge URL' %}">
+                <span class="dr-copy__icon" aria-hidden="true"></span>
+                <span data-copy-label>{% trans "copy" %}</span>
+              </button>
+              <a class="dr-btn dr-btn--sm dr-btn--ghost"
+                 href="{{ celebrate.badge.get_absolute_url }}">{% trans "badge page" %}</a>
+            </div>
+          </section>
+        {% endif %}
+
+        {% if share_extras %}
+          <div class="dr-badge-celebrate__extras">
+            <p class="dr-badge-celebrate__extras-label">{% trans "also unlocked" %}</p>
+            {% for row in share_extras %}
+              <div class="dr-badge-celebrate__extra">
+                <a class="dr-achieve" href="{{ row.award.badge.get_absolute_url }}" title="{{ row.award.badge.description }}">
+                  <span class="dr-achieve__icon" aria-hidden="true">{{ row.award.badge.icon }}</span>
+                  <span>{{ row.award.badge.title }}</span>
+                </a>
+                {% include "quizzes/_badge_share.html" with share=row.share %}
+              </div>
             {% endfor %}
           </div>
-          {% for row in share_awards %}
-            <div class="dr-stack" style="gap: 0.35rem;">
-              <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">
-                {% blocktranslate with title=row.award.badge.title %}Share {{ title }}{% endblocktranslate %}
-              </p>
-              {% include "quizzes/_badge_share.html" with badge=row.award.badge share=row.share %}
-            </div>
-          {% endfor %}
         {% endif %}
+
         <div class="dr-btn-row">
           {% if not attempt.passed %}
             <a class="dr-btn dr-btn--primary" href="{% url 'quizzes:take' quiz.slug %}">{% trans "try again" %}</a>
+          {% elif celebrate %}
+            <a class="dr-btn dr-btn--primary"
+               href="{{ celebrate.share.linkedin }}"
+               target="_blank"
+               rel="noopener noreferrer">{% trans "share on LinkedIn" %}</a>
           {% endif %}
           <a class="dr-btn" href="{% url 'quizzes:badges' %}">{% trans "badges" %}</a>
           <a class="dr-btn dr-btn--ghost" href="{% url 'quizzes:list' %}">{% trans "more quizzes" %}</a>

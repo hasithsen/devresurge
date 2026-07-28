@@ -51,6 +51,14 @@ def test_quiz_pass_awards_badge(client, seeded_quizzes):
     attempt = QuizAttempt.objects.get(user=user, quiz=quiz)
     assert attempt.passed is True
     assert UserBadge.objects.filter(user=user, badge__slug="quiz_python").exists()
+    celebrate = response.context["celebrate"]
+    assert celebrate is not None
+    assert celebrate["is_new"] is True
+    assert celebrate["badge"].slug == "quiz_python"
+    assert "linkedin.com/sharing" in celebrate["share"]["linkedin"]
+    assert b"dr-badge-celebrate" in response.content
+    assert b"share on LinkedIn" in response.content
+    assert b"badge unlocked" in response.content
 
 
 def test_quiz_fail_does_not_award_badge(client, seeded_quizzes):

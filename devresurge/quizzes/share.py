@@ -15,7 +15,7 @@ def build_badge_share_links(
     """Return platform share URLs for an earned badge.
 
     Callers must only expose these for badges the user has already achieved.
-    LinkedIn only accepts a URL; X/Reddit/email carry a short caption.
+    LinkedIn only accepts a URL; X/Reddit/WhatsApp/email carry a short caption.
     """
     if earned:
         caption = f"I earned “{title}” on DevResurge — {description}"
@@ -34,6 +34,10 @@ def build_badge_share_links(
         "x": (
             "https://twitter.com/intent/tweet?"
             + urlencode({"text": caption, "url": page_url})
+        ),
+        "whatsapp": (
+            "https://wa.me/?"
+            + urlencode({"text": f"{caption}\n{page_url}"})
         ),
         "reddit": (
             "https://www.reddit.com/submit?"

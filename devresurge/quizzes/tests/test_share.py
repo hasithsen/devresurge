@@ -28,5 +28,7 @@ def test_build_badge_share_links_platforms():
     assert "text" in parse_qs(x.query)
 
     assert links["reddit"].startswith("https://www.reddit.com/submit?")
+    assert links["whatsapp"].startswith("https://wa.me/?")
+    assert "Python Pulse" in parse_qs(urlparse(links["whatsapp"]).query)["text"][0]
     assert links["email"].startswith("mailto:?")
     assert links["page_url"].endswith("/quizzes/badges/quiz_python/")
