@@ -353,7 +353,8 @@
     var coarse = this.coarse;
     this.nodes = (graph.nodes || []).map(function (n, i) {
       var angle = (i / Math.max(graph.nodes.length, 1)) * Math.PI * 2;
-      var radius = n.is_self ? 0 : 160 + (i % 5) * 18;
+      var isCenter = !!(n.is_center || n.is_self);
+      var radius = isCenter ? 0 : 160 + (i % 5) * 18;
       var node = {
         id: n.id,
         handle: n.handle,
@@ -369,13 +370,14 @@
         open_to_learning: !!n.open_to_learning,
         intents: Array.isArray(n.intents) ? n.intents.slice() : [],
         is_self: !!n.is_self,
+        is_center: isCenter,
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
         vx: 0,
         vy: 0,
         fx: null,
         fy: null,
-        r: n.is_self ? (coarse ? 26 : 22) : (coarse ? 20 : 16),
+        r: isCenter ? (coarse ? 26 : 22) : (coarse ? 20 : 16),
         img: null,
       };
       if (n.avatar) {
@@ -444,7 +446,7 @@
 
   NetworkMap.prototype._nodeMatchesIntent = function (node) {
     if (!this.intentFilters.length) return true;
-    if (node.is_self) return true;
+    if (node.is_center) return true;
     var intents = node.intents || [];
     for (var i = 0; i < this.intentFilters.length; i++) {
       if (intents.indexOf(this.intentFilters[i]) !== -1) return true;
@@ -544,7 +546,7 @@
         a.vy = 0;
         continue;
       }
-      var pull = a.is_self ? 0.02 : 0.004;
+      var pull = a.is_center ? 0.02 : 0.004;
       a.vx += -a.x * pull;
       a.vy += -a.y * pull;
       a.vx *= 0.86;
@@ -624,12 +626,12 @@
     // Nodes
     for (var n = 0; n < this.nodes.length; n++) {
       var node = this.nodes[n];
-      if (!visible[node.id] && !node.is_self) continue;
+      if (!visible[node.id] && !node.is_center) continue;
       var intentOk = this._nodeMatchesIntent(node);
       var isHover = this.hover === node;
       var r = node.r + (isHover ? 3 : 0);
       var ring = accent;
-      if (!node.is_self) {
+      if (!node.is_center) {
         if (node.open_to_work) ring = warn;
         else if (node.open_to_collaborate) ring = cssVar("--link", accent);
         else if (node.open_to_mentor || node.open_to_learning) ring = cssVar("--accent-strong", warn);
@@ -639,7 +641,7 @@
 
       ctx.beginPath();
       ctx.arc(node.x, node.y, r + 3, 0, Math.PI * 2);
-      ctx.fillStyle = node.is_self ? accent : ring;
+      ctx.fillStyle = node.is_center ? accent : ring;
       ctx.globalAlpha = intentOk ? 0.25 : 0.08;
       ctx.fill();
       ctx.globalAlpha = intentOk ? 1 : 0.18;
@@ -649,7 +651,7 @@
       ctx.fillStyle = cssVar("--bg", "#0b0f0d");
       ctx.fill();
       ctx.lineWidth = 2 / this.scale;
-      ctx.strokeStyle = node.is_self ? accent : ring;
+      ctx.strokeStyle = node.is_center ? accent : ring;
       ctx.stroke();
 
       if (node.img && node.img.complete && node.img.naturalWidth) {
@@ -718,7 +720,7 @@
   };
 
   NetworkMap.prototype._peerRelation = function (node) {
-    if (!node || node.is_self) return null;
+    if (!node || node.is_center) return null;
     var me = this.graph.me_id;
     for (var i = 0; i < this.edges.length; i++) {
       var e = this.edges[i];
@@ -753,7 +755,7 @@
       node.location ? escapeHtml(node.location) : "",
       rel ? escapeHtml(rel.label) : "",
       intents.length ? escapeHtml(intents.join(" · ")) : "",
-      node.is_self ? "(you)" : "double-click to open",
+      node.is_self ? "(you)" : (node.url ? "double-click to open" : ""),
     ].filter(Boolean);
     this.tooltip.innerHTML = lines.join("<br>");
     this.tooltip.hidden = false;

@@ -15,7 +15,12 @@ def _profile_is_public(user) -> bool:
     return bool(profile is not None and profile.is_public)
 
 
-def _node_from_user(user, *, is_self: bool = False) -> dict[str, Any]:
+def _node_from_user(
+    user,
+    *,
+    is_self: bool = False,
+    is_center: bool = False,
+) -> dict[str, Any]:
     profile = getattr(user, "profile", None)
     handle = getattr(profile, "handle", "") or ""
     avatar = ""
@@ -58,8 +63,12 @@ def _node_from_user(user, *, is_self: bool = False) -> dict[str, Any]:
         "open_to_learning": open_to_learning,
         "intents": intents,
         "is_self": is_self,
+        "is_center": is_center or is_self,
         "is_public": is_public,
     }
+
+
+_UNSET = object()
 
 
 def build_network_graph(
@@ -67,23 +76,36 @@ def build_network_graph(
     *,
     include_mutual: bool = True,
     public_only: bool = True,
+    viewer=_UNSET,
 ) -> dict[str, Any]:
     """Return ego network for ``user``.
 
-    Nodes: the viewer + accepted 1st-degree connections.
+    Nodes: the subject + accepted 1st-degree connections.
     When ``public_only`` (default), private accounts are omitted from nodes and
     edges — required for any map that can be shared or embedded publicly.
 
-    Edges: viewer↔peer (with relation), and optionally peer↔peer when two of
-    the viewer's connections are also connected to each other.
+    ``viewer`` is who is looking at the map. The subject is labeled ``is_self``
+    only when the viewer is that same person. Pass ``viewer=None`` for anonymous
+    public maps so the center is never shown as “you”.
+
+    Edges: subject↔peer (with relation), and optionally peer↔peer when two of
+    the subject's connections are also connected to each other.
     """
+    if viewer is _UNSET:
+        viewer = user
+    viewer_id = getattr(viewer, "pk", None) if viewer is not None else None
+
     accepted = list(
         Connection.objects.involving(user)
         .filter(status=ConnectionStatus.ACCEPTED)
         .select_related("requester__profile", "addressee__profile"),
     )
 
-    me = _node_from_user(user, is_self=True)
+    me = _node_from_user(
+        user,
+        is_self=viewer_id == user.pk,
+        is_center=True,
+    )
     nodes_by_id: dict[int, dict[str, Any]] = {user.pk: me}
     edges: list[dict[str, Any]] = []
     peer_ids: list[int] = []

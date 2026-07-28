@@ -479,6 +479,7 @@ class PublicNetworkMapView(TemplateView):
             profile.user,
             include_mutual=include_mutual,
             public_only=True,
+            viewer=self.request.user if self.request.user.is_authenticated else None,
         )
         ctx["graph"] = graph
         ctx["include_mutual"] = include_mutual
@@ -534,6 +535,7 @@ def public_network_map_data_view(request: HttpRequest, handle: str) -> JsonRespo
         profile.user,
         include_mutual=include_mutual,
         public_only=True,
+        viewer=request.user if request.user.is_authenticated else None,
     )
     response = JsonResponse(graph)
     response["Cache-Control"] = "public, max-age=60, must-revalidate"

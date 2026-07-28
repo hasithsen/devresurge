@@ -170,7 +170,7 @@
 
     <div class="dr-map-layout">
       <div class="dr-map-stage">
-        <div class="dr-map-canvas-wrap">
+        <header class="dr-map-chrome">
           <div class="dr-map-stage__badge" aria-hidden="true">
             <span class="dr-map-stage__path">
               {% if is_explore_map %}map/explore{% elif is_public_map and map_profile %}map/@{{ map_profile.handle }}{% else %}map/preview{% endif %}
@@ -183,6 +183,8 @@
             <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-zoom-in aria-label="{% translate 'Zoom in' %}">+</button>
             <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-zoom-out aria-label="{% translate 'Zoom out' %}">−</button>
           </div>
+        </header>
+        <div class="dr-map-canvas-wrap">
           <canvas id="dr-network-map"
                   class="dr-map-canvas"
                   role="img"
@@ -199,7 +201,7 @@
                 <span data-map-sheet-handle></span>
                 <span class="dr-map-sheet__extra" data-map-sheet-extra></span>
               </div>
-              <a class="dr-btn dr-btn--sm dr-btn--primary" data-map-sheet-open href="#">{% trans "open profile" %}</a>
+              <a class="dr-btn dr-btn--sm dr-btn--primary" data-map-sheet-open href="#">{% trans "open" %}</a>
               <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost" data-map-sheet-close aria-label="{% translate 'Close' %}">×</button>
             </div>
           </div>
@@ -207,7 +209,11 @@
             {% if not is_explore_map %}
               <span class="dr-map-legend__item">
                 <i class="dr-map-swatch dr-map-swatch--self"></i>
-                {% if is_public_map and map_profile %}@{{ map_profile.handle }}{% else %}{% trans "you" %}{% endif %}
+                {% if is_public_map and map_profile and not is_map_owner %}
+                  @{{ map_profile.handle }}
+                {% else %}
+                  {% trans "you" %}
+                {% endif %}
               </span>
             {% endif %}
             <span class="dr-map-legend__item"><i class="dr-map-swatch dr-map-swatch--peer"></i> {% trans "dev" %}</span>

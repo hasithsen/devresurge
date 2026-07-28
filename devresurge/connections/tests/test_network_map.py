@@ -229,9 +229,62 @@ def test_public_network_map_json_excludes_private_peers(client):
     assert public.pk in ids
     assert private.pk not in ids
     assert data["stats"]["private_omitted"] == 1
+    host_node = next(n for n in data["nodes"] if n["id"] == host.pk)
+    assert host_node["is_center"] is True
+    assert host_node["is_self"] is False
     body = response.content.decode()
     assert private.email not in body
     assert private.profile.handle not in body
+
+
+def test_public_network_map_marks_you_only_for_owner(client):
+    host = UserFactory()
+    guest = UserFactory()
+    host.profile.is_public = True
+    host.profile.save()
+    guest.profile.is_public = True
+    guest.profile.save()
+    _accept(host, guest)
+
+    anon = client.get(
+        reverse("profiles:network_map_data", kwargs={"handle": host.profile.handle}),
+    ).json()
+    host_anon = next(n for n in anon["nodes"] if n["id"] == host.pk)
+    assert host_anon["is_self"] is False
+    assert host_anon["is_center"] is True
+
+    client.force_login(guest)
+    as_guest = client.get(
+        reverse("profiles:network_map_data", kwargs={"handle": host.profile.handle}),
+    ).json()
+    host_guest = next(n for n in as_guest["nodes"] if n["id"] == host.pk)
+    assert host_guest["is_self"] is False
+
+    client.force_login(host)
+    as_owner = client.get(
+        reverse("profiles:network_map_data", kwargs={"handle": host.profile.handle}),
+    ).json()
+    host_owner = next(n for n in as_owner["nodes"] if n["id"] == host.pk)
+    assert host_owner["is_self"] is True
+    assert host_owner["is_center"] is True
+
+    page = client.get(
+        reverse("profiles:network_map", kwargs={"handle": host.profile.handle}),
+    )
+    assert page.status_code == HTTPStatus.OK
+    # HUD uses handle for public maps, not the generic "you" label for guests.
+    client.logout()
+    anon_page = client.get(
+        reverse("profiles:network_map", kwargs={"handle": host.profile.handle}),
+    )
+    assert anon_page.status_code == HTTPStatus.OK
+    embedded = anon_page.context["graph"]
+    center = next(n for n in embedded["nodes"] if n["is_center"])
+    assert center["id"] == host.pk
+    assert center["is_self"] is False
+    assert all(not n["is_self"] for n in embedded["nodes"])
+    assert b"· you" not in anon_page.content
+    assert host.profile.handle.encode() in anon_page.content
 
 
 def test_explore_map_is_anonymous(client):
