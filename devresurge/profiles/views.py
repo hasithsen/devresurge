@@ -524,9 +524,6 @@ class ProfilePublicView(DetailView):
             "yes",
         }
         if profile.is_public and profile.handle:
-            from django.db.models import Q
-
-            from devresurge.connections.models import Connection
             from devresurge.connections.share import build_map_invite_share_links
             from devresurge.connections.share import build_map_share_links
 
