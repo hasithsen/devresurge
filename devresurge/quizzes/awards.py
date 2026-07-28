@@ -114,6 +114,36 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         if got:
             awarded.append(got)
 
+    # Frontend track: JS + CSS + TypeScript.
+    frontend = {"quiz_js", "quiz_css", "quiz_typescript"}
+    held_fe = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=frontend).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_fe.add(quiz.badge_slug)
+    if frontend.issubset(held_fe):
+        got = award_badge(user, "quiz_frontend")
+        if got:
+            awarded.append(got)
+
+    # Ops track: Linux + Docker + testing.
+    ops = {"quiz_linux", "quiz_docker", "quiz_testing"}
+    held_ops = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=ops).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_ops.add(quiz.badge_slug)
+    if ops.issubset(held_ops):
+        got = award_badge(user, "quiz_ops")
+        if got:
+            awarded.append(got)
+
     # Polyglot: five or more quiz-category badges.
     quiz_slugs = set(
         UserBadge.objects.filter(user=user, badge__category="quiz").values_list(

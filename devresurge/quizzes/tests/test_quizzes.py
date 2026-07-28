@@ -293,6 +293,58 @@ def test_quiz_polyglot_badge(seeded_quizzes):
     assert UserBadge.objects.filter(user=user, badge__slug="quiz_polyglot").exists()
 
 
+def test_new_catalog_quizzes_seeded(seeded_quizzes):
+    for slug in (
+        "typescript-essentials",
+        "css-layout",
+        "linux-shell",
+        "containers-docker",
+        "testing-fundamentals",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        assert quiz.is_published
+        assert quiz.questions.count() == 5
+        assert quiz.questions.filter(choices__is_correct=True).distinct().count() == 5
+
+
+def test_quiz_frontend_and_ops_track_badges(seeded_quizzes):
+    user = UserFactory()
+    for slug in (
+        "javascript-essentials",
+        "css-layout",
+        "typescript-essentials",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        attempt = QuizAttempt.objects.create(
+            user=user,
+            quiz=quiz,
+            score=5,
+            total=5,
+            percent=100,
+            passed=True,
+        )
+        evaluate_quiz_badges(user, attempt)
+    assert UserBadge.objects.filter(user=user, badge__slug="quiz_frontend").exists()
+
+    user2 = UserFactory()
+    for slug in (
+        "linux-shell",
+        "containers-docker",
+        "testing-fundamentals",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        attempt = QuizAttempt.objects.create(
+            user=user2,
+            quiz=quiz,
+            score=5,
+            total=5,
+            percent=100,
+            passed=True,
+        )
+        evaluate_quiz_badges(user2, attempt)
+    assert UserBadge.objects.filter(user=user2, badge__slug="quiz_ops").exists()
+
+
 def test_public_profile_shows_earned_badges(client, seeded_quizzes):
     user = UserFactory()
     award_badge(user, "quiz_python")
