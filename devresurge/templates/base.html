@@ -47,7 +47,9 @@
   </head>
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
     {% block body %}
+      <a class="dr-skip" href="#main">$ {% translate "skip to content" %}</a>
       <div class="dr-shell">
+        <div class="dr-nav-backdrop" data-nav-backdrop hidden></div>
         <header class="dr-nav">
           <div class="dr-container dr-nav__inner">
             <a class="dr-nav__brand" href="{% url 'home' %}">
@@ -124,7 +126,7 @@
           </div>
         </header>
 
-        <main class="dr-main{% block main_class %}{% endblock main_class %}">
+        <main id="main" class="dr-main{% block main_class %}{% endblock main_class %}" tabindex="-1">
           {% if messages %}
             <div class="dr-container">
               <div class="dr-stack" role="status" aria-live="polite">
@@ -162,6 +164,7 @@
           </div>
         </footer>
       </div>
+      <div id="dr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     {% endblock body %}
     {% block modal %}{% endblock modal %}
     {% block inline_javascript %}{% endblock inline_javascript %}

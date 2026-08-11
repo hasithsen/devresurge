@@ -15,7 +15,7 @@
     <header class="dr-page__head">
       <div>
         <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">tail -f notifications.log</span></p>
-        <h1 style="margin: 0;">{% trans "notifications" %}</h1>
+        <h1 class="dr-page__title">{% trans "notifications" %}</h1>
       </div>
       <div class="dr-page__head-actions">
         <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
@@ -88,12 +88,12 @@
 
               {% if n.kind == 'connection_request' and n.connection and n.connection.status == 'pending' and n.connection.addressee_id == request.user.pk %}
                 <div class="dr-btn-row dr-notif__actions">
-                  <form method="post" action="{% url 'connections:accept' n.connection.pk %}">
+                  <form method="post" action="{% url 'connections:accept' n.connection.pk %}" data-busy-label="{% translate 'accepting…' %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}" />
                     <button type="submit" class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Accept" %}</button>
                   </form>
-                  <form method="post" action="{% url 'connections:decline' n.connection.pk %}">
+                  <form method="post" action="{% url 'connections:decline' n.connection.pk %}" data-busy-label="{% translate 'declining…' %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}" />
                     <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "Decline" %}</button>
@@ -126,9 +126,14 @@
         </nav>
       {% endif %}
     {% else %}
-      <div class="dr-empty" style="margin-top: 1.25rem;">
+      <div class="dr-empty dr-mt-lg">
         <div class="dr-emoji">∅</div>
         <p>{% trans "No notifications yet. When someone connects with you, it'll show up here." %}</p>
+        <div class="dr-btn-row">
+          <a class="dr-btn" href="{% url 'profiles:browse' %}">{% trans "browse profiles" %}</a>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'connections:list' %}">{% trans "connections" %}</a>
+          <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:explore_map' %}">{% trans "explore map" %}</a>
+        </div>
       </div>
     {% endif %}
   </section>

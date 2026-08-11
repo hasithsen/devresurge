@@ -7,10 +7,10 @@
 
 {% block content %}
   <section class="dr-page">
-    <header class="dr-stack" style="margin-bottom: 1.5rem;">
+    <header class="dr-stack dr-mb-lg">
       <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls -la /u/</span></p>
-      <h1 style="margin: 0;">techies <span style="color: var(--text-dim);">/ {{ paginator.count }}</span></h1>
-      <p style="margin: 0; color: var(--text-muted);">
+      <h1 class="dr-page__title">techies <span class="dr-dim">/ {{ paginator.count }}</span></h1>
+      <p class="dr-mb-0 dr-muted">
         {% trans "Browse public profiles. Filter by role, open-to intent, or grep the stack." %}
       </p>
     </header>
@@ -22,30 +22,33 @@
              value="{{ q }}"
              placeholder="grep python | aws | colombo…"
              aria-label="{% translate 'Search profiles' %}" />
-      <select class="dr-select" name="role" aria-label="{% translate 'Role filter' %}">
-        <option value="">{% trans "all roles" %}</option>
-        {% for value, label in roles %}
-          <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <select class="dr-select" name="intent" aria-label="{% translate 'Open to' %}">
-        <option value="">{% trans "any intent" %}</option>
-        <option value="hire" {% if intent == 'hire' %}selected{% endif %}>{% trans "open to work" %}</option>
-        <option value="collaborate" {% if intent == 'collaborate' %}selected{% endif %}>{% trans "collaborate" %}</option>
-        <option value="mentor" {% if intent == 'mentor' %}selected{% endif %}>{% trans "mentor" %}</option>
-        <option value="learning" {% if intent == 'learning' %}selected{% endif %}>{% trans "seeking mentor" %}</option>
-      </select>
+      <details class="dr-search__filters"{% if role or intent %} open{% endif %}>
+        <summary>{% trans "filters" %}</summary>
+        <div class="dr-search__filters-body">
+          <select class="dr-select" name="role" aria-label="{% translate 'Role filter' %}">
+            <option value="">{% trans "all roles" %}</option>
+            {% for value, label in roles %}
+              <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select class="dr-select" name="intent" aria-label="{% translate 'Open to' %}">
+            <option value="">{% trans "any intent" %}</option>
+            <option value="hire" {% if intent == 'hire' %}selected{% endif %}>{% trans "open to work" %}</option>
+            <option value="collaborate" {% if intent == 'collaborate' %}selected{% endif %}>{% trans "collaborate" %}</option>
+            <option value="mentor" {% if intent == 'mentor' %}selected{% endif %}>{% trans "mentor" %}</option>
+            <option value="learning" {% if intent == 'learning' %}selected{% endif %}>{% trans "seeking mentor" %}</option>
+          </select>
+        </div>
+      </details>
       <button class="dr-btn dr-btn--primary" type="submit">run</button>
-      {% if q or role or intent or hire %}
+      {% if q or role or intent %}
         <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:browse' %}">reset</a>
       {% endif %}
     </form>
     {% if profiles %}
       <div class="dr-grid dr-grid--3">
         {% for profile in profiles %}
-          <a class="dr-profile-card"
-             href="{{ profile.get_absolute_url }}"
-             style="text-decoration: none;">
+          <a class="dr-profile-card" href="{{ profile.get_absolute_url }}">
             <div class="dr-profile-card__head">
               <span class="dr-avatar">
                 {% if profile.avatar %}
@@ -65,7 +68,7 @@
             <div class="dr-meta">
               <span><strong>{{ profile.get_primary_role_display }}</strong></span>
               {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
-              {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">open to work</strong></span>{% endif %}
+              {% if profile.available_for_hire %}<span>· <strong class="dr-accent">open to work</strong></span>{% endif %}
               {% if profile.open_to_collaborate %}<span>· collaborate</span>{% endif %}
             </div>
             {% if profile.tech_stack_list %}
@@ -86,12 +89,12 @@
         <nav class="dr-pager" aria-label="{% translate 'Pagination' %}">
           {% if page_obj.has_previous %}
             <a class="dr-btn dr-btn--sm"
-               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}{% if intent %}intent={{ intent }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
+               href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}{% if role %}role={{ role|urlencode }}&amp;{% endif %}{% if intent %}intent={{ intent|urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">‹ prev</a>
           {% endif %}
-          <span class="current">page {{ page_obj.number }} / {{ paginator.num_pages }}</span>
+          <span class="dr-pager__status">{% blocktranslate with num=page_obj.number total=paginator.num_pages %}page {{ num }} of {{ total }}{% endblocktranslate %}</span>
           {% if page_obj.has_next %}
             <a class="dr-btn dr-btn--sm"
-               href="?{% if q %}q={{ q }}&amp;{% endif %}{% if role %}role={{ role }}&amp;{% endif %}{% if intent %}intent={{ intent }}&amp;{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
+               href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}{% if role %}role={{ role|urlencode }}&amp;{% endif %}{% if intent %}intent={{ intent|urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}">next ›</a>
           {% endif %}
         </nav>
       {% endif %}
@@ -101,8 +104,10 @@
         <p>
           {% blocktranslate with q=q|default:"*" %}No profiles match <code>{{ q }}</code>.{% endblocktranslate %}
         </p>
-        {% if q or role or intent or hire %}
-          <a class="dr-btn dr-btn--ghost dr-btn--sm" href="{% url 'profiles:browse' %}">reset filters</a>
+        {% if q or role or intent %}
+          <div class="dr-btn-row">
+            <a class="dr-btn dr-btn--ghost dr-btn--sm" href="{% url 'profiles:browse' %}">reset filters</a>
+          </div>
         {% endif %}
       </div>
     {% endif %}

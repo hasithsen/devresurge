@@ -82,7 +82,10 @@
           {% else %}
             <details class="dr-connect"{% if open_connect %} open{% endif %}>
               <summary class="dr-btn dr-btn--sm dr-btn--primary">{% trans "Connect" %}</summary>
-              <form method="post" action="{% url 'connections:request' profile.user_id %}" class="dr-connect__form">
+              <form method="post"
+                    action="{% url 'connections:request' profile.user_id %}"
+                    class="dr-connect__form"
+                    data-busy-label="{% translate 'sending…' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.path }}" />
                 <p class="dr-connect__title">{% trans "Send connection request" %}</p>
@@ -116,10 +119,10 @@
             {% endif %}
           </span>
           <div class="dr-profile-hero__meta">
-            <h1 style="margin: 0;">{{ profile.display_name|default:profile.handle }}</h1>
+            <h1 class="dr-page__title">{{ profile.display_name|default:profile.handle }}</h1>
             <div class="dr-handle">{{ profile.handle }}</div>
             {% if profile.headline %}
-              <p style="margin: 0; color: var(--text-muted);">{{ profile.headline }}</p>
+              <p class="dr-mb-0 dr-muted">{{ profile.headline }}</p>
             {% endif %}
             <div class="dr-meta">
               <span><strong>{{ profile.get_primary_role_display }}</strong></span>
@@ -129,7 +132,7 @@
               {% endif %}
             </div>
             {% if profile.available_for_hire or profile.open_to_collaborate or profile.open_to_mentor or profile.open_to_learning %}
-              <div class="dr-tags" style="margin-top: 0.45rem;">
+              <div class="dr-tags dr-mt-xs">
                 {% if profile.available_for_hire %}<span class="dr-tag">{% trans "open to work" %}</span>{% endif %}
                 {% if profile.open_to_collaborate %}<span class="dr-tag">{% trans "collaborate" %}</span>{% endif %}
                 {% if profile.open_to_mentor %}<span class="dr-tag">{% trans "mentor" %}</span>{% endif %}
@@ -140,7 +143,7 @@
               <p class="dr-open-note">{{ profile.open_to_note }}</p>
             {% endif %}
             {% if user_badges %}
-              <div class="dr-achieve-row" style="margin-top: 0.65rem;">
+              <div class="dr-achieve-row dr-mt-sm">
                 {% for ub in user_badges %}
                   <a class="dr-achieve" href="{{ ub.badge.get_absolute_url }}" title="{{ ub.badge.description }}">
                     <span class="dr-achieve__icon" aria-hidden="true">{{ ub.badge.icon }}</span>
@@ -150,7 +153,7 @@
               </div>
             {% endif %}
             {% if linkedin_url or mutual_connections %}
-              <p class="dr-bridge" style="margin: 0.65rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+              <p class="dr-bridge dr-mt-sm dr-muted">
                 {% if linkedin_url %}
                   <a href="{{ linkedin_url }}" rel="noopener nofollow ugc" target="_blank"
                      data-track-kind="social">LinkedIn ↗</a>
@@ -228,13 +231,13 @@
                       <form method="post" action="{% url 'profiles:unendorse' profile.handle %}" class="dr-skill__action">
                         {% csrf_token %}
                         <input type="hidden" name="skill" value="{{ row.skill }}" />
-                        <button type="submit" class="dr-skill__btn" title="{% translate 'Remove endorsement' %}">−</button>
+                        <button type="submit" class="dr-skill__btn" aria-label="{% translate 'Remove endorsement' %}" title="{% translate 'Remove endorsement' %}">−</button>
                       </form>
                     {% else %}
                       <form method="post" action="{% url 'profiles:endorse' profile.handle %}" class="dr-skill__action">
                         {% csrf_token %}
                         <input type="hidden" name="skill" value="{{ row.skill }}" />
-                        <button type="submit" class="dr-skill__btn" title="{% translate 'Endorse' %}">+</button>
+                        <button type="submit" class="dr-skill__btn" aria-label="{% translate 'Endorse' %}" title="{% translate 'Endorse' %}">+</button>
                       </form>
                     {% endif %}
                   {% endif %}
@@ -249,6 +252,14 @@
               {% for tag in profile.tech_stack_list %}
                 <a class="dr-tag" href="{% url 'profiles:browse' %}?q={{ tag|urlencode }}">{{ tag }}</a>
               {% endfor %}
+            </div>
+          </div>
+        {% elif is_owner %}
+          <div class="dr-empty dr-empty--inline">
+            <div class="dr-emoji" aria-hidden="true">∅</div>
+            <p>{% trans "No stack listed yet — add the tools you ship with." %}</p>
+            <div class="dr-btn-row">
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "edit profile" %}</a>
             </div>
           </div>
         {% endif %}
@@ -276,6 +287,17 @@
                 </li>
               {% endfor %}
             </ul>
+          </div>
+        {% elif is_owner %}
+          <div>
+            <h2 class="dr-section-title">experience</h2>
+            <div class="dr-empty dr-empty--inline">
+              <div class="dr-emoji" aria-hidden="true">∅</div>
+              <p>{% trans "No experience entries yet — roles make your README recruiter-ready." %}</p>
+              <div class="dr-btn-row">
+                <a class="dr-btn dr-btn--sm" href="{% url 'profiles:experience_list' %}">{% trans "add experience" %}</a>
+              </div>
+            </div>
           </div>
         {% endif %}
 
@@ -346,6 +368,17 @@
                   </article>
                 {% endwith %}
               {% endfor %}
+            </div>
+          </div>
+        {% elif is_owner %}
+          <div>
+            <h2 class="dr-section-title">projects</h2>
+            <div class="dr-empty dr-empty--inline">
+              <div class="dr-emoji" aria-hidden="true">∅</div>
+              <p>{% trans "No projects yet — ship proof next to your stack." %}</p>
+              <div class="dr-btn-row">
+                <a class="dr-btn dr-btn--sm" href="{% url 'profiles:project_list' %}">{% trans "add a project" %}</a>
+              </div>
             </div>
           </div>
         {% endif %}
@@ -423,9 +456,9 @@
                 </ul>
               {% endif %}
               {% if is_connected and recommendation_form %}
-                <form method="post" action="{% url 'profiles:recommend' profile.handle %}" class="dr-rec-form">
+                <form method="post" action="{% url 'profiles:recommend' profile.handle %}" class="dr-rec-form" data-busy-label="{% translate 'saving…' %}">
                   {% csrf_token %}
-                  <p style="margin: 0 0 0.4rem; color: var(--text-muted); font-size: 0.9rem;">
+                  <p class="dr-mb-xs dr-muted">
                     {% if existing_recommendation %}
                       {% trans "Update your recommendation:" %}
                     {% else %}
@@ -443,7 +476,7 @@
           {% endif %}
         {% endwith %}
 
-        <div class="dr-share-row" style="margin-top: 0.5rem;">
+        <div class="dr-share-row dr-share-row--tight">
           <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
           <button type="button"
                   class="dr-copy"

@@ -40,11 +40,32 @@
     });
   }
 
+  /* ----- Live region announcements ------------------------------------ */
+  function announce(message) {
+    var live = document.getElementById("dr-live");
+    if (!live) return;
+    live.textContent = "";
+    window.setTimeout(function () {
+      live.textContent = message;
+    }, 20);
+  }
+
+  function prefersReducedMotion() {
+    try {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /* ----- Mobile nav ---------------------------------------------------- */
   function initNav() {
     var nav = document.querySelector(".dr-nav");
     var toggle = document.querySelector("[data-nav-toggle]");
     var menu = document.querySelector("[data-nav-menu]");
+    var backdrop = document.querySelector("[data-nav-backdrop]");
+    var main = document.getElementById("main");
+    var footer = document.querySelector(".dr-footer");
     if (!toggle || !menu) return;
 
     function measure() {
@@ -58,11 +79,24 @@
       try { new ResizeObserver(measure).observe(nav); } catch (_) {}
     }
 
+    function setInert(on) {
+      [main, footer].forEach(function (el) {
+        if (!el) return;
+        if (on) el.setAttribute("inert", "");
+        else el.removeAttribute("inert");
+      });
+      if (backdrop) {
+        if (on) backdrop.removeAttribute("hidden");
+        else backdrop.setAttribute("hidden", "");
+      }
+    }
+
     function close() {
       if (!menu.classList.contains("is-open")) return;
       menu.classList.remove("is-open");
       toggle.setAttribute("aria-expanded", "false");
       document.body.classList.remove("dr-nav-open");
+      setInert(false);
     }
 
     function open() {
@@ -70,6 +104,7 @@
       menu.classList.add("is-open");
       toggle.setAttribute("aria-expanded", "true");
       document.body.classList.add("dr-nav-open");
+      setInert(true);
     }
 
     toggle.addEventListener("click", function (event) {
@@ -77,6 +112,10 @@
       if (menu.classList.contains("is-open")) close();
       else open();
     });
+
+    if (backdrop) {
+      backdrop.addEventListener("click", close);
+    }
 
     document.addEventListener("click", function (event) {
       if (!menu.classList.contains("is-open")) return;
@@ -86,19 +125,18 @@
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
-        close();
-        toggle.focus();
+        if (menu.classList.contains("is-open")) {
+          close();
+          toggle.focus();
+        }
       }
     });
 
-    // Auto-close when navigating to a menu link (esp. anchor links on the same
-    // page — otherwise the open menu would sit on top of the new section).
     menu.addEventListener("click", function (event) {
       var target = event.target.closest("a");
       if (target) close();
     });
 
-    // If the viewport grows past mobile, ensure the menu state is clean.
     var mql = window.matchMedia("(min-width: 721px)");
     var onMq = function (e) { if (e.matches) close(); };
     if (mql.addEventListener) mql.addEventListener("change", onMq);
@@ -106,17 +144,25 @@
   }
 
   /* ----- Dismissible alerts ------------------------------------------- */
+  function dismissAlert(target) {
+    if (!target || !target.parentNode) return;
+    var reduce = prefersReducedMotion();
+    if (reduce) {
+      target.parentNode.removeChild(target);
+      return;
+    }
+    target.style.transition = "opacity 160ms ease, transform 160ms ease";
+    target.style.opacity = "0";
+    target.style.transform = "translateY(-4px)";
+    window.setTimeout(function () {
+      if (target.parentNode) target.parentNode.removeChild(target);
+    }, 180);
+  }
+
   function initAlerts() {
     document.querySelectorAll("[data-dismiss-alert]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var target = btn.closest(".dr-alert");
-        if (!target) return;
-        target.style.transition = "opacity 160ms ease, transform 160ms ease";
-        target.style.opacity = "0";
-        target.style.transform = "translateY(-4px)";
-        window.setTimeout(function () {
-          if (target.parentNode) target.parentNode.removeChild(target);
-        }, 180);
+        dismissAlert(btn.closest(".dr-alert"));
       });
     });
   }
@@ -126,7 +172,6 @@
     if (navigator.clipboard && window.isSecureContext) {
       return navigator.clipboard.writeText(text);
     }
-    // Fallback for old browsers / http
     return new Promise(function (resolve, reject) {
       try {
         var ta = document.createElement("textarea");
@@ -146,7 +191,6 @@
   }
 
   function initCopyButtons() {
-    // Match either an explicit `data-copy` value or a `data-copy-from` selector.
     var nodes = document.querySelectorAll("[data-copy], [data-copy-from]");
     nodes.forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -166,6 +210,7 @@
         function flash(text, cls) {
           btn.classList.add(cls);
           if (label) label.textContent = text;
+          announce(text);
           window.setTimeout(function () {
             btn.classList.remove(cls);
             if (label && original !== null) label.textContent = original;
@@ -233,15 +278,142 @@
 
   /* ----- Auto-hide flash messages ------------------------------------ */
   function initAutoFade() {
+    if (prefersReducedMotion()) return;
+
     document.querySelectorAll("[data-autohide]").forEach(function (el) {
       var delay = parseInt(el.getAttribute("data-autohide"), 10) || 6000;
-      window.setTimeout(function () {
-        el.style.transition = "opacity 200ms ease";
-        el.style.opacity = "0";
+      var timer = null;
+
+      function clear() {
+        if (timer) {
+          window.clearTimeout(timer);
+          timer = null;
+        }
+      }
+
+      function schedule() {
+        clear();
+        timer = window.setTimeout(function () {
+          dismissAlert(el);
+        }, delay);
+      }
+
+      el.addEventListener("mouseenter", clear);
+      el.addEventListener("focusin", clear);
+      el.addEventListener("mouseleave", schedule);
+      el.addEventListener("focusout", function () {
         window.setTimeout(function () {
-          if (el.parentNode) el.parentNode.removeChild(el);
-        }, 220);
-      }, delay);
+          if (!el.contains(document.activeElement)) schedule();
+        }, 0);
+      });
+      schedule();
+    });
+  }
+
+  /* ----- Form submit busy states -------------------------------------- */
+  function initFormBusy() {
+    document.addEventListener("submit", function (event) {
+      var form = event.target;
+      if (!form || form.tagName !== "FORM") return;
+      if (form.getAttribute("data-no-busy") === "1") return;
+
+      var submitter = event.submitter || form.querySelector("button[type=submit], input[type=submit]");
+      if (!submitter || submitter.disabled) return;
+
+      var keepLabel = submitter.classList.contains("dr-skill__btn");
+      var label =
+        form.getAttribute("data-busy-label") ||
+        submitter.getAttribute("data-busy-label");
+      if (!label) {
+        if (form.hasAttribute("data-quiz-form") || form.querySelector(".dr-quiz-q")) {
+          label = "grading…";
+        } else if (form.closest(".dr-connect") || /connect|accept|decline|endorse|unendorse/i.test(form.getAttribute("action") || "")) {
+          label = "sending…";
+        } else {
+          label = "saving…";
+        }
+      }
+
+      submitter.setAttribute("aria-busy", "true");
+      submitter.disabled = true;
+      if (!keepLabel && submitter.tagName === "BUTTON") {
+        if (!submitter.getAttribute("data-busy-original")) {
+          submitter.setAttribute("data-busy-original", submitter.textContent);
+        }
+        submitter.textContent = label;
+      }
+    });
+  }
+
+  /* ----- Quiz progress HUD -------------------------------------------- */
+  function initQuizProgress() {
+    var form = document.querySelector("[data-quiz-form]");
+    var hud = document.querySelector("[data-quiz-hud]");
+    if (!form || !hud) return;
+
+    var total = parseInt(hud.getAttribute("data-total"), 10) || 0;
+    var bar = hud.querySelector("[data-quiz-bar]");
+    var meta = hud.querySelector("[data-quiz-meta]");
+    var groups = form.querySelectorAll(".dr-quiz-choices[role='radiogroup']");
+
+    function answeredCount() {
+      var n = 0;
+      groups.forEach(function (group) {
+        if (group.querySelector("input[type=radio]:checked")) n += 1;
+      });
+      return n;
+    }
+
+    function barGlyph(done, all) {
+      var width = 10;
+      if (!all) return "[" + "░".repeat(width) + "]";
+      var filled = Math.round((done / all) * width);
+      filled = Math.max(0, Math.min(width, filled));
+      return "[" + "█".repeat(filled) + "░".repeat(width - filled) + "]";
+    }
+
+    function refresh() {
+      var done = answeredCount();
+      if (bar) bar.textContent = "progress " + barGlyph(done, total);
+      if (meta) meta.textContent = "q " + done + "/" + total + " answered";
+      hud.setAttribute("aria-valuenow", String(done));
+    }
+
+    form.addEventListener("change", refresh);
+    refresh();
+
+    form.addEventListener("submit", function (event) {
+      var done = answeredCount();
+      if (done >= total) return;
+      var first = null;
+      for (var i = 0; i < groups.length; i++) {
+        if (!groups[i].querySelector("input[type=radio]:checked")) {
+          first = groups[i].closest(".dr-quiz-q") || groups[i];
+          break;
+        }
+      }
+      if (first) {
+        announce("Answer remaining questions before submitting (" + done + "/" + total + ").");
+        try {
+          first.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+        } catch (_) {
+          first.scrollIntoView(true);
+        }
+      }
+      // Let native `required` still fire; this soft-scrolls to the gap.
+    });
+  }
+
+  /* ----- Connect popover Escape --------------------------------------- */
+  function initConnect() {
+    document.querySelectorAll("details.dr-connect").forEach(function (details) {
+      details.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && details.open) {
+          details.open = false;
+          var summary = details.querySelector("summary");
+          if (summary) summary.focus();
+        }
+      });
     });
   }
 
@@ -649,5 +821,8 @@
     initSortable();
     initLinkTracking();
     initAnalyticsChart();
+    initFormBusy();
+    initQuizProgress();
+    initConnect();
   });
 })();

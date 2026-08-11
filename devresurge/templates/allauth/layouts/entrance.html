@@ -9,7 +9,16 @@
 {% block main %}
   <section class="dr-auth">
     <div class="dr-narrow">
-      <p class="dr-cli" style="margin-bottom: 0.5rem;">
+      <header class="dr-auth__brand">
+        <p class="dr-auth__brand-name">
+          <span class="dr-prompt"></span>devresurge<span class="dr-cursor" aria-hidden="true"></span>
+        </p>
+        <p class="dr-auth__brand-lede">
+          {% trans "Terminal-styled developer profiles — complementary to LinkedIn." %}
+        </p>
+      </header>
+
+      <p class="dr-cli dr-mb-sm">
         <span class="dr-prompt"></span> <span class="cmd">ssh you@devresurge</span>
       </p>
 

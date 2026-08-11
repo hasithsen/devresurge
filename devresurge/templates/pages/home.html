@@ -6,15 +6,17 @@
 {% block meta_description %}DevResurge is the README of your career: projects, verified skills, and open-to intents. Keep LinkedIn for the network — publish your signal here.{% endblock meta_description %}
 
 {% block content %}
-<div class="dr-page" style="padding-top: 0.5rem;">
+<div class="dr-page dr-page--home">
   <section class="dr-hero">
     <div class="dr-hero__inner">
-      <div>
-        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">whoami --as developer</span></p>
-        <h1>your technical README.<br /><span style="color: var(--accent);">LinkedIn stays the network.</span></h1>
+      <div class="dr-hero__copy">
+        <p class="dr-hero__brand">
+          <span class="dr-prompt"></span>devresurge<span class="dr-cursor" aria-hidden="true"></span>
+        </p>
+        <h1>your technical README. <span class="dr-accent">LinkedIn stays the network.</span></h1>
         <p class="dr-lede">
-          DevResurge is complementary to LinkedIn: ship a signal-dense profile — stack, projects,
-          experience, quiz-backed badges, peer endorsements — without the feed noise.
+          Ship a signal-dense profile — stack, projects, experience, quiz-backed badges,
+          peer endorsements — without the feed noise.
         </p>
         <div class="dr-btn-row">
           {% if request.user.is_authenticated %}
@@ -34,21 +36,6 @@
               {% translate 'browse profiles' %}
             </a>
           {% endif %}
-        </div>
-
-        <div class="dr-stats" style="margin-top: 1.75rem;">
-          <div class="dr-stat">
-            <div class="dr-stat__label">profiles</div>
-            <div class="dr-stat__value">{{ profile_count }}</div>
-          </div>
-          <div class="dr-stat">
-            <div class="dr-stat__label">projects shipped</div>
-            <div class="dr-stat__value">{{ project_count }}</div>
-          </div>
-          <div class="dr-stat">
-            <div class="dr-stat__label">uptime</div>
-            <div class="dr-stat__value">99.9%</div>
-          </div>
         </div>
       </div>
 
@@ -71,6 +58,23 @@ peers · mutuals · hire intents
 
 <span class="muted">$</span> _</pre>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dr-home-stats" aria-label="{% translate 'Product stats' %}">
+    <div class="dr-stats">
+      <div class="dr-stat">
+        <div class="dr-stat__label">profiles</div>
+        <div class="dr-stat__value">{{ profile_count }}</div>
+      </div>
+      <div class="dr-stat">
+        <div class="dr-stat__label">projects shipped</div>
+        <div class="dr-stat__value">{{ project_count }}</div>
+      </div>
+      <div class="dr-stat">
+        <div class="dr-stat__label">uptime</div>
+        <div class="dr-stat__value">99.9%</div>
       </div>
     </div>
   </section>
@@ -134,10 +138,10 @@ peers · mutuals · hire intents
     {% else %}
       <div class="dr-panel dr-home-map__empty">
         <div class="dr-panel__body">
-          <p style="margin: 0;">
+          <p class="dr-mb-0">
             {% trans "Be early — publish, connect with public peers, and your map becomes shareable proof next to LinkedIn." %}
           </p>
-          <div class="dr-btn-row" style="margin-top: 0.85rem;">
+          <div class="dr-btn-row dr-mt-sm">
             {% if request.user.is_authenticated %}
               <a class="dr-btn" href="{% url 'profiles:browse' %}">{% trans "find people" %}</a>
             {% elif ACCOUNT_ALLOW_REGISTRATION %}
@@ -156,7 +160,7 @@ peers · mutuals · hire intents
   {% if featured_profiles %}
     <div class="dr-grid dr-grid--3">
       {% for profile in featured_profiles %}
-        <a class="dr-profile-card" href="{{ profile.get_absolute_url }}" style="text-decoration: none;">
+        <a class="dr-profile-card" href="{{ profile.get_absolute_url }}">
           <div class="dr-profile-card__head">
             <span class="dr-avatar">
               {% if profile.avatar %}
@@ -176,7 +180,7 @@ peers · mutuals · hire intents
           <div class="dr-meta">
             <span><strong>{{ profile.get_primary_role_display }}</strong></span>
             {% if profile.location %}<span>· {{ profile.location }}</span>{% endif %}
-            {% if profile.available_for_hire %}<span>· <strong style="color: var(--accent);">open to work</strong></span>{% endif %}
+            {% if profile.available_for_hire %}<span>· <strong class="dr-accent">open to work</strong></span>{% endif %}
           </div>
         </a>
       {% endfor %}

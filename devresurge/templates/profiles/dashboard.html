@@ -8,30 +8,39 @@
   <section class="dr-page">
     <header class="dr-dash-head">
       <div>
-        <h1 style="margin: 0;">@{{ profile.handle }}</h1>
-        <p style="margin: 0.25rem 0 0; color: var(--text-muted);">
+        <h1 class="dr-page__title">@{{ profile.handle }}</h1>
+        <p class="dr-page__lede">
           {{ profile.headline|default:_("Add a headline so visitors know what you do.") }}
         </p>
       </div>
       <div class="dr-btn-row">
         <a class="dr-btn dr-btn--primary" href="{% url 'profiles:edit' %}">edit profile</a>
         <a class="dr-btn" href="{{ profile.get_absolute_url }}">view ↗</a>
+        <button type="button" class="dr-btn dr-copy" data-copy-from="#dr-share-url" aria-label="{% translate 'Copy URL' %}">
+          <span class="dr-copy__icon" aria-hidden="true"></span>
+          <span data-copy-label>copy url</span>
+        </button>
       </div>
     </header>
 
-    <div class="dr-share-row" style="margin: 1rem 0 1.25rem;">
+    <div class="dr-share-row">
       <code id="dr-share-url">{{ request.scheme }}://{{ request.get_host }}{{ profile.get_absolute_url }}</code>
-      <button type="button" class="dr-copy" data-copy-from="#dr-share-url" aria-label="{% translate 'Copy URL' %}">
-        <span class="dr-copy__icon" aria-hidden="true"></span>
-        <span data-copy-label>copy</span>
-      </button>
-      {% if profile.is_public %}
-        <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost dr-copy" data-copy="{{ badge_url }}" aria-label="{% translate 'Copy badge URL' %}">
-          <span data-copy-label>badge.svg</span>
-        </button>
-        <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:export_readme' %}">readme.md</a>
-      {% endif %}
     </div>
+
+    {% if profile.is_public %}
+      <section class="dr-panel dr-dash-export" aria-labelledby="export-title">
+        <div class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title" id="export-title">{% trans "share / export" %}</span>
+        </div>
+        <div class="dr-panel__body">
+          <button type="button" class="dr-btn dr-btn--sm dr-btn--ghost dr-copy" data-copy="{{ badge_url }}" aria-label="{% translate 'Copy badge URL' %}">
+            <span data-copy-label>badge.svg</span>
+          </button>
+          <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:export_readme' %}">readme.md</a>
+        </div>
+      </section>
+    {% endif %}
 
     {% if profile.is_public %}
       <a class="dr-dash-mapcta" href="{% url 'profiles:network_map' profile.handle %}">
@@ -54,7 +63,7 @@
     {% endif %}
 
     {% if not profile.is_public %}
-      <div class="dr-alert dr-alert--warning" style="margin-bottom: 1.25rem;">
+      <div class="dr-alert dr-alert--warning dr-mb-lg">
         <span class="dr-alert__body">
           {% trans "Profile is private. Turn on “publicly listed” in the editor to share it." %}
         </span>
@@ -62,7 +71,7 @@
     {% endif %}
 
     {% if not readiness.complete %}
-      <section class="dr-panel dr-readiness" style="margin-bottom: 1.25rem;" aria-labelledby="readiness-title">
+      <section class="dr-panel dr-readiness dr-mb-lg" aria-labelledby="readiness-title">
         <div class="dr-panel__header">
           <span class="dr-dots"><span></span><span></span><span></span></span>
           <span class="dr-panel__title" id="readiness-title">setup</span>
@@ -126,14 +135,14 @@
         {% else %}
           <div class="dr-panel">
             <div class="dr-panel__body dr-stack">
-              <p style="margin: 0; color: var(--text-muted);">{% trans "Earn badges by finishing setup or passing a quiz." %}</p>
+              <p class="dr-mb-0 dr-muted">{% trans "Earn badges by finishing setup or passing a quiz." %}</p>
               <a class="dr-btn" href="{% url 'quizzes:list' %}">start a quiz</a>
             </div>
           </div>
         {% endif %}
 
         {% if profile.is_public %}
-          <div class="dr-badge-preview" style="margin-top: 1rem;">
+          <div class="dr-badge-preview">
             <img src="{% url 'profiles:badge' profile.handle %}"
                  alt="{% blocktranslate with handle=profile.handle %}DevResurge badge for @{{ handle }}{% endblocktranslate %}"
                  loading="lazy" />
@@ -142,9 +151,9 @@
       </aside>
     </div>
 
-    <details class="dr-account" style="margin-top: 1.75rem;">
+    <details class="dr-account">
       <summary>{% trans "Account" %}</summary>
-      <div class="dr-btn-row" style="margin-top: 0.75rem;">
+      <div class="dr-btn-row">
         <a class="dr-btn dr-btn--ghost" href="{% url 'account_email' %}">email</a>
         <a class="dr-btn dr-btn--ghost" href="{% url 'users:settings' %}">notifications</a>
         <a class="dr-btn dr-btn--ghost" href="{% url 'mfa_index' %}">mfa</a>

@@ -13,11 +13,11 @@
     </nav>
 
     <div class="dr-narrow dr-narrow--wide">
-      <header style="margin-bottom: 1rem;">
-        <p class="dr-cli" style="margin: 0;">
+      <header class="dr-mb-md">
+        <p class="dr-cli dr-mb-0">
           <span class="dr-prompt"></span> <span class="cmd">vim profile.yaml</span>
         </p>
-        <h1 style="margin: 0.25rem 0 0;">{% trans "edit profile" %}</h1>
+        <h1 class="dr-page__title dr-mt-xs">{% trans "edit profile" %}</h1>
       </header>
 
       {% if form.non_field_errors %}
@@ -26,10 +26,10 @@
         </div>
       {% endif %}
 
-      <form method="post" enctype="multipart/form-data" novalidate>
+      <form method="post" enctype="multipart/form-data" novalidate data-busy-label="{% translate 'saving…' %}">
         {% csrf_token %}
 
-        <article class="dr-panel" style="margin-bottom: 1.25rem;">
+        <article class="dr-panel dr-form-section">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
             <span class="dr-panel__title">identity</span>
@@ -48,7 +48,7 @@
           </div>
         </article>
 
-        <article class="dr-panel" style="margin-bottom: 1.25rem;">
+        <article class="dr-panel dr-form-section">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
             <span class="dr-panel__title">avatar &amp; bio</span>
@@ -62,7 +62,7 @@
                   {{ form.instance.initials|default:"?" }}
                 {% endif %}
               </span>
-              <div style="flex: 1; min-width: 0;">
+              <div class="dr-avatar-uploader__fields">
                 {% include "profiles/_field.html" with field=form.avatar %}
               </div>
             </div>
@@ -71,7 +71,7 @@
           </div>
         </article>
 
-        <article class="dr-panel" style="margin-bottom: 1.25rem;">
+        <article class="dr-panel dr-form-section">
           <header class="dr-panel__header">
             <span class="dr-dots"><span></span><span></span><span></span></span>
             <span class="dr-panel__title">contact &amp; open-to</span>
@@ -87,7 +87,7 @@
               {% include "profiles/_field.html" with field=form.open_to_mentor %}
               {% include "profiles/_field.html" with field=form.open_to_learning %}
             </div>
-            <p class="dr-helptext" style="margin-top: 0.5rem;">
+            <p class="dr-helptext dr-helptext--flush">
               {% trans "Tip: add your LinkedIn under links/ so recruiters can jump to your career network — DevResurge stays the technical README." %}
             </p>
           </div>
