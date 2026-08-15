@@ -4,6 +4,7 @@
 DJANGO_SETTINGS_MODULE=config.settings.production
 DJANGO_SECRET_KEY=change-me-to-a-long-random-string
 DJANGO_ADMIN_URL=admin/
+# 127.0.0.1/localhost are also appended in production.py for Compose healthchecks.
 DJANGO_ALLOWED_HOSTS=devresurge.com,www.devresurge.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://devresurge.com,https://www.devresurge.com
 # After HTTPS is confirmed end-to-end, raise to 518400 (6 months).
