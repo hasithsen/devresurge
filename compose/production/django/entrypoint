@@ -11,7 +11,12 @@ fi
 export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
 
 wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
-
 >&2 echo 'PostgreSQL is available'
+
+# Redis backs the production cache; wait so Gunicorn does not start cold-missing it.
+REDIS_HOST="${REDIS_HOST:-redis}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+wait-for-it "${REDIS_HOST}:${REDIS_PORT}" -t 30
+>&2 echo 'Redis is available'
 
 exec "$@"

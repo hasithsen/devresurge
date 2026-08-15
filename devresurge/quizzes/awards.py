@@ -7,6 +7,7 @@ import logging
 from django.db import IntegrityError
 from django.db import transaction
 
+from devresurge.connections.context_processors import invalidate_unread_count
 from devresurge.connections.models import Connection
 from devresurge.connections.models import Notification
 from devresurge.connections.models import NotificationKind
@@ -43,6 +44,7 @@ def award_badge(user, slug: str, *, quiz_attempt: QuizAttempt | None = None) -> 
     except Exception:
         logger.exception("Failed awarding badge %s to user %s", slug, user.pk)
         return None
+    invalidate_unread_count(user.pk)
     return award
 
 

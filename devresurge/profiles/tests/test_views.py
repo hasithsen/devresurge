@@ -21,6 +21,38 @@ def test_home_view_renders(client):
     assert response.status_code == HTTPStatus.OK
 
 
+def test_home_featured_maps_uses_connected_public_profiles(client):
+    from django.core.cache import cache
+
+    from devresurge.connections.models import Connection
+    from devresurge.connections.models import ConnectionStatus
+
+    cache.clear()
+    a = ProfileFactory(is_public=True, display_name="Alpha")
+    b = ProfileFactory(is_public=True, display_name="Beta")
+    ProfileFactory(is_public=True, display_name="Lonely")
+    Connection.objects.create(
+        requester=a.user,
+        addressee=b.user,
+        status=ConnectionStatus.ACCEPTED,
+    )
+
+    response = client.get(reverse("home"))
+    assert response.status_code == HTTPStatus.OK
+    handles = {item["profile"].handle for item in response.context["featured_maps"]}
+    assert a.handle in handles
+    assert b.handle in handles
+    assert len(response.context["featured_maps"]) <= 3
+
+
+def test_health_endpoint_ok(client):
+    response = client.get(reverse("health"))
+    assert response.status_code == HTTPStatus.OK
+    payload = response.json()
+    assert payload["status"] == "ok"
+    assert payload["checks"]["database"] == "ok"
+
+
 def test_browse_lists_public_profiles(client):
     public = ProfileFactory(is_public=True, display_name="Public Dev")
     private = ProfileFactory(is_public=False, display_name="Private Dev")

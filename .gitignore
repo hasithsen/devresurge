@@ -275,3 +275,6 @@ devresurge/media/
 .env
 .envs/*
 !.envs/.local/
+!.envs/.production/
+.envs/.production/*
+!.envs/.production/*.example

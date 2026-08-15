@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Daily analytics retention prune. Sleep first so a restart storm does not
+# hammer the DB at boot; then loop forever (Compose sidecar / cron substitute).
+PRUNE_INTERVAL_SECONDS="${PRUNE_INTERVAL_SECONDS:-86400}"
+PRUNE_INITIAL_DELAY_SECONDS="${PRUNE_INITIAL_DELAY_SECONDS:-300}"
+
+sleep "${PRUNE_INITIAL_DELAY_SECONDS}"
+
+while true; do
+  python /app/manage.py prune_analytics
+  sleep "${PRUNE_INTERVAL_SECONDS}"
+done

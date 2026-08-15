@@ -9,6 +9,7 @@ from django.views import defaults as default_views
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
+from config.health import health_view
 from devresurge.profiles.sitemaps import ProfileNetworkMapSitemap
 from devresurge.profiles.sitemaps import ProfileSitemap
 from devresurge.profiles.sitemaps import StaticViewSitemap
@@ -39,6 +40,7 @@ sitemaps = {
 
 urlpatterns = [
     path("", home_view, name="home"),
+    path("health/", health_view, name="health"),
     path(
         "about/",
         TemplateView.as_view(template_name="pages/about.html"),
@@ -62,9 +64,11 @@ urlpatterns = [
     path("quizzes/", include("devresurge.quizzes.urls", namespace="quizzes")),
     # Profiles app (public + private CRUD)
     path("", include("devresurge.profiles.urls", namespace="profiles")),
-    # Media files
-    *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
+
+# Media via Django only in DEBUG; production serves /media/ through Nginx.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 if settings.DEBUG:

@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.cache import cache
 from django.db import DatabaseError
 from django.db import IntegrityError
 from django.db import transaction
@@ -46,6 +47,7 @@ from django.views.generic import ListView
 from django.views.generic import TemplateView
 from django.views.generic import UpdateView
 
+from devresurge.connections.context_processors import invalidate_unread_count
 from devresurge.connections.models import Connection
 from devresurge.connections.models import ConnectionStatus
 from devresurge.connections.models import Notification
@@ -249,6 +251,9 @@ def link_click_view(request: HttpRequest) -> HttpResponse:
     records (the client only supplies a handle, kind and id), so a spoofed
     payload cannot inject arbitrary content.
     """
+    if _click_beacon_rate_limited(request):
+        return HttpResponse(status=429)
+
     try:
         payload = json.loads(request.body or b"{}")
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -313,8 +318,30 @@ def link_click_view(request: HttpRequest) -> HttpResponse:
     return HttpResponse(status=204)
 
 
+_CLICK_RATE_LIMIT = 60
+_CLICK_RATE_WINDOW = 60
+
+
+def _client_ip(request: HttpRequest) -> str:
+    forwarded = (request.META.get("HTTP_X_FORWARDED_FOR") or "").split(",")[0].strip()
+    return forwarded or request.META.get("REMOTE_ADDR") or "unknown"
+
+
+def _click_beacon_rate_limited(request: HttpRequest) -> bool:
+    """Soft IP throttle for the CSRF-exempt beacon (per-minute budget)."""
+    key = f"click_rl:{_client_ip(request)}"
+    try:
+        count = cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, _CLICK_RATE_WINDOW)
+        return False
+    return count > _CLICK_RATE_LIMIT
+
+
 class HomeView(TemplateView):
     template_name = "pages/home.html"
+    _FEATURED_MAPS_CACHE_KEY = "home:featured_maps:v1"
+    _FEATURED_MAPS_CACHE_TTL = 300
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
@@ -325,24 +352,27 @@ class HomeView(TemplateView):
         )
         ctx["profile_count"] = Profile.objects.filter(is_public=True).count()
         ctx["project_count"] = ProjectLink.objects.count()
+        ctx["featured_maps"] = self._featured_maps()
+        return ctx
 
-        # Showcase public maps that actually have connections (LinkedIn complement).
+    def _featured_maps(self) -> list[dict[str, Any]]:
+        """Showcase public maps; shortlist via SQL, then build graphs for ≤3."""
         from devresurge.connections.graph import build_network_graph
+        from devresurge.connections.graph import public_profiles_with_connections
+
+        cached = cache.get(self._FEATURED_MAPS_CACHE_KEY)
+        if cached is not None:
+            return cached
 
         featured_maps: list[dict[str, Any]] = []
-        for profile in (
-            Profile.objects.filter(is_public=True)
-            .select_related("user")
-            .order_by("-updated_at")[:24]
-        ):
+        for profile in public_profiles_with_connections(limit=3):
             graph = build_network_graph(profile.user, public_only=True)
             if graph["stats"]["connections"] < 1:
                 continue
             featured_maps.append({"profile": profile, "stats": graph["stats"]})
-            if len(featured_maps) >= 3:
-                break
-        ctx["featured_maps"] = featured_maps
-        return ctx
+
+        cache.set(self._FEATURED_MAPS_CACHE_KEY, featured_maps, self._FEATURED_MAPS_CACHE_TTL)
+        return featured_maps
 
 
 class ProfileBrowseView(ListView):
@@ -1178,6 +1208,7 @@ def skill_endorse_view(request: HttpRequest, handle: str) -> HttpResponse:
             kind=NotificationKind.SKILL_ENDORSED,
             payload=skill,
         )
+        invalidate_unread_count(profile.user_id)
         messages.success(request, _("Endorsed %(skill)s.") % {"skill": skill})
     else:
         messages.info(request, _("You already endorsed that skill."))
@@ -1234,6 +1265,7 @@ def recommendation_create_view(request: HttpRequest, handle: str) -> HttpRespons
             kind=NotificationKind.RECOMMENDATION,
             payload=profile.handle,
         )
+        invalidate_unread_count(profile.user_id)
         messages.success(request, _("Recommendation published."))
     else:
         messages.success(request, _("Recommendation updated."))

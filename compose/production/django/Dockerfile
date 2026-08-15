@@ -61,6 +61,10 @@ COPY --chown=django:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
+COPY --chown=django:django ./compose/production/django/prune /prune
+RUN sed -i 's/\r$//g' /prune
+RUN chmod +x /prune
+
 # Copy the application from the builder
 COPY --from=python-build-stage --chown=django:django ${APP_HOME} ${APP_HOME}
 # explicitly create the media folder before changing ownership below

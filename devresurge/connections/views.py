@@ -22,6 +22,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
+from .context_processors import invalidate_unread_count
 from .emails import send_notification_email
 from .graph import build_explore_graph
 from .graph import build_network_graph
@@ -57,6 +58,7 @@ def _notify(
         connection=connection,
         payload=payload[:120],
     )
+    invalidate_unread_count(recipient.pk)
     if connection is not None and kind in {
         NotificationKind.CONNECTION_REQUEST,
         NotificationKind.CONNECTION_ACCEPTED,
@@ -612,6 +614,7 @@ class NotificationListView(LoginRequiredMixin, ListView):
             Notification.objects.filter(id__in=self.unread_ids).update(
                 read_at=timezone.now(),
             )
+            invalidate_unread_count(request.user.pk)
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:

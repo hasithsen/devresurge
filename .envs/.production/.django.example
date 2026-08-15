@@ -1,0 +1,38 @@
+# General
+# ------------------------------------------------------------------------------
+# DJANGO_READ_DOT_ENV_FILE=False
+DJANGO_SETTINGS_MODULE=config.settings.production
+DJANGO_SECRET_KEY=change-me-to-a-long-random-string
+DJANGO_ADMIN_URL=admin/
+DJANGO_ALLOWED_HOSTS=devresurge.com,www.devresurge.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://devresurge.com,https://www.devresurge.com
+# After HTTPS is confirmed end-to-end, raise to 518400 (6 months).
+DJANGO_SECURE_HSTS_SECONDS=60
+# DJANGO_SECURE_SSL_REDIRECT=True
+# CONN_MAX_AGE=60
+
+# Gunicorn (resource tuning)
+# ------------------------------------------------------------------------------
+WEB_CONCURRENCY=3
+GUNICORN_TIMEOUT=60
+GUNICORN_MAX_REQUESTS=1000
+GUNICORN_MAX_REQUESTS_JITTER=50
+
+# Redis
+# ------------------------------------------------------------------------------
+REDIS_URL=redis://redis:6379/0
+# REDIS_HOST=redis
+# REDIS_PORT=6379
+
+# Email (Resend / Anymail)
+# ------------------------------------------------------------------------------
+DJANGO_DEFAULT_FROM_EMAIL=DevResurge <hello@updates.devresurge.com>
+# DJANGO_SERVER_EMAIL=
+RESEND_API_KEY=re_xxxxxxxx
+RESEND_DOMAIN=updates.devresurge.com
+# RESEND_API_URL=https://api.resend.com/
+
+# Analytics prune sidecar
+# ------------------------------------------------------------------------------
+# PRUNE_INTERVAL_SECONDS=86400
+# PRUNE_INITIAL_DELAY_SECONDS=300

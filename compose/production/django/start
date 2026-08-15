@@ -7,4 +7,17 @@ set -o nounset
 
 python /app/manage.py collectstatic --noinput
 
-exec gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app
+# Tunable via env for host memory / traffic. Defaults suit a ~1GB container.
+WEB_CONCURRENCY="${WEB_CONCURRENCY:-3}"
+GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-60}"
+GUNICORN_MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-1000}"
+GUNICORN_MAX_REQUESTS_JITTER="${GUNICORN_MAX_REQUESTS_JITTER:-50}"
+
+exec gunicorn config.wsgi \
+  --bind 0.0.0.0:5000 \
+  --chdir=/app \
+  --workers "${WEB_CONCURRENCY}" \
+  --timeout "${GUNICORN_TIMEOUT}" \
+  --max-requests "${GUNICORN_MAX_REQUESTS}" \
+  --max-requests-jitter "${GUNICORN_MAX_REQUESTS_JITTER}" \
+  --graceful-timeout 30

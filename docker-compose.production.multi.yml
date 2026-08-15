@@ -25,6 +25,12 @@ services:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health/', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     networks:
       - default
       - proxy
@@ -32,6 +38,25 @@ services:
       resources:
         limits:
           memory: 1024M   # Hard limit of RAM
+
+  analytics-prune:
+    image: devresurge_production_django
+    container_name: devresurge_analytics_prune
+    depends_on:
+      - postgres
+      - redis
+      - django
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    command: /prune
+    restart: unless-stopped
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   postgres:
     build:

@@ -75,11 +75,14 @@ docker compose -f docker-compose.local.yml run --rm django python manage.py crea
 
 Then visit <http://localhost:8000>.
 
+Local Compose runs migrations then `runserver_plus` on port 8000.
+
 ## Routes
 
 | Path                                | What it does                       |
 | ----------------------------------- | ---------------------------------- |
 | `/`                                 | Terminal landing page              |
+| `/health/`                          | Liveness probe (DB + cache)        |
 | `/u/`                               | Public profile directory + search  |
 | `/u/<handle>/`                      | A user's public profile            |
 | `/u/<handle>/badge.svg`             | Embeddable SVG profile badge       |
@@ -121,14 +124,26 @@ For convenience, you can keep your normal user logged in on Chrome and your supe
 ### Analytics retention
 
 Analytics events — both profile views and outbound link clicks — are kept for 90
-days. Prune expired events on a schedule (cron, Celery beat, or a systemd timer),
-e.g. daily:
+days. Production Compose runs an `analytics-prune` sidecar that calls
+`prune_analytics` daily. For non-Compose hosts, schedule the same command
+(cron, systemd timer, or Celery beat), e.g.:
 
     uv run python manage.py prune_analytics
 
 Use `--days N` to override the window or `--dry-run` to preview what would be
 deleted. The command prunes every analytics model and reports a per-model and
 total count.
+
+### Production env templates
+
+Copy the checked-in examples and fill in real secrets (never commit them):
+
+    mkdir -p .envs/.production
+    cp .envs/.production/.django.example .envs/.production/.django
+    cp .envs/.production/.postgres.example .envs/.production/.postgres
+
+After HTTPS is confirmed through Traefik/your proxy, raise
+`DJANGO_SECURE_HSTS_SECONDS` to `518400`.
 
 ### Quizzes & badges
 

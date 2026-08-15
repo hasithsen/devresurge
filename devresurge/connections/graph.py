@@ -189,6 +189,45 @@ def build_network_graph(
     }
 
 
+def public_profiles_with_connections(*, limit: int = 3):
+    """Return public profiles ranked by accepted links to other public profiles.
+
+    Uses two COUNT annotations instead of building full ego graphs — intended
+    for homepage / directory previews. Callers that need mutual-edge stats
+    should run ``build_network_graph`` only on this shortlist.
+    """
+    from django.db.models import Count
+    from django.db.models import F
+
+    from devresurge.profiles.models import Profile
+
+    return list(
+        Profile.objects.filter(is_public=True)
+        .select_related("user")
+        .annotate(
+            as_requester=Count(
+                "user__connections_initiated",
+                filter=Q(
+                    user__connections_initiated__status=ConnectionStatus.ACCEPTED,
+                    user__connections_initiated__addressee__profile__is_public=True,
+                ),
+                distinct=True,
+            ),
+            as_addressee=Count(
+                "user__connections_received",
+                filter=Q(
+                    user__connections_received__status=ConnectionStatus.ACCEPTED,
+                    user__connections_received__requester__profile__is_public=True,
+                ),
+                distinct=True,
+            ),
+        )
+        .annotate(public_conn_count=F("as_requester") + F("as_addressee"))
+        .filter(public_conn_count__gte=1)
+        .order_by("-public_conn_count", "-updated_at")[:limit]
+    )
+
+
 def build_explore_graph(*, limit: int = 120) -> dict[str, Any]:
     """Public community graph for anonymous exploration.
 
