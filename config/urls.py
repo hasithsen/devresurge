@@ -62,6 +62,8 @@ urlpatterns = [
     path("connections/", include("devresurge.connections.urls", namespace="connections")),
     # Quizzes + achievement badges
     path("quizzes/", include("devresurge.quizzes.urls", namespace="quizzes")),
+    # Roadmaps + lessons
+    path("learn/", include("devresurge.learning.urls", namespace="learning")),
     # Profiles app (public + private CRUD)
     path("", include("devresurge.profiles.urls", namespace="profiles")),
 ]

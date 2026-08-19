@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/learn/{{ roadmap.slug }} — DevResurge{% endblock title %}
+{% block meta_description %}{{ roadmap.tagline }}{% endblock meta_description %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'learning:list' %}">~/learn</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ roadmap.slug }}</span>
+    </nav>
+
+    <header class="dr-page__head" style="margin-top: 0.75rem;">
+      <div>
+        <h1 style="margin: 0;">
+          <span aria-hidden="true">{{ roadmap.icon }}</span>
+          {{ roadmap.title }}
+        </h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">{{ roadmap.tagline }}</p>
+      </div>
+      <span class="dr-pill">{{ roadmap.level }} · {{ roadmap.domain }}</span>
+    </header>
+
+    <div class="dr-panel" style="margin-top: 1.25rem;">
+      <div class="dr-panel__body dr-stack">
+        <p style="margin: 0;">{{ roadmap.description }}</p>
+        <p style="margin: 0; color: var(--text-dim); font-size: 0.9rem;">
+          <strong>{% trans "Audience" %}:</strong> {{ roadmap.audience }}
+        </p>
+        <div class="dr-meta">
+          <span>{{ roadmap.lesson_count }} {% trans "lessons" %}</span>
+          <span>· ~{{ roadmap.total_minutes }} {% trans "min read" %}</span>
+        </div>
+        {% if roadmap.outcomes %}
+          <div>
+            <div class="dr-learn-label">{% trans "you will be able to" %}</div>
+            <ul class="dr-learn-outcomes">
+              {% for outcome in roadmap.outcomes %}
+                <li>{{ outcome }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        <div class="dr-btn-row">
+          <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' roadmap.slug roadmap.lessons.0.slug %}">
+            {% trans "start lesson 1" %}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="dr-section-title" style="margin-top: 1.75rem;">
+      <span class="dr-prompt"></span> {% trans "lessons" %}
+    </h2>
+    <ol class="dr-learn-toc">
+      {% for lesson in roadmap.lessons %}
+        <li>
+          <a href="{% url 'learning:lesson' roadmap.slug lesson.slug %}">
+            <span class="dr-learn-toc__n">{{ forloop.counter }}</span>
+            <span class="dr-learn-toc__body">
+              <strong>{{ lesson.title }}</strong>
+              <span>{{ lesson.summary }}</span>
+            </span>
+            <span class="dr-learn-toc__meta">~{{ lesson.minutes }}m</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ol>
+
+    {% if related_quizzes %}
+      <h2 class="dr-section-title" style="margin-top: 1.75rem;">
+        <span class="dr-prompt"></span> {% trans "verify with quizzes" %}
+      </h2>
+      <div class="dr-btn-row" style="flex-wrap: wrap;">
+        {% for quiz in related_quizzes %}
+          <a class="dr-btn" href="{{ quiz.get_absolute_url }}">{{ quiz.title }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

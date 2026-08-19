@@ -3144,6 +3144,99 @@ a.dr-tag:hover {
 .dr-markdown strong { color: var(--text); font-weight: 700; }
 .dr-markdown em { color: var(--text-muted); }
 
+/* Learning roadmaps + lessons -------------------------------------------- */
+
+.dr-learn-label {
+  font-size: 0.75rem;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+
+.dr-learn-outcomes {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--text);
+}
+
+.dr-learn-outcomes li { margin: 0.25rem 0; }
+
+.dr-learn-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.dr-learn-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.dr-learn-toc a {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dr-learn-toc a:hover {
+  border-color: var(--accent);
+  background: var(--bg-elev-2);
+}
+
+.dr-learn-toc__n {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+  font-weight: 700;
+  min-width: 1.5rem;
+}
+
+.dr-learn-toc__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dr-learn-toc__body span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dr-learn-toc__meta {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.dr-learn-pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.dr-lesson-body .dr-markdown {
+  font-size: 0.95rem;
+}
+
+.dr-page--lesson .dr-page__head h1 {
+  font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+}
+
 /* Quizzes + achievement badges ------------------------------------------- */
 
 .dr-quiz-q__prompt {

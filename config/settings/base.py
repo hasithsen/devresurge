@@ -85,6 +85,7 @@ LOCAL_APPS = [
     "devresurge.profiles",
     "devresurge.connections",
     "devresurge.quizzes",
+    "devresurge.learning",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

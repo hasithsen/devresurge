@@ -146,6 +146,36 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         if got:
             awarded.append(got)
 
+    # Systems track: DSA + system design + distributed.
+    systems = {"quiz_dsa", "quiz_system_design", "quiz_distributed"}
+    held_sys = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=systems).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_sys.add(quiz.badge_slug)
+    if systems.issubset(held_sys):
+        got = award_badge(user, "quiz_systems")
+        if got:
+            awarded.append(got)
+
+    # Infra track: networking + CI/CD + observability.
+    infra = {"quiz_networking", "quiz_cicd", "quiz_observability"}
+    held_infra = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=infra).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_infra.add(quiz.badge_slug)
+    if infra.issubset(held_infra):
+        got = award_badge(user, "quiz_infra")
+        if got:
+            awarded.append(got)
+
     # Polyglot: five or more quiz-category badges.
     quiz_slugs = set(
         UserBadge.objects.filter(user=user, badge__category="quiz").values_list(

@@ -95,6 +95,10 @@
                    {% if request.resolver_match.url_name == 'explore_map' or request.resolver_match.url_name == 'network_map' %}aria-current="page"{% endif %}>~/map</a>
               </li>
               <li>
+                <a href="{% url 'learning:list' %}"
+                   {% if request.resolver_match.namespace == 'learning' %}aria-current="page"{% endif %}>~/learn</a>
+              </li>
+              <li>
                 <a href="{% url 'quizzes:list' %}"
                    {% if request.resolver_match.namespace == 'quizzes' %}aria-current="page"{% endif %}>~/quizzes</a>
               </li>

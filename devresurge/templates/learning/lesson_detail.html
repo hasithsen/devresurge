@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{{ lesson.title }} — ~/learn/{{ roadmap.slug }}{% endblock title %}
+{% block meta_description %}{{ lesson.summary }}{% endblock meta_description %}
+
+{% block content %}
+  <section class="dr-page dr-page--lesson">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'learning:list' %}">~/learn</a>
+      <span aria-hidden="true">/</span>
+      <a href="{% url 'learning:roadmap' roadmap.slug %}">{{ roadmap.slug }}</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ lesson.slug }}</span>
+    </nav>
+
+    <header class="dr-page__head" style="margin-top: 0.75rem;">
+      <div>
+        <p class="dr-learn-kicker">
+          {% blocktranslate with n=lesson_number total=roadmap.lesson_count %}Lesson {{ n }} of {{ total }} · {{ roadmap.title }}{% endblocktranslate %}
+        </p>
+        <h1 style="margin: 0;">{{ lesson.title }}</h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">{{ lesson.summary }}</p>
+      </div>
+      <span class="dr-pill">~{{ lesson.minutes }} {% trans "min" %}</span>
+    </header>
+
+    {% if lesson.outcomes %}
+      <div class="dr-panel" style="margin-top: 1rem;">
+        <div class="dr-panel__body">
+          <div class="dr-learn-label">{% trans "outcomes" %}</div>
+          <ul class="dr-learn-outcomes" style="margin-bottom: 0;">
+            {% for outcome in lesson.outcomes %}
+              <li>{{ outcome }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    <article class="dr-panel dr-lesson-body" style="margin-top: 1rem;">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">{{ lesson.slug }}.md</span>
+      </div>
+      <div class="dr-panel__body dr-markdown">
+        {{ body_html }}
+      </div>
+    </article>
+
+    {% if related_quiz %}
+      <div class="dr-panel" style="margin-top: 1rem;">
+        <div class="dr-panel__body dr-stack">
+          <p style="margin: 0;">
+            {% trans "Lock it in — pass the related skill quiz for a profile badge." %}
+          </p>
+          <div class="dr-btn-row">
+            <a class="dr-btn dr-btn--primary" href="{{ related_quiz.get_absolute_url }}">{{ related_quiz.title }}</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <nav class="dr-learn-pager" aria-label="{% translate 'Lesson navigation' %}">
+      {% if prev_lesson %}
+        <a class="dr-btn" href="{% url 'learning:lesson' roadmap.slug prev_lesson.slug %}">← {{ prev_lesson.title }}</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+      <a class="dr-btn" href="{% url 'learning:roadmap' roadmap.slug %}">{% trans "roadmap" %}</a>
+      {% if next_lesson %}
+        <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' roadmap.slug next_lesson.slug %}">{{ next_lesson.title }} →</a>
+      {% else %}
+        <a class="dr-btn dr-btn--primary" href="{% url 'learning:list' %}">{% trans "all roadmaps" %}</a>
+      {% endif %}
+    </nav>
+  </section>
+{% endblock content %}
