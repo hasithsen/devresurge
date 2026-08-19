@@ -111,7 +111,7 @@
         {% else %}
           <a href="{% url 'connections:map' %}"><span>map</span><span class="dr-dash__hint">{% trans "preview" %}</span></a>
         {% endif %}
-        <a href="{% url 'learning:list' %}"><span>learn</span><span class="dr-dash__hint">{% trans "roadmaps" %}</span></a>
+        <a href="{% url 'learning:list' %}"><span>learn</span><span class="dr-dash__hint">{% if learn_stats %}{{ learn_stats.done }}/{{ learn_stats.total }}{% else %}{% trans "roadmaps" %}{% endif %}</span></a>
         <a href="{% url 'quizzes:list' %}"><span>quizzes</span><span class="dr-dash__hint">{{ quiz_count }}</span></a>
       </nav>
 

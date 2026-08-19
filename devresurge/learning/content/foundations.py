@@ -37,7 +37,7 @@ ROADMAP = {
             "body": """
 ## The delivery loop
 
-Elite engineers optimize the **whole loop**, not just typing code:
+Merging a PR is the tutorial island. The real map is:
 
 1. **Problem** — who hurts, what constraint, what success metric?
 2. **Design** — interfaces, data model, failure modes (even a short design doc).
@@ -47,6 +47,8 @@ Elite engineers optimize the **whole loop**, not just typing code:
 6. **Ship** — deploy with rollback plan.
 7. **Observe** — metrics, logs, traces; watch the blast radius.
 8. **Learn** — post-ship notes beat silent heroics.
+
+Elite engineers optimize the **whole loop**, not just typing speed.
 
 ## Ownership mindset
 

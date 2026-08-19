@@ -649,6 +649,9 @@ class ProfileDashboardView(LoginRequiredMixin, DetailView):
             .order_by("badge__order")[:8]
         )
         ctx["quiz_count"] = Quiz.objects.filter(is_published=True).count()
+        from devresurge.learning.progress import global_stats
+
+        ctx["learn_stats"] = global_stats(self.request.user)
         return ctx
 
 

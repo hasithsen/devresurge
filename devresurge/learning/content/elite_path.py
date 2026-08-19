@@ -33,6 +33,10 @@ ROADMAP = {
             "body": """
 ## Elite ≠ trivia
 
+Imagine two candidates. One recites 47 sorting algorithms. The other shipped
+a rate-limited API, wrote the runbook, and can explain the trade-off in a
+paragraph. Guess who the staff engineer wants on-call with them.
+
 Top companies hire for:
 
 - **Problem decomposition** under ambiguity
@@ -41,7 +45,10 @@ Top companies hire for:
 - **Collaboration** (reviews, writing, mentorship)
 - **Impact** (shipped outcomes)
 
-LeetCode is a filter. It is not the job.
+LeetCode is the **filter**. It is not the **job**. Treat it like gym cardio —
+necessary, not the sport.
+
+## Your DevResurge advantage
 
 ## Your DevResurge advantage
 

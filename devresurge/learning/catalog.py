@@ -13,6 +13,7 @@ from .content import dsa
 from .content import elite_path
 from .content import foundations
 from .content import system_design
+from .flavor import flavor_for
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,9 @@ class Lesson:
     minutes: int = 12
     quiz_slug: str | None = None
     outcomes: tuple[str, ...] = ()
+    hook: str = ""
+    boss_fight: str = ""
+    xp: int = 0
 
 
 @dataclass(frozen=True)
@@ -63,14 +67,19 @@ class Roadmap:
 
 
 def _lesson(data: dict[str, Any]) -> Lesson:
+    minutes = int(data.get("minutes", 12))
+    hook, boss_fight = flavor_for(data["slug"])
     return Lesson(
         slug=data["slug"],
         title=data["title"],
         summary=data["summary"],
         body=data["body"].strip(),
-        minutes=int(data.get("minutes", 12)),
+        minutes=minutes,
         quiz_slug=data.get("quiz_slug"),
         outcomes=tuple(data.get("outcomes") or ()),
+        hook=data.get("hook") or hook,
+        boss_fight=data.get("boss_fight") or boss_fight,
+        xp=int(data.get("xp") or minutes * 10),
     )
 
 

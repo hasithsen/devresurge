@@ -12,4 +12,9 @@ urlpatterns = [
         views.lesson_detail_view,
         name="lesson",
     ),
+    path(
+        "<slug:roadmap_slug>/<slug:lesson_slug>/clear/",
+        views.lesson_complete_view,
+        name="complete",
+    ),
 ]

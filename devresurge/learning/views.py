@@ -1,22 +1,36 @@
 from __future__ import annotations
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.http import HttpRequest
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.shortcuts import render
+from django.views.decorators.http import require_POST
 
 from devresurge.profiles.markdown import render_markdown
 from devresurge.quizzes.models import Quiz
 
 from .catalog import all_roadmaps
 from .catalog import get_roadmap
+from .progress import annotate_roadmaps
+from .progress import completed_keys
+from .progress import continue_target
+from .progress import global_stats
+from .progress import mark_completed
+from .progress import mark_started
+from .progress import roadmap_stats
 
 
 def roadmap_list_view(request: HttpRequest) -> HttpResponse:
     roadmaps = all_roadmaps()
     by_domain: dict[str, list] = {}
-    for roadmap in roadmaps:
-        by_domain.setdefault(roadmap.domain, []).append(roadmap)
+    for row in annotate_roadmaps(request.user):
+        by_domain.setdefault(row["roadmap"].domain, []).append(row)
+
+    resume = continue_target(request.user) if request.user.is_authenticated else None
+    stats = global_stats(request.user) if request.user.is_authenticated else None
     return render(
         request,
         "learning/roadmap_list.html",
@@ -25,6 +39,8 @@ def roadmap_list_view(request: HttpRequest) -> HttpResponse:
             "domains": by_domain,
             "roadmap_count": len(roadmaps),
             "lesson_count": sum(r.lesson_count for r in roadmaps),
+            "resume": resume,
+            "learn_stats": stats,
         },
     )
 
@@ -45,16 +61,31 @@ def roadmap_detail_view(request: HttpRequest, roadmap_slug: str) -> HttpResponse
         }
         quizzes = [quiz_map[slug] for slug in roadmap.related_quiz_slugs if slug in quiz_map]
 
+    stats = None
+    completed: set[str] = set()
+    if request.user.is_authenticated:
+        stats = roadmap_stats(request.user, roadmap)
+        completed = {
+            slug
+            for rm, slug in completed_keys(request.user)
+            if rm == roadmap.slug
+        }
+
+    start_lesson = stats["next_lesson"] if stats and stats["next_lesson"] else roadmap.lessons[0]
     return render(
         request,
         "learning/roadmap_detail.html",
         {
             "roadmap": roadmap,
             "related_quizzes": quizzes,
+            "learn_stats": stats,
+            "completed_lessons": completed,
+            "start_lesson": start_lesson,
         },
     )
 
 
+@login_required
 def lesson_detail_view(
     request: HttpRequest,
     roadmap_slug: str,
@@ -67,6 +98,8 @@ def lesson_detail_view(
     if lesson is None:
         raise Http404("Lesson not found")
 
+    progress = mark_started(request.user, roadmap.slug, lesson.slug)
+
     idx = roadmap.lesson_index(lesson_slug)
     prev_lesson = roadmap.lessons[idx - 1] if idx > 0 else None
     next_lesson = roadmap.lessons[idx + 1] if idx < len(roadmap.lessons) - 1 else None
@@ -75,6 +108,7 @@ def lesson_detail_view(
     if lesson.quiz_slug:
         related_quiz = Quiz.objects.filter(slug=lesson.quiz_slug, is_published=True).first()
 
+    stats = roadmap_stats(request.user, roadmap)
     return render(
         request,
         "learning/lesson_detail.html",
@@ -86,5 +120,35 @@ def lesson_detail_view(
             "next_lesson": next_lesson,
             "lesson_number": idx + 1,
             "related_quiz": related_quiz,
+            "progress": progress,
+            "learn_stats": stats,
         },
     )
+
+
+@login_required
+@require_POST
+def lesson_complete_view(
+    request: HttpRequest,
+    roadmap_slug: str,
+    lesson_slug: str,
+) -> HttpResponse:
+    roadmap = get_roadmap(roadmap_slug)
+    if roadmap is None:
+        raise Http404("Roadmap not found")
+    lesson = roadmap.get_lesson(lesson_slug)
+    if lesson is None:
+        raise Http404("Lesson not found")
+
+    progress = mark_completed(request.user, roadmap.slug, lesson.slug)
+    if progress.is_completed:
+        messages.success(
+            request,
+            f"Quest cleared. +{lesson.xp} XP — {lesson.title}.",
+        )
+
+    idx = roadmap.lesson_index(lesson_slug)
+    if idx >= 0 and idx < len(roadmap.lessons) - 1:
+        nxt = roadmap.lessons[idx + 1]
+        return redirect("learning:lesson", roadmap.slug, nxt.slug)
+    return redirect("learning:roadmap", roadmap.slug)

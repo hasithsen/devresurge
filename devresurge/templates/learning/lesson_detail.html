@@ -18,18 +18,33 @@
     <header class="dr-page__head" style="margin-top: 0.75rem;">
       <div>
         <p class="dr-learn-kicker">
-          {% blocktranslate with n=lesson_number total=roadmap.lesson_count %}Lesson {{ n }} of {{ total }} · {{ roadmap.title }}{% endblocktranslate %}
+          {% blocktranslate with n=lesson_number total=roadmap.lesson_count %}Quest {{ n }} of {{ total }} · {{ roadmap.title }}{% endblocktranslate %}
+          {% if progress.is_completed %} · {% trans "cleared" %}{% else %} · {% trans "in progress" %}{% endif %}
         </p>
         <h1 style="margin: 0;">{{ lesson.title }}</h1>
         <p style="margin: 0.35rem 0 0; color: var(--text-muted);">{{ lesson.summary }}</p>
       </div>
-      <span class="dr-pill">~{{ lesson.minutes }} {% trans "min" %}</span>
+      <div class="dr-learn-badges">
+        <span class="dr-pill">+{{ lesson.xp }} XP</span>
+        <span class="dr-pill">~{{ lesson.minutes }} {% trans "min" %}</span>
+      </div>
     </header>
+
+    {% if learn_stats %}
+      <div class="dr-progress" style="margin-top: 0.85rem;" aria-label="{% trans 'Questline progress' %}">
+        <span class="dr-progress__bar" style="width: {{ learn_stats.pct }}%"></span>
+      </div>
+    {% endif %}
+
+    <div class="dr-learn-hook" role="note">
+      <span class="dr-learn-hook__prompt" aria-hidden="true">$</span>
+      <p>{{ lesson.hook }}</p>
+    </div>
 
     {% if lesson.outcomes %}
       <div class="dr-panel" style="margin-top: 1rem;">
         <div class="dr-panel__body">
-          <div class="dr-learn-label">{% trans "outcomes" %}</div>
+          <div class="dr-learn-label">{% trans "loot you walk away with" %}</div>
           <ul class="dr-learn-outcomes" style="margin-bottom: 0;">
             {% for outcome in lesson.outcomes %}
               <li>{{ outcome }}</li>
@@ -42,18 +57,39 @@
     <article class="dr-panel dr-lesson-body" style="margin-top: 1rem;">
       <div class="dr-panel__header">
         <span class="dr-dots"><span></span><span></span><span></span></span>
-        <span class="dr-panel__title">{{ lesson.slug }}.md</span>
+        <span class="dr-panel__title">{{ lesson.slug }}.quest.md</span>
       </div>
       <div class="dr-panel__body dr-markdown">
         {{ body_html }}
       </div>
     </article>
 
+    <div class="dr-learn-boss dr-panel">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">boss_fight.sh</span>
+      </div>
+      <div class="dr-panel__body dr-stack">
+        <p class="dr-learn-label" style="margin: 0;">{% trans "boss fight" %}</p>
+        <p style="margin: 0;">{{ lesson.boss_fight }}</p>
+        {% if not progress.is_completed %}
+          <form method="post" action="{% url 'learning:complete' roadmap.slug lesson.slug %}">
+            {% csrf_token %}
+            <button class="dr-btn dr-btn--primary" type="submit">
+              {% trans "quest cleared — bank XP" %}
+            </button>
+          </form>
+        {% else %}
+          <p class="dr-learn-cleared">{% trans "already in the vault. replay anytime." %}</p>
+        {% endif %}
+      </div>
+    </div>
+
     {% if related_quiz %}
       <div class="dr-panel" style="margin-top: 1rem;">
         <div class="dr-panel__body dr-stack">
           <p style="margin: 0;">
-            {% trans "Lock it in — pass the related skill quiz for a profile badge." %}
+            {% trans "Side quest: pass the skill quiz and stamp a badge on your profile." %}
           </p>
           <div class="dr-btn-row">
             <a class="dr-btn dr-btn--primary" href="{{ related_quiz.get_absolute_url }}">{{ related_quiz.title }}</a>
@@ -68,11 +104,27 @@
       {% else %}
         <span></span>
       {% endif %}
-      <a class="dr-btn" href="{% url 'learning:roadmap' roadmap.slug %}">{% trans "roadmap" %}</a>
+      <a class="dr-btn" href="{% url 'learning:roadmap' roadmap.slug %}">{% trans "map" %}</a>
       {% if next_lesson %}
-        <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' roadmap.slug next_lesson.slug %}">{{ next_lesson.title }} →</a>
+        {% if progress.is_completed %}
+          <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' roadmap.slug next_lesson.slug %}">{{ next_lesson.title }} →</a>
+        {% else %}
+          <form method="post" action="{% url 'learning:complete' roadmap.slug lesson.slug %}">
+            {% csrf_token %}
+            <button class="dr-btn dr-btn--primary" type="submit">
+              {% trans "clear & next" %} →
+            </button>
+          </form>
+        {% endif %}
       {% else %}
-        <a class="dr-btn dr-btn--primary" href="{% url 'learning:list' %}">{% trans "all roadmaps" %}</a>
+        {% if progress.is_completed %}
+          <a class="dr-btn dr-btn--primary" href="{% url 'learning:list' %}">{% trans "all questlines" %}</a>
+        {% else %}
+          <form method="post" action="{% url 'learning:complete' roadmap.slug lesson.slug %}">
+            {% csrf_token %}
+            <button class="dr-btn dr-btn--primary" type="submit">{% trans "finish questline" %}</button>
+          </form>
+        {% endif %}
       {% endif %}
     </nav>
   </section>

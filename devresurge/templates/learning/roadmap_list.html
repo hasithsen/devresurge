@@ -3,7 +3,7 @@
 {% load i18n %}
 
 {% block title %}~/learn — DevResurge{% endblock title %}
-{% block meta_description %}FAANG-oriented roadmaps and lessons: foundations, DSA, system design, backend, DevOps, databases, and distributed systems.{% endblock meta_description %}
+{% block meta_description %}FAANG-oriented quests: foundations, DSA, system design, backend, DevOps, databases, and distributed systems. Sign in to save XP.{% endblock meta_description %}
 
 {% block content %}
   <section class="dr-page">
@@ -11,28 +11,58 @@
       <div>
         <h1 style="margin: 0;">{% trans "learn" %}</h1>
         <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
-          {% blocktranslate count r=roadmap_count %}{{ r }} roadmap{% plural %}{{ r }} roadmaps{% endblocktranslate %}
+          {% blocktranslate count r=roadmap_count %}{{ r }} questline{% plural %}{{ r }} questlines{% endblocktranslate %}
           ·
-          {% blocktranslate count n=lesson_count %}{{ n }} lesson{% plural %}{{ n }} lessons{% endblocktranslate %}
-          — {% trans "strong foundations toward elite engineering." %}
+          {% blocktranslate count n=lesson_count %}{{ n }} quest{% plural %}{{ n }} quests{% endblocktranslate %}
+          — {% trans "sign in, clear lessons, stack XP." %}
         </p>
       </div>
       <a class="dr-btn" href="{% url 'quizzes:list' %}">{% trans "verify with quizzes" %}</a>
     </header>
 
+    {% if request.user.is_authenticated and learn_stats %}
+      <div class="dr-learn-xpbar" style="margin-top: 1.25rem;">
+        <div class="dr-learn-xpbar__meta">
+          <span>{% blocktranslate with xp=learn_stats.xp %}{{ xp }} XP{% endblocktranslate %}</span>
+          <span>{% blocktranslate with done=learn_stats.done total=learn_stats.total %}{{ done }}/{{ total }} quests cleared{% endblocktranslate %}</span>
+        </div>
+        <div class="dr-progress" aria-hidden="true">
+          <span class="dr-progress__bar" style="width: {{ learn_stats.pct }}%"></span>
+        </div>
+      </div>
+    {% endif %}
+
     <div class="dr-learn-hero dr-panel" style="margin-top: 1.25rem;">
       <div class="dr-panel__header">
         <span class="dr-dots"><span></span><span></span><span></span></span>
-        <span class="dr-panel__title">path.elite</span>
+        <span class="dr-panel__title">quest.boot</span>
       </div>
       <div class="dr-panel__body dr-stack">
-        <p style="margin: 0;">
-          {% trans "Start with the Elite engineer path, then deepen via DSA, system design, backend, DevOps, and databases. Pass quizzes to earn profile badges." %}
-        </p>
-        <div class="dr-btn-row">
-          <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' 'elite-engineer-path' %}">{% trans "open master roadmap" %}</a>
-          <a class="dr-btn" href="{% url 'learning:roadmap' 'strong-foundations' %}">{% trans "strong foundations" %}</a>
-        </div>
+        {% if request.user.is_authenticated %}
+          <p style="margin: 0;">
+            {% trans "Quests save to your account. Clear a lesson, grab the XP, then boss-fight the checkpoint." %}
+          </p>
+          <div class="dr-btn-row">
+            {% if resume %}
+              <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' resume.0.slug resume.1.slug %}">
+                {% trans "continue" %} · {{ resume.1.title }}
+              </a>
+            {% else %}
+              <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' 'elite-engineer-path' %}">{% trans "you cleared the map — replay elite path" %}</a>
+            {% endif %}
+            <a class="dr-btn" href="{% url 'learning:roadmap' 'strong-foundations' %}">{% trans "strong foundations" %}</a>
+          </div>
+        {% else %}
+          <p style="margin: 0;">
+            {% trans "Browse the map free. Sign in to run quests, save progress, and bank XP." %}
+          </p>
+          <div class="dr-btn-row">
+            <a class="dr-btn dr-btn--primary" href="{% url 'account_login' %}?next={% url 'learning:lesson' 'elite-engineer-path' 'north-star' %}">
+              {% trans "sign in to start" %}
+            </a>
+            <a class="dr-btn" href="{% url 'learning:roadmap' 'elite-engineer-path' %}">{% trans "peek the master map" %}</a>
+          </div>
+        {% endif %}
       </div>
     </div>
 
@@ -41,25 +71,33 @@
         <span class="dr-prompt"></span> {{ domain }}/
       </h2>
       <div class="dr-grid dr-grid--2">
-        {% for roadmap in items %}
+        {% for row in items %}
           <article class="dr-panel">
             <header class="dr-panel__header">
               <span class="dr-dots"><span></span><span></span><span></span></span>
-              <span class="dr-panel__title">{{ roadmap.slug }}.map</span>
-              <span class="dr-pill">{{ roadmap.level }}</span>
+              <span class="dr-panel__title">{{ row.roadmap.slug }}.map</span>
+              <span class="dr-pill">{{ row.roadmap.level }}</span>
             </header>
             <div class="dr-panel__body dr-stack">
               <h2 style="margin: 0; font-size: 1.1rem;">
-                <span aria-hidden="true">{{ roadmap.icon }}</span>
-                {{ roadmap.title }}
+                <span aria-hidden="true">{{ row.roadmap.icon }}</span>
+                {{ row.roadmap.title }}
               </h2>
-              <p style="margin: 0; color: var(--text-muted);">{{ roadmap.tagline }}</p>
+              <p style="margin: 0; color: var(--text-muted);">{{ row.roadmap.tagline }}</p>
               <div class="dr-meta">
-                <span>{{ roadmap.lesson_count }} {% trans "lessons" %}</span>
-                <span>· ~{{ roadmap.total_minutes }} {% trans "min" %}</span>
+                <span>{{ row.roadmap.lesson_count }} {% trans "quests" %}</span>
+                <span>· ~{{ row.roadmap.total_minutes }} {% trans "min" %}</span>
+                {% if request.user.is_authenticated %}
+                  <span>· {{ row.done }}/{{ row.roadmap.lesson_count }} {% trans "cleared" %}</span>
+                {% endif %}
               </div>
+              {% if request.user.is_authenticated %}
+                <div class="dr-progress" aria-hidden="true">
+                  <span class="dr-progress__bar" style="width: {{ row.pct }}%"></span>
+                </div>
+              {% endif %}
               <div class="dr-btn-row">
-                <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' roadmap.slug %}">{% trans "open" %}</a>
+                <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' row.roadmap.slug %}">{% trans "open" %}</a>
               </div>
             </div>
           </article>

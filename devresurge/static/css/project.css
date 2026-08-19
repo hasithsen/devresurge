@@ -3237,6 +3237,64 @@ a.dr-tag:hover {
   font-size: clamp(1.25rem, 2.5vw, 1.6rem);
 }
 
+.dr-learn-xpbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.dr-learn-xpbar__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.dr-learn-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.dr-learn-hook {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed color-mix(in oklab, var(--accent) 45%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--accent) 8%, var(--bg-elev));
+}
+
+.dr-learn-hook p {
+  margin: 0;
+  color: var(--text);
+}
+
+.dr-learn-hook__prompt {
+  color: var(--accent-strong);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dr-learn-boss {
+  margin-top: 1rem;
+}
+
+.dr-learn-cleared {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+}
+
+.dr-learn-toc a.is-cleared .dr-learn-toc__n {
+  color: var(--accent-strong);
+}
+
 /* Quizzes + achievement badges ------------------------------------------- */
 
 .dr-quiz-q__prompt {
