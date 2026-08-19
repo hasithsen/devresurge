@@ -365,28 +365,40 @@ def test_public_network_map_invite_share_and_landing(client):
     url = reverse("profiles:network_map", kwargs={"handle": host.profile.handle})
     anon = client.get(url)
     assert anon.status_code == HTTPStatus.OK
-    assert anon.context["map_invite"] is not None
-    assert "invite=1" in anon.context["map_invite"]["page_url"]
-    assert "wa.me" in anon.context["map_invite"]["whatsapp"]
-    assert b"invite to connect" in anon.content
-    assert b"copy invite" in anon.content
+    assert anon.context["map_invite"] is None
+    assert anon.context["is_map_owner"] is False
+    assert b"invite to connect" not in anon.content
 
     landing = client.get(url, {"invite": "1"})
     assert landing.status_code == HTTPStatus.OK
     assert landing.context["invite_landing"] is True
+    assert landing.context["map_invite"] is None
     assert b"invited you to connect" in landing.content
     assert b"join &amp; connect" in landing.content or b"login to connect" in landing.content
+    assert b"invite to connect" not in landing.content
 
     client.force_login(guest)
+    guest_page = client.get(url)
+    assert guest_page.context["map_invite"] is None
+    assert guest_page.context["is_map_owner"] is False
+    assert b"invite to connect" not in guest_page.content
+
     guest_landing = client.get(url, {"invite": "1"})
     assert guest_landing.context["invite_landing"] is True
     assert guest_landing.context["can_connect"] is True
+    assert guest_landing.context["map_invite"] is None
     assert b"Send connection request" in guest_landing.content or b"Connect" in guest_landing.content
+    assert b"invite to connect" not in guest_landing.content
 
     client.force_login(host)
     owner = client.get(url, {"invite": "1"})
     assert owner.context["invite_landing"] is False
     assert owner.context["is_map_owner"] is True
+    assert owner.context["map_invite"] is not None
+    assert "invite=1" in owner.context["map_invite"]["page_url"]
+    assert "wa.me" in owner.context["map_invite"]["whatsapp"]
+    assert b"invite to connect" in owner.content
+    assert b"copy invite" in owner.content
 
 
 def test_build_map_invite_share_links():

@@ -499,12 +499,6 @@ class PublicNetworkMapView(TemplateView):
             page_url=map_url,
             handle=profile.handle,
         )
-        invite_url = f"{map_url}?invite=1"
-        ctx["map_invite"] = build_map_invite_share_links(
-            page_url=invite_url,
-            handle=profile.handle,
-            name=profile.public_name,
-        )
         invite_flag = (self.request.GET.get("invite") or "").strip() in {
             "1",
             "true",
@@ -514,6 +508,13 @@ class PublicNetworkMapView(TemplateView):
         viewer = self.request.user
         is_owner = viewer.is_authenticated and viewer.pk == profile.user_id
         ctx["is_map_owner"] = is_owner
+        ctx["map_invite"] = None
+        if is_owner:
+            ctx["map_invite"] = build_map_invite_share_links(
+                page_url=f"{map_url}?invite=1",
+                handle=profile.handle,
+                name=profile.public_name,
+            )
         ctx["invite_landing"] = invite_flag and not is_owner
         connect = _connect_context(viewer, profile.user)
         ctx.update(connect)

@@ -234,10 +234,8 @@
         </header>
 
         <div class="dr-map-sidebar__scroll">
-          {% if map_invite %}
-            {% if map_profile or is_explore_map and is_map_owner %}
-              {% include "connections/_map_invite_share.html" %}
-            {% endif %}
+          {% if map_invite and is_map_owner %}
+            {% include "connections/_map_invite_share.html" %}
           {% endif %}
 
           <div class="dr-map-sidebar__filters">
