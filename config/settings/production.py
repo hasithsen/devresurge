@@ -1,8 +1,12 @@
 # ruff: noqa: E501
+import ssl
+
 from .base import *  # noqa: F403
 from .base import DATABASES
 from .base import INSTALLED_APPS
+from .base import REDIS_SSL
 from .base import REDIS_URL
+from .base import TEMPLATES
 from .base import env
 
 # GENERAL
@@ -27,19 +31,23 @@ CSRF_TRUSTED_ORIGINS = env.list(
 # DATABASES
 # ------------------------------------------------------------------------------
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # CACHES
 # ------------------------------------------------------------------------------
+_redis_options: dict = {
+    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    # Redis is required in production (cache + rate limits); fail loudly when down.
+    "IGNORE_EXCEPTIONS": False,
+}
+if REDIS_SSL:
+    _redis_options["CONNECTION_POOL_KWARGS"] = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # Mimicking memcache behavior.
-            # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
-            "IGNORE_EXCEPTIONS": True,
-        },
+        "OPTIONS": _redis_options,
     },
 }
 
@@ -57,6 +65,10 @@ SESSION_COOKIE_NAME = "__Secure-sessionid"
 CSRF_COOKIE_SECURE = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-name
 CSRF_COOKIE_NAME = "__Secure-csrftoken"
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-samesite
+SESSION_COOKIE_SAMESITE = "Lax"
+# https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-samesite
+CSRF_COOKIE_SAMESITE = "Lax"
 # https://docs.djangoproject.com/en/dev/topics/security/#ssl-https
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-hsts-seconds
 # Raise via env only after HTTPS is confirmed end-to-end (Traefik/proxy).
@@ -67,12 +79,17 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
     default=True,
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-hsts-preload
-SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=True)
+# Keep False until HSTS is raised to at least 1 year and HTTPS is verified.
+SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=False)
 # https://docs.djangoproject.com/en/dev/ref/middleware/#x-content-type-options-nosniff
 SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
     "DJANGO_SECURE_CONTENT_TYPE_NOSNIFF",
     default=True,
 )
+# https://docs.djangoproject.com/en/dev/ref/settings/#secure-referrer-policy
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+# https://docs.djangoproject.com/en/dev/ref/settings/#secure-cross-origin-opener-policy
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 # STATIC & MEDIA
 # ------------------------
@@ -145,7 +162,7 @@ LOGGING = {
             "class": "django.utils.log.AdminEmailHandler",
         },
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
@@ -165,6 +182,16 @@ LOGGING = {
     },
 }
 
+
+# TEMPLATES
+# ------------------------------------------------------------------------------
+# Drop the debug context processor so accidental DEBUG=True does not leak extra
+# template context in production.
+TEMPLATES[0]["OPTIONS"]["context_processors"] = [
+    cp
+    for cp in TEMPLATES[0]["OPTIONS"]["context_processors"]
+    if cp != "django.template.context_processors.debug"
+]
 
 # Your stuff...
 # ------------------------------------------------------------------------------

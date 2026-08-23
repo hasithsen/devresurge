@@ -13,11 +13,14 @@ services:
       dockerfile: ./compose/production/django/Dockerfile
 
     image: devresurge_production_django
+    restart: unless-stopped
     volumes:
       - production_django_media:/app/devresurge/media
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -38,13 +41,28 @@ services:
   analytics-prune:
     image: devresurge_production_django
     depends_on:
-      - postgres
-      - redis
-      - django
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      django:
+        condition: service_started
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /prune
+    restart: unless-stopped
+
+  postgres-backup:
+    image: devresurge_production_postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./.envs/.production/.postgres
+    volumes:
+      - production_postgres_data_backups:/backups
+    command: backup-cron
     restart: unless-stopped
 
   postgres:
@@ -52,19 +70,28 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: devresurge_production_postgres
+    restart: unless-stopped
     volumes:
       - production_postgres_data:/var/lib/postgresql/18/docker
       - production_postgres_data_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   traefik:
     build:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
     image: devresurge_production_traefik
+    restart: unless-stopped
     depends_on:
-      - django
+      django:
+        condition: service_started
     volumes:
       - production_traefik:/etc/traefik/acme
     ports:
@@ -73,14 +100,22 @@ services:
 
   redis:
     image: docker.io/redis:7.2
-    
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   nginx:
     build:
       context: .
       dockerfile: ./compose/production/nginx/Dockerfile
     image: devresurge_production_nginx
+    restart: unless-stopped
     depends_on:
-      - django
+      django:
+        condition: service_started
     volumes:
       - production_django_media:/usr/share/nginx/media:ro

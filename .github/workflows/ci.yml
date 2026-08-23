@@ -57,11 +57,32 @@ jobs:
             postgres.cache-from=type=gha,scope=postgres-cached-tests
             postgres.cache-to=type=gha,scope=postgres-cached-tests,mode=max
 
+      - name: Build production Django image
+        uses: docker/bake-action@v6
+        with:
+          push: false
+          load: true
+          files: docker-compose.production.yml
+          targets: django
+          set: |
+            django.cache-from=type=gha,scope=django-cached-prod
+            django.cache-to=type=gha,scope=django-cached-prod,mode=max
+
       - name: Check DB Migrations
         run: docker compose -f docker-compose.local.yml run --rm django python manage.py makemigrations --check
 
       - name: Run DB Migrations
         run: docker compose -f docker-compose.local.yml run --rm django python manage.py migrate
+
+      - name: Smoke-test production settings import
+        run: >
+          docker compose -f docker-compose.local.yml run --rm --no-deps
+          -e DJANGO_SETTINGS_MODULE=config.settings.production
+          -e DJANGO_SECRET_KEY=ci-smoke-secret
+          -e DJANGO_ADMIN_URL=secret-admin-path/
+          -e RESEND_DOMAIN=example.com
+          -e RESEND_API_KEY=re_ci_smoke
+          django python -c "import django; django.setup(); from django.conf import settings; assert settings.DEBUG is False"
 
       - name: Run Django Tests
         run: docker compose -f docker-compose.local.yml run django pytest

@@ -143,7 +143,13 @@ Copy the checked-in examples and fill in real secrets (never commit them):
     cp .envs/.production/.postgres.example .envs/.production/.postgres
 
 After HTTPS is confirmed through Traefik/your proxy, raise
-`DJANGO_SECURE_HSTS_SECONDS` to `518400`.
+`DJANGO_SECURE_HSTS_SECONDS` to `518400`. Enable
+`DJANGO_SECURE_HSTS_PRELOAD=True` only when you intend to submit for browser
+preload.
+
+Production Compose runs `migrate` on Django boot, plus sidecars for analytics
+pruning and daily Postgres backups. See [deployment/README.md](deployment/README.md)
+for Traefik vs multi-host nginx-proxy setup.
 
 ### Quizzes & badges
 
@@ -181,4 +187,6 @@ The following details how to deploy this application.
 
 ### Docker
 
-See detailed [cookiecutter-django Docker documentation](https://cookiecutter-django.readthedocs.io/en/latest/3-deployment/deployment-with-docker.html).
+See [deployment/README.md](deployment/README.md) for production Compose, backups,
+and multi-host nginx-proxy setup. General Cookiecutter Django Docker notes:
+[deployment with Docker](https://cookiecutter-django.readthedocs.io/en/latest/3-deployment/deployment-with-docker.html).

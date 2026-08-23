@@ -2,14 +2,20 @@
 # ------------------------------------------------------------------------------
 # DJANGO_READ_DOT_ENV_FILE=False
 DJANGO_SETTINGS_MODULE=config.settings.production
+DJANGO_DEBUG=False
 DJANGO_SECRET_KEY=change-me-to-a-long-random-string
-DJANGO_ADMIN_URL=admin/
+# Use a non-guessable path (not "admin/").
+DJANGO_ADMIN_URL=change-me-to-a-random-path/
 # 127.0.0.1/localhost are also appended in production.py for Compose healthchecks.
 DJANGO_ALLOWED_HOSTS=devresurge.com,www.devresurge.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://devresurge.com,https://www.devresurge.com
-# After HTTPS is confirmed end-to-end, raise to 518400 (6 months).
+# After HTTPS is confirmed end-to-end, raise to 518400 (6 months) and optionally
+# set DJANGO_SECURE_HSTS_PRELOAD=True once you intend to submit for preload.
 DJANGO_SECURE_HSTS_SECONDS=60
+DJANGO_SECURE_HSTS_PRELOAD=False
 # DJANGO_SECURE_SSL_REDIRECT=True
+# DJANGO_ACCOUNT_ALLOW_REGISTRATION=True
+# DJANGO_ADMIN_FORCE_ALLAUTH=False
 # CONN_MAX_AGE=60
 
 # Gunicorn (resource tuning)
@@ -22,13 +28,14 @@ GUNICORN_MAX_REQUESTS_JITTER=50
 # Redis
 # ------------------------------------------------------------------------------
 REDIS_URL=redis://redis:6379/0
+# For TLS Redis (e.g. managed cache): rediss://host:6380/0
 # REDIS_HOST=redis
 # REDIS_PORT=6379
 
 # Email (Resend / Anymail)
 # ------------------------------------------------------------------------------
 DJANGO_DEFAULT_FROM_EMAIL=DevResurge <hello@updates.devresurge.com>
-# DJANGO_SERVER_EMAIL=
+DJANGO_SERVER_EMAIL=DevResurge <hello@updates.devresurge.com>
 RESEND_API_KEY=re_xxxxxxxx
 RESEND_DOMAIN=updates.devresurge.com
 # RESEND_API_URL=https://api.resend.com/
@@ -37,3 +44,8 @@ RESEND_DOMAIN=updates.devresurge.com
 # ------------------------------------------------------------------------------
 # PRUNE_INTERVAL_SECONDS=86400
 # PRUNE_INITIAL_DELAY_SECONDS=300
+
+# Postgres backup sidecar
+# ------------------------------------------------------------------------------
+# BACKUP_INTERVAL_SECONDS=86400
+# BACKUP_INITIAL_DELAY_SECONDS=600

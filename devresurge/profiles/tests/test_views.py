@@ -53,6 +53,18 @@ def test_health_endpoint_ok(client):
     assert payload["checks"]["database"] == "ok"
 
 
+def test_health_endpoint_hides_database_errors(client, monkeypatch):
+    def boom():
+        raise RuntimeError("super secret db host")
+
+    monkeypatch.setattr("config.health.connection.ensure_connection", boom)
+    response = client.get(reverse("health"))
+    assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+    payload = response.json()
+    assert payload["checks"]["database"] == "unavailable"
+    assert "super secret" not in response.content.decode()
+
+
 def test_browse_lists_public_profiles(client):
     public = ProfileFactory(is_public=True, display_name="Public Dev")
     private = ProfileFactory(is_public=False, display_name="Private Dev")

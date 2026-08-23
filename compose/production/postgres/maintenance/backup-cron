@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Daily Postgres backups. Sleep first so a restart storm does not hammer the DB
+# at boot; then loop forever (Compose sidecar / cron substitute).
+BACKUP_INTERVAL_SECONDS="${BACKUP_INTERVAL_SECONDS:-86400}"
+BACKUP_INITIAL_DELAY_SECONDS="${BACKUP_INITIAL_DELAY_SECONDS:-600}"
+
+sleep "${BACKUP_INITIAL_DELAY_SECONDS}"
+
+while true; do
+  backup
+  sleep "${BACKUP_INTERVAL_SECONDS}"
+done

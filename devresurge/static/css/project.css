@@ -227,9 +227,19 @@ code {
   top: 0;
   z-index: 50;
   border-bottom: 1px solid var(--border);
+}
+
+/* Frosted bar only — backdrop-filter on `.dr-nav` itself blurs fixed
+   children (the mobile menu dropdown). */
+.dr-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: color-mix(in oklab, var(--bg) 88%, transparent);
   backdrop-filter: saturate(140%) blur(8px);
   -webkit-backdrop-filter: saturate(140%) blur(8px);
+  pointer-events: none;
 }
 
 .dr-nav__inner {

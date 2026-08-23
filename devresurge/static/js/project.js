@@ -423,8 +423,15 @@
   function csrfToken() {
     var input = document.querySelector("input[name=csrfmiddlewaretoken]");
     if (input && input.value) return input.value;
-    var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : "";
+    var names = ["csrftoken", "__Secure-csrftoken"];
+    for (var i = 0; i < names.length; i += 1) {
+      var re = new RegExp(
+        "(?:^|;\\s*)" + names[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]+)"
+      );
+      var m = document.cookie.match(re);
+      if (m) return decodeURIComponent(m[1]);
+    }
+    return "";
   }
 
   function flashStatus(list, text, kind) {

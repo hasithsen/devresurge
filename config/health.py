@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+
 from django.core.cache import cache
 from django.db import connection
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+
+logger = logging.getLogger(__name__)
 
 
 @require_GET
@@ -21,9 +25,10 @@ def health_view(_request: HttpRequest) -> HttpResponse:
     try:
         connection.ensure_connection()
         checks["database"] = "ok"
-    except Exception as exc:  # noqa: BLE001 — surface probe failure, not traceback
+    except Exception:  # noqa: BLE001 — log internally; never leak probe details
+        logger.exception("Health check: database probe failed")
         return JsonResponse(
-            {"status": "error", "checks": {"database": str(exc)}},
+            {"status": "error", "checks": {"database": "unavailable"}},
             status=503,
         )
 
@@ -32,8 +37,9 @@ def health_view(_request: HttpRequest) -> HttpResponse:
         if cache.get("healthcheck") != "1":
             raise RuntimeError("cache round-trip failed")
         checks["cache"] = "ok"
-    except Exception as exc:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         # Cache is optional for process liveness; report degraded but stay up.
-        checks["cache"] = f"degraded: {exc}"
+        logger.exception("Health check: cache probe failed")
+        checks["cache"] = "degraded"
 
     return JsonResponse({"status": "ok", "checks": checks})
