@@ -11,12 +11,15 @@ from .models import ALLOWED_AVATAR_EXTENSIONS
 from .models import HANDLE_MAX_LENGTH
 from .models import HANDLE_MIN_LENGTH
 from .models import MAX_AVATAR_BYTES
+from .models import PLATFORM_PROFILE_URLS
+from .models import PLATFORM_URL_HINTS
 from .models import Education
 from .models import Profile
 from .models import ProjectLink
 from .models import Recommendation
 from .models import ShowcaseItem
 from .models import SocialLink
+from .models import SocialPlatform
 from .models import WorkExperience
 
 _ALLOWED_AVATAR_MIME = {
@@ -25,6 +28,59 @@ _ALLOWED_AVATAR_MIME = {
     "image/webp",
     "image/gif",
 }
+
+# Optgroups so DevResurge feels like the hub for practice + professional signal.
+PLATFORM_CHOICE_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
+    (
+        _("Code & practice"),
+        [
+            (SocialPlatform.LEETCODE, SocialPlatform.LEETCODE.label),
+            (SocialPlatform.HACKERRANK, SocialPlatform.HACKERRANK.label),
+            (SocialPlatform.CODEFORCES, SocialPlatform.CODEFORCES.label),
+            (SocialPlatform.CODEWARS, SocialPlatform.CODEWARS.label),
+            (SocialPlatform.ATCODER, SocialPlatform.ATCODER.label),
+            (SocialPlatform.CODESIGNAL, SocialPlatform.CODESIGNAL.label),
+            (SocialPlatform.TOPCODER, SocialPlatform.TOPCODER.label),
+            (SocialPlatform.EXERCISM, SocialPlatform.EXERCISM.label),
+            (SocialPlatform.KAGGLE, SocialPlatform.KAGGLE.label),
+            (SocialPlatform.CODEPEN, SocialPlatform.CODEPEN.label),
+            (SocialPlatform.HUGGINGFACE, SocialPlatform.HUGGINGFACE.label),
+        ],
+    ),
+    (
+        _("Code hosting"),
+        [
+            (SocialPlatform.GITHUB, SocialPlatform.GITHUB.label),
+            (SocialPlatform.GITLAB, SocialPlatform.GITLAB.label),
+        ],
+    ),
+    (
+        _("Professional"),
+        [
+            (SocialPlatform.LINKEDIN, SocialPlatform.LINKEDIN.label),
+            (SocialPlatform.STACKOVERFLOW, SocialPlatform.STACKOVERFLOW.label),
+            (SocialPlatform.WEBSITE, SocialPlatform.WEBSITE.label),
+            (SocialPlatform.EMAIL, SocialPlatform.EMAIL.label),
+        ],
+    ),
+    (
+        _("Writing & media"),
+        [
+            (SocialPlatform.DEVTO, SocialPlatform.DEVTO.label),
+            (SocialPlatform.MEDIUM, SocialPlatform.MEDIUM.label),
+            (SocialPlatform.YOUTUBE, SocialPlatform.YOUTUBE.label),
+            (SocialPlatform.TWITTER, SocialPlatform.TWITTER.label),
+            (SocialPlatform.MASTODON, SocialPlatform.MASTODON.label),
+            (SocialPlatform.BLUESKY, SocialPlatform.BLUESKY.label),
+        ],
+    ),
+    (
+        _("Other"),
+        [
+            (SocialPlatform.OTHER, SocialPlatform.OTHER.label),
+        ],
+    ),
+]
 
 
 class ProfileForm(forms.ModelForm):
@@ -150,25 +206,60 @@ class SocialLinkForm(forms.ModelForm):
         # `order` is managed via drag-and-drop on the list page, not the form.
         fields = ("platform", "label", "url")
         widgets = {
-            "url": forms.TextInput(attrs={"placeholder": "https://github.com/your-handle"}),
+            "url": forms.TextInput(
+                attrs={
+                    "placeholder": "https://leetcode.com/u/your-handle/  or  your-handle",
+                    "autocomplete": "url",
+                },
+            ),
             "label": forms.TextInput(attrs={"placeholder": "Optional display name"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["platform"].choices = PLATFORM_CHOICE_GROUPS
+        self.fields["platform"].help_text = _(
+            "Bring LeetCode, HackerRank, and the rest here ? DevResurge is the hub.",
+        )
+        self.fields["url"].help_text = _(
+            "Full profile URL, or just your handle for known sites (we expand it).",
+        )
+        platform = None
+        if self.is_bound:
+            platform = self.data.get("platform")
+        elif self.instance and self.instance.pk:
+            platform = self.instance.platform
+        elif self.initial.get("platform"):
+            platform = self.initial["platform"]
+        hint = PLATFORM_URL_HINTS.get(platform or "")
+        if hint:
+            self.fields["url"].widget.attrs["placeholder"] = hint
 
     def clean_url(self) -> str:
         url = (self.cleaned_data.get("url") or "").strip()
         platform = self.cleaned_data.get("platform")
-        if platform == "email":
+        if not url:
+            err = _("Enter a URL or profile handle.")
+            raise ValidationError(err)
+        if platform == SocialPlatform.EMAIL:
             if "@" not in url:
                 err = _("Enter a valid email address.")
                 raise ValidationError(err)
             if not url.lower().startswith("mailto:"):
                 url = f"mailto:{url}"
             return url
+        # Bare handle ? canonical public profile URL for known platforms.
+        if "://" not in url and platform in PLATFORM_PROFILE_URLS:
+            handle = url.lstrip("@").strip().strip("/")
+            if not handle or any(ch.isspace() for ch in handle):
+                err = _("Enter a valid profile handle or full URL.")
+                raise ValidationError(err)
+            url = PLATFORM_PROFILE_URLS[platform].format(handle=handle)
         validator = forms.URLField()
         try:
             url = validator.clean(url)
         except ValidationError as exc:
-            raise ValidationError(_("Enter a valid URL.")) from exc
+            raise ValidationError(_("Enter a valid URL (or a handle for this platform).")) from exc
         return url
 
 

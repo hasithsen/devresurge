@@ -53,8 +53,22 @@ class PrimaryRole(models.TextChoices):
 
 
 class SocialPlatform(models.TextChoices):
+    # Code hosting
     GITHUB = "github", "GitHub"
     GITLAB = "gitlab", "GitLab"
+    # Practice / contest (DevResurge as the hub)
+    LEETCODE = "leetcode", "LeetCode"
+    HACKERRANK = "hackerrank", "HackerRank"
+    CODEFORCES = "codeforces", "Codeforces"
+    CODEWARS = "codewars", "Codewars"
+    ATCODER = "atcoder", "AtCoder"
+    CODESIGNAL = "codesignal", "CodeSignal"
+    TOPCODER = "topcoder", "TopCoder"
+    EXERCISM = "exercism", "Exercism"
+    KAGGLE = "kaggle", "Kaggle"
+    CODEPEN = "codepen", "CodePen"
+    HUGGINGFACE = "huggingface", "Hugging Face"
+    # Professional / social
     LINKEDIN = "linkedin", "LinkedIn"
     TWITTER = "twitter", "X / Twitter"
     MASTODON = "mastodon", "Mastodon"
@@ -66,6 +80,58 @@ class SocialPlatform(models.TextChoices):
     WEBSITE = "website", "Personal Site"
     EMAIL = "email", "Email"
     OTHER = "other", "Other"
+
+
+# Platforms that prove problem-solving / craft — featured as "practice" on profiles.
+PRACTICE_PLATFORMS: frozenset[str] = frozenset(
+    {
+        SocialPlatform.LEETCODE,
+        SocialPlatform.HACKERRANK,
+        SocialPlatform.CODEFORCES,
+        SocialPlatform.CODEWARS,
+        SocialPlatform.ATCODER,
+        SocialPlatform.CODESIGNAL,
+        SocialPlatform.TOPCODER,
+        SocialPlatform.EXERCISM,
+        SocialPlatform.KAGGLE,
+        SocialPlatform.CODEPEN,
+        SocialPlatform.HUGGINGFACE,
+    },
+)
+
+# Bare handle → public profile URL (users can still paste full URLs).
+PLATFORM_PROFILE_URLS: dict[str, str] = {
+    SocialPlatform.GITHUB: "https://github.com/{handle}",
+    SocialPlatform.GITLAB: "https://gitlab.com/{handle}",
+    SocialPlatform.LEETCODE: "https://leetcode.com/u/{handle}/",
+    SocialPlatform.HACKERRANK: "https://www.hackerrank.com/profile/{handle}",
+    SocialPlatform.CODEFORCES: "https://codeforces.com/profile/{handle}",
+    SocialPlatform.CODEWARS: "https://www.codewars.com/users/{handle}",
+    SocialPlatform.ATCODER: "https://atcoder.jp/users/{handle}",
+    SocialPlatform.CODESIGNAL: "https://app.codesignal.com/profile/{handle}",
+    SocialPlatform.TOPCODER: "https://www.topcoder.com/members/{handle}",
+    SocialPlatform.EXERCISM: "https://exercism.org/profiles/{handle}",
+    SocialPlatform.KAGGLE: "https://www.kaggle.com/{handle}",
+    SocialPlatform.CODEPEN: "https://codepen.io/{handle}",
+    SocialPlatform.HUGGINGFACE: "https://huggingface.co/{handle}",
+    SocialPlatform.LINKEDIN: "https://www.linkedin.com/in/{handle}",
+    SocialPlatform.TWITTER: "https://x.com/{handle}",
+    SocialPlatform.DEVTO: "https://dev.to/{handle}",
+    SocialPlatform.MEDIUM: "https://medium.com/@{handle}",
+    SocialPlatform.STACKOVERFLOW: "https://stackoverflow.com/users/{handle}",
+    SocialPlatform.YOUTUBE: "https://www.youtube.com/@{handle}",
+}
+
+PLATFORM_URL_HINTS: dict[str, str] = {
+    SocialPlatform.LEETCODE: "https://leetcode.com/u/your-handle/  (or paste handle only)",
+    SocialPlatform.HACKERRANK: "https://www.hackerrank.com/profile/your-handle",
+    SocialPlatform.CODEFORCES: "https://codeforces.com/profile/your-handle",
+    SocialPlatform.CODEWARS: "https://www.codewars.com/users/your-handle",
+    SocialPlatform.GITHUB: "https://github.com/your-handle",
+    SocialPlatform.KAGGLE: "https://www.kaggle.com/your-handle",
+    SocialPlatform.HUGGINGFACE: "https://huggingface.co/your-handle",
+    SocialPlatform.CODEPEN: "https://codepen.io/your-handle",
+}
 
 
 class Profile(models.Model):
@@ -258,8 +324,10 @@ class Profile(models.Model):
         )
         has_experience = self.experiences.exists() if self.pk else False
         has_linkedin = False
+        has_practice = False
         if self.pk:
             has_linkedin = self.social_links.filter(platform=SocialPlatform.LINKEDIN).exists()
+            has_practice = self.social_links.filter(platform__in=PRACTICE_PLATFORMS).exists()
         return [
             {
                 "key": "display_name",
@@ -310,6 +378,13 @@ class Profile(models.Model):
                 "url_name": "profiles:showcase_create",
             },
             {
+                "key": "practice",
+                "label": _("LeetCode, HackerRank, or similar"),
+                "done": has_practice,
+                "url_name": "profiles:link_create",
+                "url_query": "platform=leetcode",
+            },
+            {
                 "key": "links",
                 "label": _("Social or website link"),
                 "done": has_links,
@@ -320,6 +395,7 @@ class Profile(models.Model):
                 "label": _("LinkedIn link (bridge)"),
                 "done": has_linkedin,
                 "url_name": "profiles:link_create",
+                "url_query": "platform=linkedin",
             },
             {
                 "key": "public",
@@ -342,6 +418,18 @@ class Profile(models.Model):
             "pct": pct,
             "complete": done == total,
         }
+
+    def practice_links(self) -> list[SocialLink]:
+        """Coding-practice / craft profiles (LeetCode, HackerRank, …)."""
+        if not self.pk:
+            return []
+        return [link for link in self.social_links.all() if link.platform in PRACTICE_PLATFORMS]
+
+    def network_links(self) -> list[SocialLink]:
+        """Non-practice social / professional links."""
+        if not self.pk:
+            return []
+        return [link for link in self.social_links.all() if link.platform not in PRACTICE_PLATFORMS]
 
     def to_readme_markdown(self, *, base_url: str = "") -> str:
         """Serialize this profile as a shareable README.md document."""
@@ -437,6 +525,7 @@ class Profile(models.Model):
                 lines.append(f"> — {author}")
                 lines.append("")
 
+        practice: list[str] = []
         links: list[str] = []
         if self.website_url:
             links.append(f"- [Website]({self.website_url})")
@@ -444,7 +533,13 @@ class Profile(models.Model):
             links.append(f"- [Email](mailto:{self.user.email})")
         if self.pk:
             for link in self.social_links.all():
-                links.append(f"- [{link.display_label}]({link.url})")
+                item = f"- [{link.display_label}]({link.url})"
+                if link.platform in PRACTICE_PLATFORMS:
+                    practice.append(item)
+                else:
+                    links.append(item)
+        if practice:
+            lines.extend(["## Practice", "", *practice, ""])
         if links:
             lines.extend(["## Links", "", *links, ""])
 
@@ -475,10 +570,13 @@ class Profile(models.Model):
             labels.append(str(_("seeking mentor")))
         return labels
 
-    def linkedin_url(self) -> str:
+    def linkedin_link(self) -> SocialLink | None:
         if not self.pk:
-            return ""
-        link = self.social_links.filter(platform=SocialPlatform.LINKEDIN).first()
+            return None
+        return self.social_links.filter(platform=SocialPlatform.LINKEDIN).first()
+
+    def linkedin_url(self) -> str:
+        link = self.linkedin_link()
         return link.url if link else ""
 
 
@@ -703,7 +801,7 @@ class SocialLink(models.Model):
     )
     platform = models.CharField(
         _("platform"),
-        max_length=24,
+        max_length=32,
         choices=SocialPlatform.choices,
         default=SocialPlatform.WEBSITE,
     )
@@ -731,6 +829,10 @@ class SocialLink(models.Model):
     @property
     def display_label(self) -> str:
         return self.label or self.get_platform_display()
+
+    @property
+    def is_practice(self) -> bool:
+        return self.platform in PRACTICE_PLATFORMS
 
 
 class WorkExperience(models.Model):

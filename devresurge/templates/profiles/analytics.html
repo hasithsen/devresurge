@@ -93,6 +93,11 @@
           {% else %}
             {% trans "outbound" %}
           {% endif %}
+          {% if clicks_delta > 0 %}
+            <span class="dr-delta dr-delta--up">+{{ clicks_delta }} · {{ clicks_delta_pct }}%</span>
+          {% elif clicks_delta < 0 %}
+            <span class="dr-delta dr-delta--down">{{ clicks_delta }} · {{ clicks_delta_pct }}%</span>
+          {% endif %}
         </div>
       </div>
     </section>

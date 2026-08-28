@@ -209,6 +209,7 @@ def test_readiness_scores_incomplete_profile():
     keys = {c["key"] for c in readiness["checks"] if not c["done"]}
     assert "display_name" in keys
     assert "public" in keys
+    assert "practice" in keys
 
 
 def test_readiness_complete_when_fully_filled():
@@ -239,6 +240,11 @@ def test_readiness_complete_when_fully_filled():
     ProjectLinkFactory(profile=profile)
     ShowcaseItemFactory(profile=profile, is_published=True)
     SocialLinkFactory(profile=profile, platform="linkedin", url="https://linkedin.com/in/x")
+    SocialLinkFactory(
+        profile=profile,
+        platform="leetcode",
+        url="https://leetcode.com/u/fulldev/",
+    )
     WorkExperience.objects.create(
         profile=profile,
         title="Engineer",
@@ -250,6 +256,7 @@ def test_readiness_complete_when_fully_filled():
     readiness = profile.readiness()
     assert readiness["complete"] is True
     assert readiness["pct"] == 100
+    assert "practice" not in {c["key"] for c in readiness["checks"] if not c["done"]}
 
 
 def test_to_readme_markdown_includes_core_sections():
@@ -262,13 +269,48 @@ def test_to_readme_markdown_includes_core_sections():
         location="London",
     )
     from devresurge.profiles.tests.factories import ProjectLinkFactory
+    from devresurge.profiles.tests.factories import SocialLinkFactory
 
     ProjectLinkFactory(profile=profile, title="Analytical Engine", is_featured=True)
+    SocialLinkFactory(
+        profile=profile,
+        platform="leetcode",
+        url="https://leetcode.com/u/ada/",
+    )
+    SocialLinkFactory(
+        profile=profile,
+        platform="github",
+        url="https://github.com/ada",
+    )
     md = profile.to_readme_markdown(base_url="https://devresurge.test")
     assert "# Ada" in md
     assert f"**@{profile.handle}**" in md
     assert "## Stack" in md
     assert "## Projects" in md
     assert "Analytical Engine" in md
+    assert "## Practice" in md
+    assert "leetcode.com/u/ada" in md
+    assert "## Links" in md
+    assert "github.com/ada" in md
     assert "open to work" in md
     assert "https://devresurge.test" in md
+
+
+def test_practice_links_split_from_network_links():
+    profile = ProfileFactory()
+    from devresurge.profiles.tests.factories import SocialLinkFactory
+
+    practice = SocialLinkFactory(
+        profile=profile,
+        platform="hackerrank",
+        url="https://www.hackerrank.com/profile/x",
+    )
+    network = SocialLinkFactory(
+        profile=profile,
+        platform="linkedin",
+        url="https://linkedin.com/in/x",
+    )
+    assert practice in profile.practice_links()
+    assert network not in profile.practice_links()
+    assert network in profile.network_links()
+    assert practice not in profile.network_links()

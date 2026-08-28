@@ -518,10 +518,38 @@ code {
 
 .dr-btn--sm { padding: 0.45rem 0.7rem; font-size: 0.82rem; }
 
+/* Copy action on a real button — keep full .dr-btn chrome (not the compact chip). */
+.dr-btn.dr-copy {
+  padding: 0.6rem 0.95rem;
+  font-size: 0.92rem;
+  border: 1px solid var(--btn-bd);
+  background: var(--btn-bg);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--btn-bd) 70%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.dr-btn.dr-copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 80%, transparent);
+}
+
+.dr-btn.dr-copy.dr-btn--ghost {
+  --btn-bg: transparent;
+  background: transparent;
+}
+
+.dr-btn.dr-copy.dr-btn--sm {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 .dr-btn-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  /* Room for the 1px bottom edge / shadow so neighbors don't cover it */
+  padding-bottom: 1px;
 }
 
 /* Panels / cards ---------------------------------------------------------- */
@@ -531,7 +559,8 @@ code {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  /* visible so button bottom edges / shadows inside aren't clipped */
+  overflow: visible;
 }
 
 /* Panels that host dropdowns/popovers must not clip them. */
@@ -3163,6 +3192,49 @@ a.dr-tag:hover {
 .dr-markdown strong { color: var(--text); font-weight: 700; }
 .dr-markdown em { color: var(--text-muted); }
 
+.dr-markdown hr,
+.dr-markdown-hr {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 1rem 0;
+}
+
+.dr-markdown blockquote,
+.dr-markdown-quote {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid color-mix(in oklab, var(--accent) 45%, var(--border));
+  background: color-mix(in oklab, var(--accent) 6%, var(--bg-elev));
+  color: var(--text-muted);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+}
+
+.dr-markdown blockquote strong,
+.dr-markdown-quote strong {
+  color: var(--text);
+}
+
+.dr-markdown .dr-table-wrap {
+  margin: 0.75rem 0;
+}
+
+.dr-markdown .dr-table--markdown {
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+.dr-markdown .dr-table--markdown th,
+.dr-markdown .dr-table--markdown td {
+  padding: 0.45rem 0.65rem;
+  vertical-align: top;
+}
+
+.dr-markdown .dr-table--markdown th {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* Learning roadmaps + lessons -------------------------------------------- */
 
 .dr-panel--highlight {
@@ -3287,14 +3359,152 @@ a.dr-tag:hover {
 }
 
 .dr-lesson-body .dr-markdown {
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-family: var(--font-sans);
+  font-size: 1.02rem;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  max-width: 68ch;
+}
+
+.dr-lesson-body .dr-markdown pre,
+.dr-lesson-body .dr-markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
 }
 
 .dr-lesson-body .dr-markdown h2,
 .dr-lesson-body .dr-markdown h3 {
   margin-top: 1.35em;
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 6.5rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.dr-main--learn {
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      color-mix(in oklab, var(--accent) 5%, transparent),
+      transparent 55%
+    );
+}
+
+.dr-page--learn .dr-section-lede,
+.dr-section-lede {
+  margin: -0.35rem 0 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  max-width: 52ch;
+}
+
+.dr-learn-hud {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--bg-elev) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+
+.dr-learn-hud__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dr-learn-hud__quest {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: lowercase;
+  letter-spacing: 0.03em;
+}
+
+.dr-learn-hud__title {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(42ch, 70vw);
+}
+
+.dr-learn-hud__track {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1 1 10rem;
+  min-width: 8rem;
+  max-width: 16rem;
+}
+
+.dr-learn-hud__track .dr-progress {
+  flex: 1;
+  height: 0.35rem;
+}
+
+.dr-learn-hud__pct {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.2rem;
+  text-align: right;
+}
+
+.dr-learn-onpage {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.dr-learn-onpage__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dr-learn-onpage__item--h3 {
+  padding-left: 0.85rem;
+}
+
+.dr-learn-onpage__item a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  border-bottom: 1px dotted transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.dr-learn-onpage__item a:hover,
+.dr-learn-onpage__item a:focus-visible {
+  color: var(--accent);
+  border-bottom-color: color-mix(in oklab, var(--accent) 55%, transparent);
+}
+
+.dr-learn-region__row {
+  align-items: center;
+}
+
+.dr-learn-region .dr-select {
+  min-width: 12rem;
+  flex: 1 1 12rem;
+  max-width: 100%;
 }
 
 .dr-page--lesson .dr-page__head h1 {
@@ -3705,16 +3915,23 @@ a.dr-achieve:hover {
   gap: 1rem;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elev);
   color: var(--text);
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--border-strong) 55%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.dr-dash__nav a:hover {
+.dr-dash__nav a:hover,
+.dr-dash__nav a:focus-visible {
   border-color: var(--accent);
+  border-bottom-color: var(--accent);
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 70%, transparent);
+  transform: translateY(-1px);
+  color: var(--text);
 }
 
 .dr-dash__hint {
@@ -4897,7 +5114,74 @@ body.dr-map-body .dr-main--map {
 
 .dr-dash-mapcta__go {
   color: var(--accent);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.dr-dash-learn {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--link) 35%, var(--border));
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      115deg,
+      color-mix(in oklab, var(--link) 8%, transparent),
+      transparent 55%
+    ),
+    var(--bg-elev);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.dr-dash-learn:hover,
+.dr-dash-learn:focus-visible {
+  border-color: color-mix(in oklab, var(--link) 55%, var(--border));
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--link) 18%, transparent);
+}
+
+.dr-dash-learn__copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.dr-dash-learn__kicker {
+  font-size: 0.72rem;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.dr-dash-learn__title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dr-dash-learn__meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.dr-dash-learn__track {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.dr-dash-learn__track .dr-progress {
+  height: 0.35rem;
+}
+
+.dr-dash-learn__go {
+  color: var(--link);
+  font-size: 1.1rem;
 }
 
 @media (max-width: 860px) {
@@ -4969,49 +5253,100 @@ body.dr-map-body .dr-main--map {
 }
 
 /* Kill global dotted underline on tile / CTA anchors.
-   Do NOT set border-bottom: none on a.dr-btn — that override beats .dr-btn's
-   border shorthand and hides the bottom outline on every link-button. */
+   Never use border-bottom: none here — that override beats component box
+   borders (dash nav, buttons, showcase cards) and hides the bottom edge,
+   especially on hover when only the other three sides pick up accent. */
 a.dr-profile-card,
 a.dr-home-map__card,
 a.dr-dash-mapcta,
+a.dr-dash-learn,
 a.dr-achieve,
 a.dr-profile-mapcta__main,
 a.dr-showcase-card,
+a.dr-btn,
 .dr-dash__nav a,
 .dr-nav__brand,
 .dr-nav__links a {
-  border-bottom: none;
   text-decoration: none;
 }
 
-/* Anchor CTAs: keep the full box border (and ignore global dotted a:underline). */
-a.dr-btn {
-  text-decoration: none;
-  border: 1px solid var(--btn-bd);
+/* Keep a solid bottom edge on boxy anchors (cancels global dotted a {}). */
+a.dr-btn,
+a.dr-profile-card,
+a.dr-home-map__card,
+a.dr-dash-mapcta,
+a.dr-dash-learn,
+a.dr-achieve,
+a.dr-showcase-card,
+a.dr-profile-mapcta__main,
+.dr-dash__nav a {
+  border-bottom-width: 1px;
   border-bottom-style: solid;
 }
 
-a.dr-btn:hover {
-  border-color: var(--accent);
+a.dr-btn {
+  border: 1px solid var(--btn-bd);
+  border-bottom-color: var(--btn-bd);
 }
 
-a.dr-btn.dr-btn--primary:hover {
+a.dr-btn:hover,
+a.dr-btn:focus-visible {
+  border-color: var(--accent);
+  border-bottom-color: var(--accent);
+  border-bottom-style: solid;
+  color: var(--accent);
+}
+
+a.dr-btn.dr-btn--primary:hover,
+a.dr-btn.dr-btn--primary:focus-visible {
   border-color: var(--btn-bd);
+  border-bottom-color: var(--btn-bd);
   color: #0b0f0d;
+}
+
+a.dr-btn.dr-btn--ghost:hover,
+a.dr-btn.dr-btn--ghost:focus-visible {
+  border-color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+a.dr-btn.dr-btn--danger:hover,
+a.dr-btn.dr-btn--danger:focus-visible {
+  border-color: var(--error);
+  border-bottom-color: var(--error);
+  color: var(--error);
 }
 
 a.dr-profile-card,
 a.dr-home-map__card {
   border: 1px solid var(--border);
+  border-bottom-color: var(--border);
 }
 
 a.dr-profile-card:hover,
 a.dr-home-map__card:hover {
   border-color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 a.dr-dash-mapcta {
   border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
+  border-bottom-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+}
+
+a.dr-dash-mapcta:hover,
+a.dr-dash-mapcta:focus-visible {
+  border-bottom-color: var(--accent);
+}
+
+a.dr-showcase-card:hover,
+a.dr-showcase-card:focus-visible {
+  border-bottom-color: var(--accent);
+}
+
+a.dr-achieve:hover,
+a.dr-achieve:focus-visible {
+  border-bottom-color: var(--accent);
 }
 
 /* Spacing utilities */
@@ -5028,6 +5363,10 @@ a.dr-dash-mapcta {
   font-size: 0.85rem;
 }
 .dr-accent { color: var(--accent); }
+
+.dr-mb-0 { margin-bottom: 0 !important; }
+.dr-text-sm { font-size: 0.92rem; }
+.dr-muted { color: var(--text-muted); }
 
 .dr-page__title { margin: 0; }
 .dr-page__lede { margin: 0.25rem 0 0; color: var(--text-muted); }

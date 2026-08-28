@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
     {% block css %}
       <link href="{% static 'css/project.css' %}" rel="stylesheet" />
     {% endblock css %}
@@ -162,6 +162,7 @@
           <div class="dr-container">
             <span class="dr-prompt"></span> exit 0 ·
             <a href="{% url 'about' %}">about</a> ·
+            <a href="{% url 'learning:list' %}">learn</a> ·
             <a href="{% url 'profiles:explore_map' %}">map</a> ·
             <a href="{% url 'quizzes:badges' %}">badges</a> ·
             <a href="mailto:contact@devresurge.com">contact</a>

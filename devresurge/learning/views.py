@@ -28,6 +28,7 @@ from .progress import global_stats
 from .progress import mark_completed
 from .progress import mark_started
 from .progress import roadmap_stats
+from .toc import lesson_headings
 
 
 def roadmap_list_view(request: HttpRequest) -> HttpResponse:
@@ -156,13 +157,15 @@ def lesson_detail_view(
         related_quiz = Quiz.objects.filter(slug=lesson.quiz_slug, is_published=True).first()
 
     stats = roadmap_stats(request.user, roadmap)
+    headings = lesson_headings(lesson.body)
     return render(
         request,
         "learning/lesson_detail.html",
         {
             "roadmap": roadmap,
             "lesson": lesson,
-            "body_html": render_markdown(lesson.body),
+            "body_html": render_markdown(lesson.body, heading_ids=True),
+            "lesson_headings": headings,
             "prev_lesson": prev_lesson,
             "next_lesson": next_lesson,
             "lesson_number": idx + 1,

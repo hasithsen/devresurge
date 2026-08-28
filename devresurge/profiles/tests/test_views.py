@@ -231,6 +231,51 @@ def test_social_link_email_is_normalized_to_mailto(client):
     assert link.url == "mailto:hi@example.com"
 
 
+def test_social_link_practice_handle_expands_to_profile_url(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.post(
+        reverse("profiles:link_create"),
+        data={"platform": "leetcode", "label": "", "url": "ada-lovelace", "order": 0},
+    )
+    assert response.status_code == HTTPStatus.FOUND
+    link = SocialLink.objects.get(profile__user=user, platform="leetcode")
+    assert link.url == "https://leetcode.com/u/ada-lovelace/"
+    assert link.is_practice is True
+
+    response = client.post(
+        reverse("profiles:link_create"),
+        data={"platform": "hackerrank", "label": "", "url": "@ada", "order": 1},
+    )
+    assert response.status_code == HTTPStatus.FOUND
+    hr = SocialLink.objects.get(profile__user=user, platform="hackerrank")
+    assert hr.url == "https://www.hackerrank.com/profile/ada"
+
+
+def test_link_create_preselects_platform_from_query(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.get(reverse("profiles:link_create"), {"platform": "hackerrank"})
+    assert response.status_code == HTTPStatus.OK
+    assert response.context["form"].initial.get("platform") == "hackerrank"
+
+
+def test_link_list_suggests_missing_practice_platforms(client):
+    user = UserFactory()
+    client.force_login(user)
+    SocialLinkFactory(
+        profile=user.profile,
+        platform="leetcode",
+        url="https://leetcode.com/u/x/",
+    )
+    response = client.get(reverse("profiles:link_list"))
+    assert response.status_code == HTTPStatus.OK
+    suggested = {value for value, _label in response.context["link_suggestions"]}
+    assert "leetcode" not in suggested
+    assert "hackerrank" in suggested
+    assert "github" in suggested
+
+
 # ---------------------------------------------------------------------------
 # Drag-and-drop reorder endpoints
 # ---------------------------------------------------------------------------

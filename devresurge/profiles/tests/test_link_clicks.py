@@ -79,6 +79,29 @@ def test_beacon_records_social_click(client):
     assert click.destination == "github.com"
 
 
+def test_beacon_records_linkedin_social_click(client):
+    profile = ProfileFactory(is_public=True)
+    link = SocialLinkFactory(
+        profile=profile,
+        platform="linkedin",
+        url="https://www.linkedin.com/in/dev/",
+    )
+    response = _beacon(client, handle=profile.handle, kind="social", id=link.pk)
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    click = LinkClick.objects.get(profile=profile)
+    assert click.kind == "social"
+    assert click.target_id == link.pk
+    assert click.destination == "www.linkedin.com"
+
+
+def test_beacon_social_without_id_is_ignored(client):
+    profile = ProfileFactory(is_public=True)
+    SocialLinkFactory(profile=profile, platform="linkedin", url="https://linkedin.com/in/x")
+    response = _beacon(client, handle=profile.handle, kind="social")
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert LinkClick.objects.filter(profile=profile).count() == 0
+
+
 def test_beacon_records_website_click(client):
     profile = ProfileFactory(is_public=True, website_url="https://mysite.dev/")
     _beacon(client, handle=profile.handle, kind="website")

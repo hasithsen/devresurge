@@ -156,7 +156,8 @@
               <p class="dr-bridge dr-mt-sm dr-muted">
                 {% if linkedin_url %}
                   <a href="{{ linkedin_url }}" rel="noopener nofollow ugc" target="_blank"
-                     data-track-kind="social">LinkedIn ↗</a>
+                     data-track-kind="social"
+                     {% if linkedin_link %}data-track-id="{{ linkedin_link.pk }}"{% endif %}>LinkedIn ↗</a>
                 {% endif %}
                 {% if linkedin_url and mutual_connections %}<span> · </span>{% endif %}
                 {% if mutual_connections %}
@@ -436,56 +437,102 @@
           {% endif %}
         {% endwith %}
 
-        {% if profile.social_links.all or profile.website_url or profile.show_email %}
-          <div>
-            <h2 class="dr-section-title">links</h2>
-            <ul class="dr-social-list">
-              {% if profile.website_url %}
-                <li class="dr-list-row dr-list-row--card">
-                  <a class="dr-list-row__link"
-                     href="{{ profile.website_url }}"
-                     rel="noopener nofollow"
-                     target="_blank"
-                     data-track-kind="website">
-                    <div class="dr-list-row__main">
-                      <div class="dr-list-row__title">website</div>
-                      <span class="dr-list-row__url">{{ profile.website_url }}</span>
-                    </div>
-                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
-                  </a>
-                </li>
+        {% with practice_links=profile.practice_links network_links=profile.network_links %}
+          {% if practice_links %}
+            <div>
+              <h2 class="dr-section-title">practice · coding profiles</h2>
+              <p class="dr-helptext" style="margin-top: -0.35rem;">
+                {% trans "Problem-solving signal — LeetCode, HackerRank, and peers, linked from this hub." %}
+              </p>
+              <ul class="dr-social-list">
+                {% for link in practice_links %}
+                  <li class="dr-list-row dr-list-row--card">
+                    <a class="dr-list-row__link"
+                       href="{{ link.url }}"
+                       rel="noopener nofollow ugc"
+                       data-track-kind="social"
+                       data-track-id="{{ link.pk }}"
+                       target="_blank">
+                      <div class="dr-list-row__main">
+                        <div class="dr-list-row__title">{{ link.display_label }}</div>
+                        <span class="dr-list-row__url">{{ link.url }}</span>
+                      </div>
+                      <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+              {% if is_owner %}
+                <div class="dr-btn-row" style="margin-top: 0.65rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_create' %}?platform=leetcode">{% trans "add practice link" %}</a>
+                </div>
               {% endif %}
-              {% if profile.show_email and profile.user.email %}
-                <li class="dr-list-row dr-list-row--card">
-                  <a class="dr-list-row__link" href="mailto:{{ profile.user.email }}"
-                     data-track-kind="email">
-                    <div class="dr-list-row__main">
-                      <div class="dr-list-row__title">email</div>
-                      <span class="dr-list-row__url">{{ profile.user.email }}</span>
-                    </div>
-                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
-                  </a>
-                </li>
-              {% endif %}
-              {% for link in profile.social_links.all %}
-                <li class="dr-list-row dr-list-row--card">
-                  <a class="dr-list-row__link"
-                     href="{{ link.url }}"
-                     rel="noopener nofollow"
-                     data-track-kind="social"
-                     data-track-id="{{ link.pk }}"
-                     {% if link.platform != 'email' %}target="_blank"{% endif %}>
-                    <div class="dr-list-row__main">
-                      <div class="dr-list-row__title">{{ link.display_label }}</div>
-                      <span class="dr-list-row__url">{{ link.url }}</span>
-                    </div>
-                    <span class="dr-list-row__chev" aria-hidden="true">↗</span>
-                  </a>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+            </div>
+          {% elif is_owner %}
+            <div>
+              <h2 class="dr-section-title">practice · coding profiles</h2>
+              <div class="dr-empty dr-empty--inline">
+                <div class="dr-emoji" aria-hidden="true">⧉</div>
+                <p>{% trans "Add LeetCode, HackerRank, Codeforces, or Kaggle so practice lives next to your stack." %}</p>
+                <div class="dr-btn-row">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_create' %}?platform=leetcode">+ LeetCode</a>
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_create' %}?platform=hackerrank">+ HackerRank</a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if network_links or profile.website_url or profile.show_email %}
+            <div>
+              <h2 class="dr-section-title">links</h2>
+              <ul class="dr-social-list">
+                {% if profile.website_url %}
+                  <li class="dr-list-row dr-list-row--card">
+                    <a class="dr-list-row__link"
+                       href="{{ profile.website_url }}"
+                       rel="noopener nofollow"
+                       target="_blank"
+                       data-track-kind="website">
+                      <div class="dr-list-row__main">
+                        <div class="dr-list-row__title">website</div>
+                        <span class="dr-list-row__url">{{ profile.website_url }}</span>
+                      </div>
+                      <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                {% endif %}
+                {% if profile.show_email and profile.user.email %}
+                  <li class="dr-list-row dr-list-row--card">
+                    <a class="dr-list-row__link" href="mailto:{{ profile.user.email }}"
+                       data-track-kind="email">
+                      <div class="dr-list-row__main">
+                        <div class="dr-list-row__title">email</div>
+                        <span class="dr-list-row__url">{{ profile.user.email }}</span>
+                      </div>
+                      <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                {% endif %}
+                {% for link in network_links %}
+                  <li class="dr-list-row dr-list-row--card">
+                    <a class="dr-list-row__link"
+                       href="{{ link.url }}"
+                       rel="noopener nofollow ugc"
+                       data-track-kind="social"
+                       data-track-id="{{ link.pk }}"
+                       {% if link.platform != 'email' %}target="_blank"{% endif %}>
+                      <div class="dr-list-row__main">
+                        <div class="dr-list-row__title">{{ link.display_label }}</div>
+                        <span class="dr-list-row__url">{{ link.url }}</span>
+                      </div>
+                      <span class="dr-list-row__chev" aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endwith %}
 
         {% with recs=profile.recommendations_received.all %}
           {% if recs or is_connected and recommendation_form %}

@@ -15,16 +15,32 @@
     <header class="dr-page__head">
       <div>
         <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">cat links.json</span></p>
-        <h1 style="margin: 0;">{% trans "social links" %}</h1>
+        <h1 style="margin: 0;">{% trans "links · hub" %}</h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
+          {% trans "Point recruiters here once — LeetCode, HackerRank, GitHub, LinkedIn, and the rest live on your DevResurge profile." %}
+        </p>
       </div>
       <div class="dr-btn-row dr-page__head-actions">
         <a class="dr-btn dr-btn--primary" href="{% url 'profiles:link_create' %}">+ {% trans "new link" %}</a>
       </div>
     </header>
 
+    {% if link_suggestions %}
+      <div class="dr-panel" style="margin-top: 1rem;">
+        <div class="dr-panel__body">
+          <div class="dr-learn-label" style="margin: 0 0 0.45rem;">{% trans "quick add · practice & signal" %}</div>
+          <div class="dr-btn-row" style="flex-wrap: wrap;">
+            {% for value, label in link_suggestions %}
+              <a class="dr-btn dr-btn--sm" href="{% url 'profiles:link_create' %}?platform={{ value }}">+ {{ label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
     {% if links %}
       {% csrf_token %}
-      <p class="dr-helptext" id="dr-links-help">
+      <p class="dr-helptext" id="dr-links-help" style="margin-top: 1rem;">
         {% trans "Tip: drag the ≡ handle to reorder. Tap a card to edit." %}
         <span class="dr-sortable__status" data-sortable-status aria-live="polite"></span>
       </p>
@@ -49,6 +65,7 @@
               <div class="dr-list-row__main">
                 <div class="dr-list-row__title">
                   {{ link.get_platform_display }}{% if link.label %} · {{ link.label }}{% endif %}
+                  {% if link.is_practice %}<span class="dr-pill">{% trans "practice" %}</span>{% endif %}
                 </div>
                 <span class="dr-list-row__url">{{ link.url }}</span>
               </div>
@@ -63,8 +80,11 @@
       </ul>
     {% else %}
       <div class="dr-empty">
-        <div class="dr-emoji">∅</div>
-        <p>{% trans "No links yet." %} <a href="{% url 'profiles:link_create' %}">{% trans "Add one." %}</a></p>
+        <div class="dr-emoji">⧉</div>
+        <p>
+          {% trans "No links yet — start with LeetCode or HackerRank so practice signal lives next to your stack." %}
+          <a href="{% url 'profiles:link_create' %}?platform=leetcode">{% trans "Add LeetCode." %}</a>
+        </p>
       </div>
     {% endif %}
   </section>

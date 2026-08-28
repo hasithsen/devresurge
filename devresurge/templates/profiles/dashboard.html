@@ -42,6 +42,30 @@
       </section>
     {% endif %}
 
+    {% if learn_stats %}
+      <a class="dr-dash-learn dr-mt-lg" href="{% if learn_resume %}{% url 'learning:lesson' learn_resume.0.slug learn_resume.1.slug %}{% else %}{% url 'learning:list' %}{% endif %}">
+        <span class="dr-dash-learn__copy">
+          <span class="dr-dash-learn__kicker">{% trans "learning" %}</span>
+          <span class="dr-dash-learn__title">
+            {% if learn_resume %}
+              {% blocktranslate with title=learn_resume.1.title %}Continue · {{ title }}{% endblocktranslate %}
+            {% else %}
+              {% trans "Explore free roadmaps" %}
+            {% endif %}
+          </span>
+          <span class="dr-dash-learn__meta">
+            {% blocktranslate with done=learn_stats.done total=learn_stats.total xp=learn_stats.xp %}{{ done }}/{{ total }} lessons · {{ xp }} XP{% endblocktranslate %}
+          </span>
+        </span>
+        <span class="dr-dash-learn__track">
+          <span class="dr-progress" aria-hidden="true">
+            <span class="dr-progress__bar" style="width: {{ learn_stats.pct }}%;"></span>
+          </span>
+        </span>
+        <span class="dr-dash-learn__go" aria-hidden="true">→</span>
+      </a>
+    {% endif %}
+
     {% if profile.is_public %}
       <a class="dr-dash-mapcta" href="{% url 'profiles:network_map' profile.handle %}">
         <span class="dr-dash-mapcta__copy">
@@ -88,7 +112,7 @@
               {% if not check.done %}
                 <li class="dr-checklist__item">
                   <span class="dr-checklist__mark" aria-hidden="true">○</span>
-                  <a href="{% url check.url_name %}">{{ check.label }}</a>
+                  <a href="{% url check.url_name %}{% if check.url_query %}?{{ check.url_query }}{% endif %}">{{ check.label }}</a>
                 </li>
               {% endif %}
             {% endfor %}

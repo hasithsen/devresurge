@@ -73,6 +73,7 @@ from .models import Recommendation
 from .models import ShowcaseItem
 from .models import SkillEndorsement
 from .models import SocialLink
+from .models import SocialPlatform
 from .models import WorkExperience
 
 if TYPE_CHECKING:
@@ -111,7 +112,9 @@ _BOT_UA_MARKERS = (
 def _client_ip(request: HttpRequest) -> str:
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        ip = forwarded.split(",")[0].strip()
+        if ip:
+            return ip
     return request.META.get("REMOTE_ADDR", "") or ""
 
 
@@ -325,14 +328,9 @@ _CLICK_RATE_LIMIT = 60
 _CLICK_RATE_WINDOW = 60
 
 
-def _client_ip(request: HttpRequest) -> str:
-    forwarded = (request.META.get("HTTP_X_FORWARDED_FOR") or "").split(",")[0].strip()
-    return forwarded or request.META.get("REMOTE_ADDR") or "unknown"
-
-
 def _click_beacon_rate_limited(request: HttpRequest) -> bool:
     """Soft IP throttle for the CSRF-exempt beacon (per-minute budget)."""
-    key = f"click_rl:{_client_ip(request)}"
+    key = f"click_rl:{_client_ip(request) or 'unknown'}"
     try:
         count = cache.incr(key)
     except ValueError:
@@ -547,7 +545,8 @@ class ProfilePublicView(DetailView):
         ctx["recommendation_form"] = None
         ctx["existing_recommendation"] = None
         ctx["mutual_connections"] = []
-        ctx["linkedin_url"] = profile.linkedin_url()
+        ctx["linkedin_link"] = profile.linkedin_link()
+        ctx["linkedin_url"] = ctx["linkedin_link"].url if ctx["linkedin_link"] else ""
         ctx["map_peer_count"] = 0
         ctx["map_share"] = None
         ctx["map_invite"] = None
@@ -653,9 +652,11 @@ class ProfileDashboardView(LoginRequiredMixin, DetailView):
             .order_by("badge__order")[:8]
         )
         ctx["quiz_count"] = Quiz.objects.filter(is_published=True).count()
+        from devresurge.learning.progress import continue_target
         from devresurge.learning.progress import global_stats
 
         ctx["learn_stats"] = global_stats(self.request.user)
+        ctx["learn_resume"] = continue_target(self.request.user)
         return ctx
 
 
@@ -859,6 +860,19 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
         # Outbound link clicks over the same window.
         clicks = LinkClick.objects.filter(profile=profile, created_at__date__gte=start)
         total_clicks = clicks.count()
+        prev_clicks = LinkClick.objects.filter(
+            profile=profile,
+            created_at__date__gte=prev_start,
+            created_at__date__lte=prev_end,
+        ).count()
+        clicks_delta = total_clicks - prev_clicks
+        if prev_clicks > 0:
+            clicks_delta_pct = round((clicks_delta / prev_clicks) * 100)
+        elif total_clicks > 0:
+            clicks_delta_pct = 100
+        else:
+            clicks_delta_pct = 0
+
         top_links = list(
             clicks.values("kind", "label", "destination")
             .annotate(count=Count("id"))
@@ -907,6 +921,9 @@ class ProfileAnalyticsView(LoginRequiredMixin, TemplateView):
                     round((unique_visitors / total_views) * 100) if total_views else 0
                 ),
                 "total_clicks": total_clicks,
+                "prev_clicks": prev_clicks,
+                "clicks_delta": clicks_delta,
+                "clicks_delta_pct": clicks_delta_pct,
                 "top_links": top_links,
                 "has_views": total_views > 0,
                 "has_clicks": total_clicks > 0,
@@ -995,7 +1012,19 @@ class SocialLinkListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
-        ctx["profile"] = _get_or_create_profile(self.request.user)
+        profile = _get_or_create_profile(self.request.user)
+        ctx["profile"] = profile
+        existing = {link.platform for link in ctx["links"]}
+        suggestions = [
+            (SocialPlatform.LEETCODE, SocialPlatform.LEETCODE.label),
+            (SocialPlatform.HACKERRANK, SocialPlatform.HACKERRANK.label),
+            (SocialPlatform.CODEFORCES, SocialPlatform.CODEFORCES.label),
+            (SocialPlatform.CODEWARS, SocialPlatform.CODEWARS.label),
+            (SocialPlatform.KAGGLE, SocialPlatform.KAGGLE.label),
+            (SocialPlatform.GITHUB, SocialPlatform.GITHUB.label),
+            (SocialPlatform.LINKEDIN, SocialPlatform.LINKEDIN.label),
+        ]
+        ctx["link_suggestions"] = [(value, label) for value, label in suggestions if value not in existing]
         return ctx
 
 
@@ -1005,6 +1034,13 @@ class SocialLinkCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     template_name = "profiles/sociallink_form.html"
     success_url = reverse_lazy("profiles:link_list")
     success_message = _("Link added.")
+
+    def get_initial(self) -> dict[str, Any]:
+        initial = super().get_initial()
+        platform = (self.request.GET.get("platform") or "").strip().lower()
+        if platform in SocialPlatform.values:
+            initial["platform"] = platform
+        return initial
 
     def form_valid(self, form: SocialLinkForm):
         form.instance.profile = _get_or_create_profile(self.request.user)
