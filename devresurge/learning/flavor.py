@@ -188,6 +188,86 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Unique IDs, locks, sagas — the gym circuit for distributed intuition.",
         "Pick one: global rate limiter, payment capture, or multi-region notes. Outline the hard part.",
     ),
+    "30-day-battle-plan": (
+        "Thirty days beats thirty tabs. A calendar is a strategy; chaos is a hobby.",
+        "Block this week: 5 study slots + 1 hands-on lab. Screenshot your calendar.",
+    ),
+    "linux-shell-interview": (
+        "Interviewers love a calm `curl -v` more than a panicked SSH session.",
+        "Write a 6-step debug checklist for 'service A cannot reach B' — no googling.",
+    ),
+    "git-collaboration-interview": (
+        "Trunk-based flow is boring on purpose. Boring ships; drama rolls back.",
+        "Draft a 60-second STAR story about improving PR quality on your team.",
+    ),
+    "networking-http-ops": (
+        "Every 502 is a story: DNS, TLS, LB, probe, or the deploy you forgot about.",
+        "Draw client → pod on paper. Label where TLS terminates and where probes run.",
+    ),
+    "week1-checkpoint": (
+        "Week 1 is the foundation. Skip it and Week 4 mocks feel like improv comedy.",
+        "Complete the 502 health-check scenario in 45 minutes. Time yourself.",
+    ),
+    "cicd-design-interview": (
+        "Build once, promote everywhere — say it like a mantra until they believe you.",
+        "Whiteboard 8 pipeline stages in 5 minutes. Circle your fastest fail gate.",
+    ),
+    "azure-devops-github-actions": (
+        "YAML pipelines are résumés that actually run. ClickOps doesn't survive audits.",
+        "Sketch a pipeline: PR test → merge build → staging → manual prod approval.",
+    ),
+    "docker-production-interview": (
+        "Root in a container is a red flag wearing a security badge.",
+        "Write a production Dockerfile outline: multi-stage, non-root, healthcheck, pin.",
+    ),
+    "kubernetes-aks-essentials": (
+        "Pods die. Deployments resurrect them. That's the sermon.",
+        "Explain rolling deploy + rollback with `kubectl rollout` — out loud, 2 minutes.",
+    ),
+    "week2-checkpoint": (
+        "A demo pipeline beats ten buzzwords on LinkedIn. Ship the proof.",
+        "Start the mini pipeline project README tonight: problem, stages, rollback.",
+    ),
+    "terraform-iac-interview": (
+        "State is the source of truth. Lose it and infra becomes fan fiction.",
+        "List three Terraform prod risks (state, drift, destroy) and one fix each.",
+    ),
+    "azure-cloud-devops": (
+        "AKS + ACR + Key Vault — the enterprise trilogy. Name them like old friends.",
+        "Map a microservices platform to five Azure services. One sentence each.",
+    ),
+    "config-secrets-twelve-factor": (
+        "Secrets in Git are a time bomb with a merge conflict.",
+        "Describe how connection strings reach a pod without ever touching the repo.",
+    ),
+    "devsecops-supply-chain": (
+        "Shift-left means scanners in CI, not security as a deploy-day surprise party.",
+        "List five security gates you'd add before prod. Prioritize by blast radius.",
+    ),
+    "week3-checkpoint": (
+        "Terraform plan output is a horror movie preview. Read it before you apply.",
+        "Run one `terraform plan` and write a 5-line PR with blast-radius notes.",
+    ),
+    "observability-slo-interview": (
+        "Page on user pain, not CPU curiosity. On-call sleep is a reliability feature.",
+        "Define one SLI, one SLO, and one alert you'd actually wake up for.",
+    ),
+    "incident-response-interview": (
+        "Mitigate first, root-cause later. Users don't care about your gdb session.",
+        "Write a blameless postmortem outline for a deploy-gone-wrong story.",
+    ),
+    "behavioral-devops-interview": (
+        "STAR stories are cheat codes for 'tell me about a time when…'",
+        "Draft five STAR bullets: automate, conflict, incident, mentor, learn-fast.",
+    ),
+    "technical-mock-drills": (
+        "Mock interviews are dress rehearsal. Rambling is the villain — structure wins.",
+        "Record 15 minutes: one pipeline design + one K8s debug. Listen once. Cringe. Improve.",
+    ),
+    "final-checklist-interview-day": (
+        "You've done the reps. Interview day is execution, not cramming.",
+        "Handwrite your one-page cheat sheet. Put it away until the night before.",
+    ),
 }
 
 

@@ -13,6 +13,7 @@ from .content import dsa
 from .content import elite_path
 from .content import foundations
 from .content import system_design
+from .content import volvo_devops_interview
 from .flavor import flavor_for
 
 
@@ -105,6 +106,7 @@ ROADMAP_SOURCES: tuple[dict[str, Any], ...] = (
     dsa.ROADMAP,
     system_design.ROADMAP,
     backend.ROADMAP,
+    volvo_devops_interview.ROADMAP,
     devops.ROADMAP,
     databases.ROADMAP,
     distributed.ROADMAP,
