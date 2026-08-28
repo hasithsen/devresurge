@@ -1199,4 +1199,4 @@ def all_career_roadmaps() -> tuple[dict[str, Any], ...]:
     cores = [build_core_roadmap(role_key) for role_key in ROLES]
     data_fundamentals = build_data_fundamentals_elective()
     regions = [build_relocation_roadmap(region_key) for region_key in RELOCATION_REGIONS]
-    return tuple(cores + (data_fundamentals,) + tuple(regions))
+    return (*cores, data_fundamentals, *regions)
