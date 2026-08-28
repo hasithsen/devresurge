@@ -59,6 +59,16 @@ local talent is scarce.
 Use **DevOps & SRE** for depth and **30-day DevOps interview sprint** for extra drills.
 
 > Immigration rules change. This is education, not legal advice — verify with a registered migration agent or Home Affairs.
+
+## Pass criteria — Australia track
+
+| Gate | Requirement |
+|------|-------------|
+| Skills assessment | Start [ACS assessment](https://www.acs.org.au/msa/overview.html) early if required |
+| Visa | Confirm role on [skilled occupation list](https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list) |
+| Quizzes | Pass Linux, Git, Docker, CI/CD, Observability, Security |
+| Portfolio | AWS EKS or enterprise pipeline demo with audit trail narrative |
+| Employers | 15+ applications to sponsors (product + bank targets) |
 """,
         },
         {
@@ -424,6 +434,31 @@ AWS services map | EKS rollback | IRSA | SLI/SLO | ACS/visa status | Target empl
 Quizzes passed, one AWS demo project, sponsor list applied, migration agent consult if needed.
 
 Good luck — fair dinkum reliability engineers are in demand down under.
+""",
+        },
+        {
+            "slug": "au-complete-resources",
+            "title": "Australia: complete links & pass checklist",
+            "summary": "482/186, ACS, APRA, AWS/EKS docs, employers, and final gates.",
+            "minutes": 16,
+            "outcomes": ("Verify readiness before signing a sponsored offer",),
+            "body": """
+## Final checklist — Australia DevOps interviews
+
+- [ ] 13 lessons cleared
+- [ ] ACS outcome received (if required for your pathway)
+- [ ] Written sponsorship intent (482 or 186 pathway named)
+- [ ] [Home Affairs skilled visas](https://immi.homeaffairs.gov.au/visas/working-in-australia) reviewed
+- [ ] Quizzes passed including [Security basics](/quizzes/security-basics/)
+- [ ] EKS pipeline demo + change-audit story for bank interviews
+- [ ] [Essential Eight](https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/essential-eight) controls mapped to your pipeline
+- [ ] TFN/super/relocation checklist drafted
+
+## Deep dives
+
+- [AWS EKS workshop](https://www.aws.amazon.com/eks/resources/)
+- [APRA CPS 234 PDF](https://www.apra.gov.au/sites/default/files/cps-234.pdf)
+- [DORA metrics](https://dora.dev/) — cite in behavioral stories
 """,
         },
     ],

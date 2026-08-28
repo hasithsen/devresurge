@@ -189,8 +189,8 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Pick one: global rate limiter, payment capture, or multi-region notes. Outline the hard part.",
     ),
     "30-day-battle-plan": (
-        "Thirty days beats thirty tabs. A calendar is a strategy; chaos is a hobby.",
-        "Block this week: 5 study slots + 1 hands-on lab. Screenshot your calendar.",
+        "Hyperscale loops test judgment under scale — not Azure flashcards.",
+        "Block four weeks: 6 study days + 1 lab. Screenshot your calendar.",
     ),
     "linux-shell-interview": (
         "Interviewers love a calm `curl -v` more than a panicked SSH session.",
@@ -205,36 +205,36 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Draw client → pod on paper. Label where TLS terminates and where probes run.",
     ),
     "week1-checkpoint": (
-        "Week 1 is the foundation. Skip it and Week 4 mocks feel like improv comedy.",
-        "Complete the 502 health-check scenario in 45 minutes. Time yourself.",
+        "Week 1 is the foundation — skip it and design mocks feel like improv.",
+        "Complete the 502 drill and the log-parsing script in 75 minutes total.",
     ),
     "cicd-design-interview": (
         "Build once, promote everywhere — say it like a mantra until they believe you.",
         "Whiteboard 8 pipeline stages in 5 minutes. Circle your fastest fail gate.",
     ),
-    "azure-devops-github-actions": (
-        "YAML pipelines are résumés that actually run. ClickOps doesn't survive audits.",
-        "Sketch a pipeline: PR test → merge build → staging → manual prod approval.",
+    "cicd-release-engineering": (
+        "Release engineering is how thousands of commits become safe prod — YAML is the proof.",
+        "Sketch a pipeline: PR test → OIDC build → scan → staging → canary prod.",
     ),
     "docker-production-interview": (
         "Root in a container is a red flag wearing a security badge.",
         "Write a production Dockerfile outline: multi-stage, non-root, healthcheck, pin.",
     ),
-    "kubernetes-aks-essentials": (
-        "Pods die. Deployments resurrect them. That's the sermon.",
-        "Explain rolling deploy + rollback with `kubectl rollout` — out loud, 2 minutes.",
+    "kubernetes-production-essentials": (
+        "Pods die. Deployments, PDBs, and probes decide whether users notice.",
+        "Explain rolling deploy + rollback with probes and limits — out loud, 2 minutes.",
     ),
     "week2-checkpoint": (
-        "A demo pipeline beats ten buzzwords on LinkedIn. Ship the proof.",
-        "Start the mini pipeline project README tonight: problem, stages, rollback.",
+        "A public pipeline repo beats ten buzzwords. Interviewers click the README.",
+        "Ship the portfolio pipeline this weekend: CI, image, K8s, rollback doc.",
     ),
     "terraform-iac-interview": (
         "State is the source of truth. Lose it and infra becomes fan fiction.",
         "List three Terraform prod risks (state, drift, destroy) and one fix each.",
     ),
-    "azure-cloud-devops": (
-        "AKS + ACR + Key Vault — the enterprise trilogy. Name them like old friends.",
-        "Map a microservices platform to five Azure services. One sentence each.",
+    "cloud-platform-engineering": (
+        "Platform design is IAM + tenancy + observability — name the trade-offs.",
+        "Whiteboard a multi-team K8s platform: isolation, GitOps, on-call, SLO.",
     ),
     "config-secrets-twelve-factor": (
         "Secrets in Git are a time bomb with a merge conflict.",
@@ -245,8 +245,8 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "List five security gates you'd add before prod. Prioritize by blast radius.",
     ),
     "week3-checkpoint": (
-        "Terraform plan output is a horror movie preview. Read it before you apply.",
-        "Run one `terraform plan` and write a 5-line PR with blast-radius notes.",
+        "Infra design rounds freeze without a spine — clarify before you diagram.",
+        "Run one 35-minute design mock: global CI for 500 engineers. Timer on.",
     ),
     "observability-slo-interview": (
         "Page on user pain, not CPU curiosity. On-call sleep is a reliability feature.",
@@ -257,16 +257,20 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Write a blameless postmortem outline for a deploy-gone-wrong story.",
     ),
     "behavioral-devops-interview": (
-        "STAR stories are cheat codes for 'tell me about a time when…'",
-        "Draft five STAR bullets: automate, conflict, incident, mentor, learn-fast.",
+        "Bar-raisers listen for ownership and customer impact — not buzzwords.",
+        "Draft five STAR bullets with metrics: automate, conflict, incident, mentor, learn.",
     ),
     "technical-mock-drills": (
-        "Mock interviews are dress rehearsal. Rambling is the villain — structure wins.",
-        "Record 15 minutes: one pipeline design + one K8s debug. Listen once. Cringe. Improve.",
+        "Full-loop mocks: pipeline, K8s, design, scripting — structure beats panic.",
+        "Record 35 minutes: one design mock + one K8s debug. Fix one ramble.",
     ),
     "final-checklist-interview-day": (
         "You've done the reps. Interview day is execution, not cramming.",
         "Handwrite your one-page cheat sheet. Put it away until the night before.",
+    ),
+    "sprint-complete-resources": (
+        "The pass checklist — red gates mean reschedule, not hope.",
+        "Walk every box. Portfolio link live before you book loops.",
     ),
     "se-devops-battle-plan": (
         "Sweden rewards calm engineers who ship safely — not heroes who hide incidents.",
@@ -313,8 +317,12 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Draft a relocation checklist: offer → permit → housing → personnummer → Day 1.",
     ),
     "se-mock-drills-final": (
-        "Grattis in advance — mocks now beat panic in the Volvo lobby later.",
+        "Azure + safety culture — the Nordic enterprise platform duet.",
         "Two timed mocks: AKS pipeline design + 502 debug. Record one.",
+    ),
+    "se-complete-resources": (
+        "Migrationsverket waits for no one — checklist everything before the offer signature.",
+        "Clear every box on the pass checklist. Screenshot for your relocation folder.",
     ),
     "au-devops-battle-plan": (
         "Sydney rent is brutal — your pipeline skills pay the visa and the lease.",
@@ -364,6 +372,10 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "Fair dinkum reliability engineers are hired, not wished into existence.",
         "Mock: EKS pipeline + bank change-freeze exception. Time each 20 min.",
     ),
+    "au-complete-resources": (
+        "ACS slow, Home Affairs slower — the checklist keeps you honest while you wait.",
+        "Every pass gate ticked? If not, you know exactly what to do this week.",
+    ),
     "nz-devops-battle-plan": (
         "Small market, lean teams — you're platform, on-call, and sometimes lunch IT.",
         "Set weekly goals: study, applications, one hands-on lab.",
@@ -407,6 +419,10 @@ FLAVOR: dict[str, tuple[str, str]] = {
     "nz-mock-drills-final": (
         "Kia kaha — generalists who automate toil get sponsored.",
         "Mock: lean platform for 3 services + solo on-call first 10 minutes.",
+    ),
+    "nz-complete-resources": (
+        "Small market, sharp prep — this page is your NZ interview bible.",
+        "Verify accredited employer list + pass checklist before any verbal offer.",
     ),
     "us-devops-battle-plan": (
         "H-1B lottery is a plot twist — plan O-1 evidence and Tier-1 sponsors in parallel.",
@@ -455,6 +471,10 @@ FLAVOR: dict[str, tuple[str, str]] = {
     "us-mock-drills-final": (
         "Full loop mock beats reading Hacker News the night before.",
         "Run scripting + infra design + behavioral in one mock day.",
+    ),
+    "us-complete-resources": (
+        "H-1B lottery is random; your checklist is the part you control.",
+        "Clear every gate. Book the lawyer consult if H-1B is your path.",
     ),
     "uk-devops-battle-plan": (
         "Skilled Worker + CoS — know the acronym soup before the technical soup.",
@@ -508,7 +528,92 @@ FLAVOR: dict[str, tuple[str, str]] = {
         "GitOps + FCA awareness — the London platform interview duet.",
         "Mock: GitOps platform + regulated emergency deploy. Cheat sheet after.",
     ),
+    "uk-complete-resources": (
+        "Sponsor register or scroll past — this checklist saves months of dead ends.",
+        "Verify sponsor licence + Skilled Worker gates before celebrating the offer.",
+    ),
+    "devops-sre-complete-resources": (
+        "Production craft is never 'done' — this page is your ops bookmark bar.",
+        "Audit the pass checklist. Pick one regional sprint if you're visa hunting.",
+    ),
 }
+
+
+def _register_career_flavor(slug: str, title: str) -> tuple[str, str]:
+    if slug.startswith("sp-"):
+        if slug.endswith("-intro"):
+            return (
+                "Volvo, IFS, and peers — one employer path per target country.",
+                "Link core sprint + regional elective + this sponsor path in your notes.",
+            )
+        if "volvo" in slug:
+            return (
+                "Automotive Azure platforms reward safety and traceability — not heroics.",
+                "Whiteboard AKS pipeline + rollback in 15 minutes. Say safety aloud.",
+            )
+        if "ifs" in slug:
+            return (
+                "Enterprise SaaS ops — tenant isolation beats buzzword bingo.",
+                "Prepare one SaaS incident STAR with customer-impact metrics.",
+            )
+        if slug.endswith("-checklist"):
+            return (
+                "Sponsor path checklist — visa + employer gates before you sign.",
+                "Walk every box. Stop only when sponsor and visa route are verified.",
+            )
+    if slug.startswith("reloc-"):
+        if slug.endswith("-intro"):
+            return (
+                "One elective, every discipline — visa culture without repeating five copies.",
+                "Pick the core sprint you're running. Link this elective in your notes.",
+            )
+        if slug.endswith("-visa"):
+            return (
+                "Official immigration links beat forum rumors every time.",
+                "Read the visa reference section. List three red flags from real job posts.",
+            )
+        if slug.endswith("-checklist"):
+            return (
+                "The checklist page — tick every box before you sign or relocate.",
+                "Walk the pass checklist. Stop only when all gates are green.",
+            )
+    if "battle-plan" in slug:
+        return (
+            "Thirty days beats thirty tabs — this questline is your interview calendar.",
+            "Block four weeks on your calendar. Screenshot it.",
+        )
+    if "visa-landscape" in slug:
+        return (
+            "Official immigration links beat forum rumors every time.",
+            "Read the visa reference section. List three red flags from real job posts.",
+        )
+    if "complete-resources" in slug:
+        return (
+            "The checklist page — tick every box before you book interviews.",
+            "Walk the pass checklist. Stop only when all gates are green.",
+        )
+    if "mock-final" in slug:
+        return (
+            "Mocks are dress rehearsal; rambling is the villain.",
+            "Record one 20-minute technical mock. Listen once. Fix one thing.",
+        )
+    return (
+        f"{title} — ship proof, not buzzwords.",
+        "Write one interview answer you'll reuse. Say it aloud.",
+    )
+
+
+try:
+    from .content.career_path_builder import all_career_roadmaps as _career_roadmaps
+    from .content.sponsor_employer_paths import SPONSOR_ROADMAPS as _sponsor_roadmaps
+
+    for _roadmap in (*_career_roadmaps(), *_sponsor_roadmaps):
+        for _lesson in _roadmap["lessons"]:
+            _slug = _lesson["slug"]
+            if _slug not in FLAVOR:
+                FLAVOR[_slug] = _register_career_flavor(_slug, _lesson["title"])
+except ImportError:
+    pass
 
 
 def flavor_for(lesson_slug: str) -> tuple[str, str]:

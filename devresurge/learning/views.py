@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -12,8 +14,13 @@ from django.views.decorators.http import require_POST
 from devresurge.profiles.markdown import render_markdown
 from devresurge.quizzes.models import Quiz
 
+from .catalog import TRACK_LABELS
+from .catalog import TRACK_ORDER
 from .catalog import all_roadmaps
 from .catalog import get_roadmap
+from .catalog import related_roadmaps
+from .catalog import relocation_electives
+from .catalog import resolve_roadmap_slug
 from .progress import annotate_roadmaps
 from .progress import completed_keys
 from .progress import continue_target
@@ -24,10 +31,31 @@ from .progress import roadmap_stats
 
 
 def roadmap_list_view(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST" and "learn_region" in request.POST:
+        region = request.POST.get("learn_region", "").strip()
+        if region in ("", "sweden", "australia", "new-zealand", "usa", "uk"):
+            request.session["learn_region"] = region
+
     roadmaps = all_roadmaps()
-    by_domain: dict[str, list] = {}
+    track_sections: list[dict[str, Any]] = []
+    for track in TRACK_ORDER:
+        rows = [row for row in annotate_roadmaps(request.user) if row["roadmap"].track == track]
+        if rows:
+            track_sections.append(
+                {
+                    "track": track,
+                    "label": TRACK_LABELS[track],
+                    "rows": rows,
+                }
+            )
+
+    craft_by_domain: dict[str, list] = {}
     for row in annotate_roadmaps(request.user):
-        by_domain.setdefault(row["roadmap"].domain, []).append(row)
+        if row["roadmap"].track == "craft":
+            craft_by_domain.setdefault(row["roadmap"].domain, []).append(row)
+
+    preferred_region = request.session.get("learn_region", "")
+    preferred_elective = get_roadmap(f"relocation-{preferred_region}") if preferred_region else None
 
     resume = continue_target(request.user) if request.user.is_authenticated else None
     stats = global_stats(request.user) if request.user.is_authenticated else None
@@ -36,16 +64,24 @@ def roadmap_list_view(request: HttpRequest) -> HttpResponse:
         "learning/roadmap_list.html",
         {
             "roadmaps": roadmaps,
-            "domains": by_domain,
+            "track_sections": track_sections,
+            "craft_domains": craft_by_domain,
             "roadmap_count": len(roadmaps),
             "lesson_count": sum(r.lesson_count for r in roadmaps),
             "resume": resume,
             "learn_stats": stats,
+            "preferred_region": preferred_region,
+            "preferred_elective": preferred_elective,
+            "relocation_electives": relocation_electives(),
         },
     )
 
 
 def roadmap_detail_view(request: HttpRequest, roadmap_slug: str) -> HttpResponse:
+    canonical = resolve_roadmap_slug(roadmap_slug)
+    if canonical != roadmap_slug:
+        return redirect("learning:roadmap", canonical)
+
     roadmap = get_roadmap(roadmap_slug)
     if roadmap is None:
         raise Http404("Roadmap not found")
@@ -72,6 +108,11 @@ def roadmap_detail_view(request: HttpRequest, roadmap_slug: str) -> HttpResponse
         }
 
     start_lesson = stats["next_lesson"] if stats and stats["next_lesson"] else roadmap.lessons[0]
+    paired_roadmaps = related_roadmaps(roadmap.related_roadmap_slugs)
+    preferred_region = request.session.get("learn_region", "")
+    highlighted_elective = (
+        get_roadmap(f"relocation-{preferred_region}") if preferred_region else None
+    )
     return render(
         request,
         "learning/roadmap_detail.html",
@@ -81,6 +122,8 @@ def roadmap_detail_view(request: HttpRequest, roadmap_slug: str) -> HttpResponse
             "learn_stats": stats,
             "completed_lessons": completed,
             "start_lesson": start_lesson,
+            "paired_roadmaps": paired_roadmaps,
+            "highlighted_elective": highlighted_elective,
         },
     )
 
@@ -91,6 +134,10 @@ def lesson_detail_view(
     roadmap_slug: str,
     lesson_slug: str,
 ) -> HttpResponse:
+    canonical = resolve_roadmap_slug(roadmap_slug)
+    if canonical != roadmap_slug:
+        return redirect("learning:lesson", canonical, lesson_slug)
+
     roadmap = get_roadmap(roadmap_slug)
     if roadmap is None:
         raise Http404("Roadmap not found")

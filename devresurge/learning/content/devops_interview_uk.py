@@ -60,6 +60,16 @@ guidance for DevOps-adjacent codes (e.g. IT business analyst, programmer, IT spe
 — exact SOC matching matters).
 
 > Not immigration advice. Confirm with UK employer's mobility team or OISC-regulated adviser.
+
+## Pass criteria — UK track
+
+| Gate | Requirement |
+|------|-------------|
+| Sponsor register | Every target employer checked on [licensed sponsors list](https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers) |
+| SOC code | Role matches eligible code + salary threshold |
+| Quizzes | Pass Linux, Git, Docker, CI/CD, Observability, Security |
+| Take-home | Terraform or pipeline take-home quality (if applicable) |
+| GitOps | Explain revert-based rollback fluently |
 """,
         },
         {
@@ -386,6 +396,30 @@ Skilled Worker steps | Sponsor register | GitOps flow | FCA awareness bullets | 
 Licensed sponsor list applied, take-home quality demo repo, quizzes passed, STAR stories ready.
 
 Best of luck — London platform teams hire engineers who ship safely in regulated environments.
+""",
+        },
+        {
+            "slug": "uk-complete-resources",
+            "title": "UK: complete links & pass checklist",
+            "summary": "Skilled Worker, sponsors, GitOps, FCA/GDPR, and final gates.",
+            "minutes": 16,
+            "outcomes": ("Verify readiness before Skilled Worker CoS",),
+            "body": """
+## Final checklist — UK DevOps interviews
+
+- [ ] 13 lessons cleared
+- [ ] Sponsor licence verified for employer
+- [ ] [Skilled Worker visa](https://www.gov.uk/skilled-worker-visa) eligibility checked
+- [ ] Quizzes passed including security
+- [ ] GitOps + regulated deploy audit chain rehearsed
+- [ ] [FCA operational resilience](https://www.fca.org.uk/firms/operational-resilience) awareness for fintech targets
+- [ ] CoS timeline questions prepared for HR
+- [ ] NI number / housing / hybrid policy plan
+
+## Fintech interview extras
+
+- [Monzo engineering blog](https://monzo.com/blog/topic/engineering) — culture signal
+- [Revolut tech blog](https://www.revolut.com/blog/tag/engineering/)
 """,
         },
     ],

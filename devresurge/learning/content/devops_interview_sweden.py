@@ -67,6 +67,16 @@ in Gothenburg (automotive/industrial), Stockholm (fintech/media), and Malmö/Lun
 - **Sustainability of pace** — burnout is taken seriously; show balance
 
 > Not legal advice. Always confirm visa rules with Migrationsverket and your employer's relocation team.
+
+## Pass criteria — Sweden track
+
+| Gate | Requirement |
+|------|-------------|
+| Visa research | Read [Migrationsverket work permit overview](https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden.html) |
+| Employers | Apply to 10+ roles with sponsorship mention or accredited HR confirmation |
+| Quizzes | Pass Linux, Git, Docker, CI/CD, Observability on DevResurge |
+| Portfolio | Pipeline demo targeting Azure/AKS stack |
+| Language | English interview-ready; basic Swedish phrases for daily life (optional) |
 """,
         },
         {
@@ -494,6 +504,31 @@ Sleep, test video setup, think aloud, admit gaps honestly, ask good questions.
 - Clear list of sponsor employers applied to
 
 > Grattis in advance — Sweden rewards engineers who ship safely and collaborate well.
+""",
+        },
+        {
+            "slug": "se-complete-resources",
+            "title": "Sweden: complete links & pass checklist",
+            "summary": "Immigration, employers, Azure/K8s docs, quizzes, and final gates.",
+            "minutes": 16,
+            "outcomes": ("Confirm every box before accepting a sponsored offer",),
+            "body": """
+## Final checklist — Sweden DevOps interviews
+
+- [ ] 13 lessons cleared on this questline
+- [ ] Verified employer on careers page + sponsorship in writing
+- [ ] [Migrationsverket](https://www.migrationsverket.se/English.html) process understood
+- [ ] Salary researched ([Unionen salary info](https://www.unionen.se/rad-och-stod/salary-and-labour-market))
+- [ ] Quizzes passed: Linux, Git, Docker, CI/CD, Observability
+- [ ] AKS demo project with README rollback section
+- [ ] Housing/relocation plan for target city (Stockholm/Gothenburg)
+- [ ] Five STAR stories + three technical mocks completed
+
+## Study if any topic below is weak
+
+- [Azure AKS learning path](https://learn.microsoft.com/en-us/training/paths/intro-to-kubernetes-on-azure/)
+- [Terraform AzureRM docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [Google SRE books](https://sre.google/books/) — chapters on SLIs and postmortems
 """,
         },
     ],

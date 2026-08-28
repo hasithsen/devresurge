@@ -3,7 +3,7 @@
 {% load i18n %}
 
 {% block title %}~/learn — DevResurge{% endblock title %}
-{% block meta_description %}FAANG-oriented quests: foundations, DSA, system design, backend, DevOps, databases, and distributed systems. Sign in to save XP.{% endblock meta_description %}
+{% block meta_description %}Interview sprints, regional electives, and core craft questlines. Pick your discipline and optional visa region. Sign in to save XP.{% endblock meta_description %}
 
 {% block content %}
   <section class="dr-page">
@@ -14,7 +14,7 @@
           {% blocktranslate count r=roadmap_count %}{{ r }} questline{% plural %}{{ r }} questlines{% endblocktranslate %}
           ·
           {% blocktranslate count n=lesson_count %}{{ n }} quest{% plural %}{{ n }} quests{% endblocktranslate %}
-          — {% trans "sign in, clear lessons, stack XP." %}
+          — {% trans "core sprint + optional regional elective." %}
         </p>
       </div>
       <a class="dr-btn" href="{% url 'quizzes:list' %}">{% trans "verify with quizzes" %}</a>
@@ -38,71 +38,82 @@
         <span class="dr-panel__title">quest.boot</span>
       </div>
       <div class="dr-panel__body dr-stack">
-        {% if request.user.is_authenticated %}
-          <p style="margin: 0;">
-            {% trans "Quests save to your account. Clear a lesson, grab the XP, then boss-fight the checkpoint." %}
-          </p>
-          <div class="dr-btn-row">
+        <p style="margin: 0;">
+          {% trans "1) Pick an interview sprint for your role. 2) Optionally add one regional elective for visa & culture. 3) Deepen craft questlines anytime." %}
+        </p>
+        <form method="post" action="{% url 'learning:list' %}" class="dr-stack" style="gap: 0.5rem;">
+          {% csrf_token %}
+          <label for="learn_region" class="dr-learn-label" style="margin: 0;">{% trans "target region (optional elective)" %}</label>
+          <div class="dr-btn-row" style="flex-wrap: wrap; align-items: center;">
+            <select id="learn_region" name="learn_region" class="dr-btn" style="min-width: 12rem;">
+              <option value="" {% if not preferred_region %}selected{% endif %}>{% trans "No regional elective" %}</option>
+              <option value="sweden" {% if preferred_region == "sweden" %}selected{% endif %}>🇸🇪 Sweden</option>
+              <option value="australia" {% if preferred_region == "australia" %}selected{% endif %}>🇦🇺 Australia</option>
+              <option value="new-zealand" {% if preferred_region == "new-zealand" %}selected{% endif %}>🇳🇿 New Zealand</option>
+              <option value="usa" {% if preferred_region == "usa" %}selected{% endif %}>🇺🇸 USA</option>
+              <option value="uk" {% if preferred_region == "uk" %}selected{% endif %}>🇬🇧 UK</option>
+            </select>
+            <button class="dr-btn dr-btn--primary" type="submit">{% trans "save preference" %}</button>
+            {% if preferred_elective %}
+              <a class="dr-btn" href="{% url 'learning:roadmap' preferred_elective.slug %}">{% trans "open elective" %} · {{ preferred_elective.icon }}</a>
+            {% endif %}
+          </div>
+        </form>
+        <div class="dr-btn-row">
+          {% if request.user.is_authenticated %}
             {% if resume %}
               <a class="dr-btn dr-btn--primary" href="{% url 'learning:lesson' resume.0.slug resume.1.slug %}">
                 {% trans "continue" %} · {{ resume.1.title }}
               </a>
             {% else %}
-              <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' 'elite-engineer-path' %}">{% trans "you cleared the map — replay elite path" %}</a>
+              <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' 'devops-interview' %}">{% trans "start · DevOps sprint" %}</a>
             {% endif %}
-            <a class="dr-btn" href="{% url 'learning:roadmap' 'strong-foundations' %}">{% trans "strong foundations" %}</a>
-          </div>
-        {% else %}
-          <p style="margin: 0;">
-            {% trans "Browse the map free. Sign in to run quests, save progress, and bank XP." %}
-          </p>
-          <div class="dr-btn-row">
-            <a class="dr-btn dr-btn--primary" href="{% url 'account_login' %}?next={% url 'learning:lesson' 'elite-engineer-path' 'north-star' %}">
+          {% else %}
+            <a class="dr-btn dr-btn--primary" href="{% url 'account_login' %}?next={% url 'learning:list' %}">
               {% trans "sign in to start" %}
             </a>
-            <a class="dr-btn" href="{% url 'learning:roadmap' 'elite-engineer-path' %}">{% trans "peek the master map" %}</a>
-          </div>
-        {% endif %}
+          {% endif %}
+        </div>
       </div>
     </div>
 
-    {% for domain, items in domains.items %}
+    {% for section in track_sections %}
       <h2 class="dr-section-title" style="margin-top: 1.75rem;">
-        <span class="dr-prompt"></span> {{ domain }}/
+        <span class="dr-prompt"></span> {{ section.label }}/
       </h2>
+      <p style="margin: -0.5rem 0 0.75rem; color: var(--text-muted); font-size: 0.92rem;">
+        {% if section.track == "interview" %}
+          {% trans "Universal 30-day prep — same technical core worldwide." %}
+        {% elif section.track == "elective" %}
+          {% trans "Shared add-ons — complete once; pairs with data engineering and data science sprints." %}
+        {% elif section.track == "relocation" %}
+          {% trans "Optional add-ons — pick one region; works with any interview sprint." %}
+        {% elif section.track == "sponsor" %}
+          {% trans "Employer deep-dives — Volvo, IFS, and visa sponsors in Sweden, Australia, and USA." %}
+        {% endif %}
+      </p>
       <div class="dr-grid dr-grid--2">
-        {% for row in items %}
-          <article class="dr-panel">
-            <header class="dr-panel__header">
-              <span class="dr-dots"><span></span><span></span><span></span></span>
-              <span class="dr-panel__title">{{ row.roadmap.slug }}.map</span>
-              <span class="dr-pill">{{ row.roadmap.level }}</span>
-            </header>
-            <div class="dr-panel__body dr-stack">
-              <h2 style="margin: 0; font-size: 1.1rem;">
-                <span aria-hidden="true">{{ row.roadmap.icon }}</span>
-                {{ row.roadmap.title }}
-              </h2>
-              <p style="margin: 0; color: var(--text-muted);">{{ row.roadmap.tagline }}</p>
-              <div class="dr-meta">
-                <span>{{ row.roadmap.lesson_count }} {% trans "quests" %}</span>
-                <span>· ~{{ row.roadmap.total_minutes }} {% trans "min" %}</span>
-                {% if request.user.is_authenticated %}
-                  <span>· {{ row.done }}/{{ row.roadmap.lesson_count }} {% trans "cleared" %}</span>
-                {% endif %}
-              </div>
-              {% if request.user.is_authenticated %}
-                <div class="dr-progress" aria-hidden="true">
-                  <span class="dr-progress__bar" style="width: {{ row.pct }}%"></span>
-                </div>
-              {% endif %}
-              <div class="dr-btn-row">
-                <a class="dr-btn dr-btn--primary" href="{% url 'learning:roadmap' row.roadmap.slug %}">{% trans "open" %}</a>
-              </div>
-            </div>
-          </article>
+        {% for row in section.rows %}
+          {% include "learning/_roadmap_card.html" with row=row highlight=preferred_elective %}
         {% endfor %}
       </div>
     {% endfor %}
+
+    {% if craft_domains %}
+      <h2 class="dr-section-title" style="margin-top: 1.75rem;">
+        <span class="dr-prompt"></span> {% trans "core craft" %}/
+      </h2>
+      <p style="margin: -0.5rem 0 0.75rem; color: var(--text-muted); font-size: 0.92rem;">
+        {% trans "Deep skill building — pair with interview sprints." %}
+      </p>
+      {% for domain, items in craft_domains.items %}
+        <h3 class="dr-learn-label" style="margin-top: 1rem;">{{ domain }}/</h3>
+        <div class="dr-grid dr-grid--2">
+          {% for row in items %}
+            {% include "learning/_roadmap_card.html" with row=row %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% endif %}
   </section>
 {% endblock content %}

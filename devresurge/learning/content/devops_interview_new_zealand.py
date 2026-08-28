@@ -60,6 +60,16 @@ when no suitable local candidate exists.
 | 4 | Culture, mocks, relocation |
 
 > Not immigration advice. Check Immigration New Zealand and licensed advisers for current rules.
+
+## Pass criteria — New Zealand track
+
+| Gate | Requirement |
+|------|-------------|
+| Accredited employer | Verify on [INZ accredited list](https://www.immigration.govt.nz/employers/accreditation-and-accredited-employers/accredited-employers/) |
+| Quizzes | Pass Linux, Git, Docker, CI/CD on DevResurge |
+| Portfolio | Public GitHub — app + pipeline + minimal Terraform |
+| Generalist proof | One story showing solo on-call / end-to-end ownership |
+| Applications | 10+ accredited employers contacted |
 """,
         },
         {
@@ -352,6 +362,28 @@ Explain why NZ, timeline, accreditation questions you'd ask.
 - STAR stories polished
 
 Kia kaha — strong generalists who ship reliably are exactly what NZ teams need.
+""",
+        },
+        {
+            "slug": "nz-complete-resources",
+            "title": "New Zealand: complete links & pass checklist",
+            "summary": "AEWV, accredited employers, cloud docs, and final gates.",
+            "minutes": 15,
+            "outcomes": ("Confirm readiness before relocating to Aotearoa",),
+            "body": """
+## Final checklist — NZ DevOps interviews
+
+- [ ] 12 lessons cleared
+- [ ] Employer verified accredited + job check understood
+- [ ] [AEWV overview](https://www.immigration.govt.nz/visas/work/accredited-employer-work-visa/) read
+- [ ] GitHub portfolio live with README architecture
+- [ ] Quizzes passed (Linux, Git, Docker, CI/CD, Observability)
+- [ ] IRD/KiwiSaver/housing plan drafted
+- [ ] Technical + behavioral mocks recorded
+
+## Employers to monitor
+
+Check careers pages weekly — NZ market is small; speed matters when roles open.
 """,
         },
     ],

@@ -66,6 +66,44 @@
       </div>
     </div>
 
+    {% if paired_roadmaps %}
+      <div class="dr-panel" style="margin-top: 1rem;">
+        <div class="dr-panel__body dr-stack">
+          <div class="dr-learn-label" style="margin: 0;">
+            {% if roadmap.track == "interview" %}
+              {% trans "related questlines" %}
+            {% elif roadmap.track == "relocation" %}
+              {% trans "pair with a core interview sprint" %}
+            {% elif roadmap.track == "sponsor" %}
+              {% trans "pair with core sprint + regional elective" %}
+            {% elif roadmap.track == "elective" %}
+              {% trans "pair with interview sprints" %}
+            {% else %}
+              {% trans "related questlines" %}
+            {% endif %}
+          </div>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.92rem;">
+            {% if roadmap.track == "interview" %}
+              {% trans "Regional electives, shared foundations, and sibling sprints — pick what matches your target role." %}
+            {% elif roadmap.track == "relocation" %}
+              {% trans "Run a core sprint in parallel for technical interview prep." %}
+            {% elif roadmap.track == "sponsor" %}
+              {% trans "Pair with a core sprint plus the matching regional relocation elective for visa rules." %}
+            {% elif roadmap.track == "elective" %}
+              {% trans "Complete once, then continue your data engineering or data science core sprint." %}
+            {% endif %}
+          </p>
+          <div class="dr-btn-row" style="flex-wrap: wrap;">
+            {% for paired in paired_roadmaps %}
+              <a class="dr-btn{% if highlighted_elective and paired.slug == highlighted_elective.slug %} dr-btn--primary{% endif %}" href="{% url 'learning:roadmap' paired.slug %}">
+                {{ paired.icon }} {{ paired.title }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
     <h2 class="dr-section-title" style="margin-top: 1.75rem;">
       <span class="dr-prompt"></span> {% trans "quests" %}
     </h2>

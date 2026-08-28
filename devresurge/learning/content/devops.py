@@ -53,6 +53,13 @@ Keep main releasable. Feature flags > long-lived branches.
 ## Artifact discipline
 
 Build once; promote the same artifact across environments.
+
+## Interview questions to rehearse
+
+1. Draw your pipeline on a whiteboard — 8 boxes minimum.
+2. Where do you fail fastest? Where is prod approval?
+3. How do you rollback in under five minutes?
+4. What DORA metrics would you track?
 """,
         },
         {
@@ -196,6 +203,26 @@ Incident commander, comms, ops — separate when severity warrants.
 ## Drill
 
 Tabletop: "p99 latency 10× after deploy" — what do you check first?
+""",
+        },
+        {
+            "slug": "devops-sre-complete-resources",
+            "title": "Complete DevOps/SRE reference guide",
+            "summary": "Official docs, quizzes, labs, and pass checklist for production craft.",
+            "minutes": 15,
+            "outcomes": ("Use as ongoing reference after clearing all quests",),
+            "body": """
+## Pass criteria — DevOps & SRE questline
+
+- [ ] All 7 lessons cleared (6 core + this guide)
+- [ ] Quizzes passed: [CI/CD](/quizzes/cicd-devops/), [Docker](/quizzes/containers-docker/), [Linux](/quizzes/linux-shell/), [Observability](/quizzes/observability-basics/)
+- [ ] One service deployed with pipeline, probes, and dashboard
+- [ ] One blameless postmortem written (real or tabletop)
+- [ ] Runbook for "latency 10× after deploy" documented
+
+## Interview sprint paths (visa sponsors)
+
+Preparing for relocation interviews? Add one [regional elective](/learn/) (visa + culture) alongside this craft path.
 """,
         },
     ],

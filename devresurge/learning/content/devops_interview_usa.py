@@ -69,6 +69,16 @@ common) → system design / infrastructure design → behavioral → hiring comm
 | 4 | Behavioral + mocks + negotiation |
 
 Start applications **months** before desired start — H-1B filing is March/April for October start historically.
+
+## Pass criteria — USA track
+
+| Gate | Requirement |
+|------|-------------|
+| Sponsor tier | 10+ applications to Tier-1 H-1B filers or O-1 evidence file started |
+| Quizzes | All core + [System design basics](/quizzes/system-design-basics/) |
+| Portfolio | AWS EKS platform demo with metrics in README |
+| Mocks | Scripting + infra design + LP behavioral full day |
+| Comp | [Levels.fyi](https://www.levels.fyi/) anchors for target level |
 """,
         },
         {
@@ -369,6 +379,31 @@ AWS map | EKS patterns | SLO math | STAR titles | Sponsor tier list | Comp targe
 - Demo project with README metrics
 
 The US market rewards depth and clear communication under pressure. You've got this.
+""",
+        },
+        {
+            "slug": "us-complete-resources",
+            "title": "USA: complete links & pass checklist",
+            "summary": "H-1B/O-1, sponsor data, AWS/EKS, SRE, comp, and final gates.",
+            "minutes": 17,
+            "outcomes": ("Verify full-loop readiness before onsite/virtual loops",),
+            "body": """
+## Final checklist — US DevOps/SRE interviews
+
+- [ ] 13 lessons cleared
+- [ ] [USCIS H-1B employer hub](https://www.uscis.gov/tools/reports-and-studies/h-1b-employer-data-hub) researched for targets
+- [ ] Immigration lawyer consult (recommended)
+- [ ] Quizzes passed including system design
+- [ ] 10 STAR / Leadership Principle stories
+- [ ] Full mock day completed (script + design + behavioral)
+- [ ] Comp targets documented with levels.fyi
+- [ ] EKS platform design whiteboard rehearsed 45 min
+
+## Senior bar reading
+
+- [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
+- [AWS Well-Architected](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html)
+- [Staff Eng — platform archetype](https://staffeng.com/guides/staff-archetypes)
 """,
         },
     ],
