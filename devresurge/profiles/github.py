@@ -105,10 +105,24 @@ def parse_github_url(url: str, *, default_ref: str = "main") -> GitHubRef:
     raise GitHubFetchError(msg)
 
 
+def is_excalidraw_embed(path: str) -> bool:
+    """True for Excalidraw exports with embedded scene (PNG/SVG)."""
+    name = path.rsplit("/", 1)[-1].lower()
+    return name.endswith(".excalidraw.png") or name.endswith(".excalidraw.svg")
+
+
+def is_excalidraw_source(path: str) -> bool:
+    """True for editable Excalidraw JSON sources (not embedded exports)."""
+    name = path.rsplit("/", 1)[-1].lower()
+    if is_excalidraw_embed(path):
+        return False
+    return name.endswith(".excalidraw.json") or name.endswith(".excalidraw")
+
+
 def detect_kind(path: str) -> str:
     """Map a file path to a ShowcaseKind value."""
     name = path.rsplit("/", 1)[-1].lower()
-    if name.endswith(".excalidraw") or name.endswith(".excalidraw.json"):
+    if is_excalidraw_embed(path) or is_excalidraw_source(path):
         return "excalidraw"
     if name.endswith((".md", ".markdown", ".mdx")):
         return "markdown"
@@ -120,7 +134,9 @@ def detect_kind(path: str) -> str:
 
 
 def companion_preview_paths(path: str) -> list[str]:
-    """Likely image exports sitting next to an Excalidraw source file."""
+    """Likely embedded Excalidraw PNG exports next to a JSON source file."""
+    if not is_excalidraw_source(path):
+        return []
     if "/" in path:
         directory, name = path.rsplit("/", 1)
         prefix = f"{directory}/"
@@ -137,11 +153,6 @@ def companion_preview_paths(path: str) -> list[str]:
             stem = stem.rsplit(".", 1)[0]
     candidates = [
         f"{prefix}{stem}.excalidraw.png",
-        f"{prefix}{stem}.excalidraw.svg",
-        f"{prefix}{name}.png",
-        f"{prefix}{name}.svg",
-        f"{prefix}{stem}.png",
-        f"{prefix}{stem}.svg",
     ]
     # Preserve order, drop dupes.
     seen: set[str] = set()
@@ -194,6 +205,32 @@ def _http_get(url: str, *, accept: str = "*/*") -> bytes:
         raise GitHubFetchError(msg) from exc
 
 
+def fetch_bytes(ref: GitHubRef) -> bytes:
+    """Download a public file as raw bytes (images, exports, etc.)."""
+    return _http_get(ref.raw_url, accept="image/*, application/octet-stream, */*")
+
+
+def resolve_excalidraw_ref(ref: GitHubRef) -> GitHubRef:
+    """Prefer embedded .excalidraw.png over editable .excalidraw JSON sources."""
+    if is_excalidraw_embed(ref.path):
+        return ref
+    if not is_excalidraw_source(ref.path):
+        return ref
+    for path in companion_preview_paths(ref.path):
+        candidate = GitHubRef(owner=ref.owner, repo=ref.repo, ref=ref.ref, path=path)
+        try:
+            fetch_bytes(candidate)
+        except GitHubFetchError:
+            continue
+        return candidate
+    msg = (
+        "Link the exported Excalidraw PNG (.excalidraw.png with embedded scene) "
+        "instead of the .excalidraw source. In Excalidraw: File → Export → PNG, "
+        "enable “Embed scene”, then commit e.g. designs/api.excalidraw.png."
+    )
+    raise GitHubFetchError(msg)
+
+
 def fetch_text(ref: GitHubRef) -> str:
     """Download a public file as UTF-8 text."""
     data = _http_get(ref.raw_url, accept="text/plain, application/json, */*")
@@ -205,11 +242,13 @@ def fetch_text(ref: GitHubRef) -> str:
 
 
 def find_preview_url(ref: GitHubRef) -> str:
-    """Return the first companion image raw URL that exists, else empty."""
+    """Return the first companion embedded PNG raw URL that exists, else empty."""
+    if is_excalidraw_embed(ref.path):
+        return ref.raw_url
     for path in companion_preview_paths(ref.path):
         candidate = GitHubRef(owner=ref.owner, repo=ref.repo, ref=ref.ref, path=path)
         try:
-            _http_get(candidate.raw_url, accept="image/*,*/*")
+            fetch_bytes(candidate)
         except GitHubFetchError:
             continue
         return candidate.raw_url

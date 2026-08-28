@@ -25,8 +25,7 @@ ROADMAP = {
             "minutes": 12,
             "quiz_slug": "sql-fundamentals",
             "outcomes": ("Model entities with clear keys and constraints",),
-            "body": """
-## Design from queries
+            "body": """## Design from queries
 
 Schema exists to answer access patterns efficiently — not to win purity contests.
 
@@ -51,8 +50,7 @@ Foreign keys and unique constraints are production safety rails.
             "minutes": 16,
             "quiz_slug": "databases-internals",
             "outcomes": ("Fix a slow query with an intentional index",),
-            "body": """
-## B-tree intuition
+            "body": """## B-tree intuition
 
 Indexes keep ordered structures so lookups/ranges aren't full scans.
 
@@ -84,8 +82,7 @@ Every index slows writes and uses space. Index what you query.
             "summary": "Dirty reads, non-repeatable reads, phantoms, deadlocks.",
             "minutes": 14,
             "outcomes": ("Pick isolation levels with eyes open",),
-            "body": """
-## Anomalies
+            "body": """## Anomalies
 
 - Dirty read
 - Non-repeatable read
@@ -111,8 +108,7 @@ Many apps run Read Committed + careful application checks; know when you need st
             "summary": "Replicas, partitioning, connection pooling, and hot rows.",
             "minutes": 14,
             "outcomes": ("Name scaling levers before microservices",),
-            "body": """
-## Vertical then horizontal
+            "body": """## Vertical then horizontal
 
 1. Fix queries/indexes
 2. Cache hot reads
@@ -138,8 +134,7 @@ Online schema change tools; batched backfills; expand/contract.
             "summary": "KV, document, search, warehouse — right tool, right job.",
             "minutes": 12,
             "outcomes": ("Avoid hype-driven database choices",),
-            "body": """
-## When specialized stores win
+            "body": """## When specialized stores win
 
 - **Redis** — hot ephemeral state, rate limits, queues (carefully)
 - **Document** — flexible documents with mostly PK access

@@ -1,8 +1,7 @@
 """Reusable reference link blocks for DevOps interview roadmaps (Markdown)."""
 
 # Immigration & relocation (verify dates — rules change)
-REF_VISA_SWEDEN = """
-## Official immigration & relocation
+REF_VISA_SWEDEN = """## Official immigration & relocation
 
 - [Migrationsverket — work permit](https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Look-for-work-or-run-a-business/Employed/How-to-apply.html)
 - [EU Blue Card — Sweden](https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Look-for-work-or-run-a-business/EU-Blue-Card.html)
@@ -10,8 +9,7 @@ REF_VISA_SWEDEN = """
 - [Unionen — salary & labour market (EN)](https://www.unionen.se/rad-och-stod/salary-and-labour-market)
 """
 
-REF_VISA_AUSTRALIA = """
-## Official immigration & skills
+REF_VISA_AUSTRALIA = """## Official immigration & skills
 
 - [Home Affairs — skilled visas overview](https://immi.homeaffairs.gov.au/visas/working-in-australia)
 - [Temporary Skill Shortage (482)](https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/temporary-skill-shortage-482)
@@ -20,8 +18,7 @@ REF_VISA_AUSTRALIA = """
 - [ACS skills assessment](https://www.acs.org.au/msa/overview.html)
 """
 
-REF_VISA_NEW_ZEALAND = """
-## Official immigration
+REF_VISA_NEW_ZEALAND = """## Official immigration
 
 - [Immigration NZ — work visas](https://www.immigration.govt.nz/visas/work)
 - [Accredited Employer Work Visa](https://www.immigration.govt.nz/visas/work/accredited-employer-work-visa/)
@@ -29,8 +26,7 @@ REF_VISA_NEW_ZEALAND = """
 - [Skilled Migrant Category](https://www.immigration.govt.nz/visas/live/skilled-migrant-category-resident-visa/)
 """
 
-REF_VISA_USA = """
-## Official immigration (verify with employer counsel)
+REF_VISA_USA = """## Official immigration (verify with employer counsel)
 
 - [USCIS — H-1B specialty occupations](https://www.uscis.gov/working-in-the-united-states/h-1b-specialty-occupations)
 - [USCIS — O-1 extraordinary ability](https://www.uscis.gov/working-in-the-united-states/temporary-workers/o-1-visa-individuals-with-extraordinary-ability-or-achievement)
@@ -38,8 +34,7 @@ REF_VISA_USA = """
 - [DOL — Foreign Labor Certification (LCA)](https://www.dol.gov/agencies/eta/foreign-labor)
 """
 
-REF_VISA_UK = """
-## Official immigration
+REF_VISA_UK = """## Official immigration
 
 - [GOV.UK — Skilled Worker visa](https://www.gov.uk/skilled-worker-visa)
 - [Register of licensed sponsors](https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers)
@@ -48,8 +43,7 @@ REF_VISA_UK = """
 """
 
 # Cloud platforms
-REF_AZURE = """
-## Azure references
+REF_AZURE = """## Azure references
 
 - [Azure Kubernetes Service (AKS) docs](https://learn.microsoft.com/en-us/azure/aks/)
 - [Azure DevOps Pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/)
@@ -59,8 +53,7 @@ REF_AZURE = """
 - [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
 """
 
-REF_AWS = """
-## AWS references
+REF_AWS = """## AWS references
 
 - [Amazon EKS user guide](https://docs.aws.amazon.com/eks/latest/userguide/)
 - [IAM roles for service accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html)
@@ -69,8 +62,7 @@ REF_AWS = """
 - [Terraform AWS provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 """
 
-REF_GCP = """
-## GCP references
+REF_GCP = """## GCP references
 
 - [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/docs)
 - [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
@@ -79,40 +71,35 @@ REF_GCP = """
 """
 
 # Core DevOps craft
-REF_LINUX = """
-## Linux & shell
+REF_LINUX = """## Linux & shell
 
 - [Linux Foundation — free courses](https://training.linuxfoundation.org/free-linux-training/)
 - [DevResurge quiz: Linux shell](/quizzes/linux-shell/)
 - [Explain shell — command explainer](https://explainshell.com/)
 """
 
-REF_GIT = """
-## Git & collaboration
+REF_GIT = """## Git & collaboration
 
 - [Pro Git book (free)](https://git-scm.com/book/en/v2)
 - [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow)
 - [DevResurge quiz: Git collaboration](/quizzes/git-collaboration/)
 """
 
-REF_NETWORKING = """
-## Networking & HTTP
+REF_NETWORKING = """## Networking & HTTP
 
 - [MDN — HTTP overview](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview)
 - [Cloudflare — how DNS works](https://www.cloudflare.com/learning/dns/what-is-dns/)
 - [DevResurge quiz: Networking fundamentals](/quizzes/networking-fundamentals/)
 """
 
-REF_DOCKER = """
-## Containers & Docker
+REF_DOCKER = """## Containers & Docker
 
 - [Docker docs — best practices](https://docs.docker.com/develop/dev-best-practices/)
 - [OCI image spec](https://github.com/opencontainers/image-spec)
 - [DevResurge quiz: Containers & Docker](/quizzes/containers-docker/)
 """
 
-REF_KUBERNETES = """
-## Kubernetes
+REF_KUBERNETES = """## Kubernetes
 
 - [Kubernetes documentation](https://kubernetes.io/docs/home/)
 - [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/quick-reference/)
@@ -121,8 +108,7 @@ REF_KUBERNETES = """
 - [Flux — GitOps](https://fluxcd.io/flux/)
 """
 
-REF_CICD = """
-## CI/CD & delivery
+REF_CICD = """## CI/CD & delivery
 
 - [DORA metrics research](https://dora.dev/)
 - [Continuous Delivery book site](https://continuousdelivery.com/)
@@ -130,8 +116,7 @@ REF_CICD = """
 - [GitHub Actions docs](https://docs.github.com/en/actions)
 """
 
-REF_TERRAFORM = """
-## Infrastructure as code
+REF_TERRAFORM = """## Infrastructure as code
 
 - [Terraform documentation](https://developer.hashicorp.com/terraform/docs)
 - [Terraform Azure backend](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm)
@@ -140,8 +125,7 @@ REF_TERRAFORM = """
 - [tfsec](https://github.com/aquasecurity/tfsec)
 """
 
-REF_OBSERVABILITY = """
-## Observability & SRE
+REF_OBSERVABILITY = """## Observability & SRE
 
 - [Google SRE books (free PDFs)](https://sre.google/books/)
 - [OpenTelemetry docs](https://opentelemetry.io/docs/)
@@ -149,8 +133,7 @@ REF_OBSERVABILITY = """
 - [DevResurge quiz: Observability basics](/quizzes/observability-basics/)
 """
 
-REF_SECURITY = """
-## Security & DevSecOps
+REF_SECURITY = """## Security & DevSecOps
 
 - [OWASP DevSecOps guideline](https://owasp.org/www-project-devsecops-guideline/)
 - [NIST SSDF](https://csrc.nist.gov/publications/detail/white-paper/2022/02/04/ssdf-v1-1-final/draft)
@@ -159,8 +142,7 @@ REF_SECURITY = """
 - [DevResurge quiz: Security basics](/quizzes/security-basics/)
 """
 
-REF_INTERVIEW = """
-## Interview preparation
+REF_INTERVIEW = """## Interview preparation
 
 ### Interview sprints (technical core)
 
@@ -192,8 +174,7 @@ REF_INTERVIEW = """
 """
 
 # Regional employers (careers — verify openings)
-REF_EMPLOYERS_SWEDEN = """
-## Employer career pages (verify sponsorship per role)
+REF_EMPLOYERS_SWEDEN = """## Employer career pages (verify sponsorship per role)
 
 ### Automotive & industrial
 - [Volvo Group careers](https://www.volvogroup.com/en/careers.html)
@@ -215,8 +196,7 @@ REF_EMPLOYERS_SWEDEN = """
 - [Sweden sponsors — Volvo, IFS & industrial](/learn/sponsor-employers-sweden/)
 """
 
-REF_EMPLOYER_VOLVO = """
-## Volvo ecosystem interview prep
+REF_EMPLOYER_VOLVO = """## Volvo ecosystem interview prep
 
 - [Volvo Group careers](https://www.volvogroup.com/en/careers.html)
 - [Volvo Cars careers](https://jobs.volvocars.com/)
@@ -226,8 +206,7 @@ REF_EMPLOYER_VOLVO = """
 - [DevResurge quiz: CI/CD DevOps](/quizzes/cicd-devops/)
 """
 
-REF_EMPLOYER_IFS = """
-## IFS global platform careers
+REF_EMPLOYER_IFS = """## IFS global platform careers
 
 - [IFS careers (global)](https://www.ifs.com/about/careers)
 - [Sweden sponsor path](/learn/sponsor-employers-sweden/) · [Australia](/learn/sponsor-employers-australia/) · [USA](/learn/sponsor-employers-usa/)
@@ -235,8 +214,7 @@ REF_EMPLOYER_IFS = """
 - [DevResurge — DevSecOps sprint](/learn/devsecops-interview/)
 """
 
-REF_EMPLOYERS_AUSTRALIA = """
-## Employer career pages
+REF_EMPLOYERS_AUSTRALIA = """## Employer career pages
 
 ### Enterprise platform
 - [IFS careers](https://www.ifs.com/about/careers)
@@ -254,8 +232,7 @@ REF_EMPLOYERS_AUSTRALIA = """
 - [Australia migration sponsors](/learn/sponsor-employers-australia/)
 """
 
-REF_EMPLOYERS_NZ = """
-## Employer career pages
+REF_EMPLOYERS_NZ = """## Employer career pages
 
 - [Xero careers](https://www.xero.com/careers/)
 - [Datacom careers](https://datacom.com/careers)
@@ -263,8 +240,7 @@ REF_EMPLOYERS_NZ = """
 - [Orion Health careers](https://www.orionhealth.com/careers/)
 """
 
-REF_EMPLOYERS_USA = """
-## Sponsor research & careers
+REF_EMPLOYERS_USA = """## Sponsor research & careers
 
 - [USCIS H-1B employer data hub](https://www.uscis.gov/tools/reports-and-studies/h-1b-employer-data-hub)
 - [Levels.fyi — comp & levels](https://www.levels.fyi/)
@@ -277,8 +253,7 @@ REF_EMPLOYERS_USA = """
 - [USA migration sponsors — IFS, enterprise & Tier-1](/learn/sponsor-employers-usa/)
 """
 
-REF_EMPLOYERS_UK = """
-## Employer career pages
+REF_EMPLOYERS_UK = """## Employer career pages
 
 - [Revolut careers](https://www.revolut.com/careers/)
 - [Monzo careers](https://monzo.com/careers/)
@@ -287,30 +262,26 @@ REF_EMPLOYERS_UK = """
 - [GOV.UK sponsor register](https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers)
 """
 
-REF_COMPLIANCE_AU = """
-## Australia compliance (awareness)
+REF_COMPLIANCE_AU = """## Australia compliance (awareness)
 
 - [APRA CPS 234 — information security](https://www.apra.gov.au/sites/default/files/cps-234.pdf)
 - [Essential Eight — ACSC](https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/essential-eight)
 """
 
-REF_COMPLIANCE_UK = """
-## UK compliance (awareness)
+REF_COMPLIANCE_UK = """## UK compliance (awareness)
 
 - [FCA operational resilience](https://www.fca.org.uk/firms/operational-resilience)
 - [ICO — UK GDPR guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/)
 """
 
-REF_COMPLIANCE_US = """
-## US compliance (awareness)
+REF_COMPLIANCE_US = """## US compliance (awareness)
 
 - [SOC 2 trust principles — AICPA](https://www.aicpa.org/soc4so)
 - [FedRAMP program](https://www.fedramp.gov/)
 """
 
 # Master index for final resource lessons
-REF_QUESTIONS_CICD = """
-## Common CI/CD interview questions (practice aloud)
+REF_QUESTIONS_CICD = """## Common CI/CD interview questions (practice aloud)
 
 1. Walk through CI/CD from git push to production for a containerized service.
 2. How do you prevent a bad build from reaching all users?
@@ -321,13 +292,10 @@ REF_QUESTIONS_CICD = """
 7. How do you cache dependencies to keep PR feedback under 10 minutes?
 8. What metrics prove your pipeline is healthy (DORA)?
 
-**Model answer spine:** trigger → test → immutable artifact → scan → staging →
-integration → approval (if needed) → progressive prod → smoke → SLO watch →
-automated rollback on breach.
+**Model answer spine:** trigger → test → immutable artifact → scan → staging → integration → approval (if needed) → progressive prod → smoke → SLO watch → automated rollback on breach.
 """
 
-REF_QUESTIONS_K8S = """
-## Common Kubernetes interview questions
+REF_QUESTIONS_K8S = """## Common Kubernetes interview questions
 
 1. Difference between Deployment, StatefulSet, and DaemonSet — when each?
 2. Liveness vs readiness probes — misconfiguration symptoms?
@@ -341,8 +309,7 @@ REF_QUESTIONS_K8S = """
 **Lab links:** [KillerCoda Kubernetes](https://killercoda.com/kubernetes/) · [CKA curriculum outline](https://github.com/cncf/curriculum)
 """
 
-REF_QUESTIONS_SRE = """
-## Common SRE / observability interview questions
+REF_QUESTIONS_SRE = """## Common SRE / observability interview questions
 
 1. Define SLI, SLO, and error budget for an API you know.
 2. When would you freeze releases based on error budget?
@@ -356,8 +323,7 @@ REF_QUESTIONS_SRE = """
 **Read:** [Google SRE Workbook — implementing SLOs](https://sre.google/workbook/implementing-slos/)
 """
 
-REF_QUESTIONS_BEHAVIORAL = """
-## Behavioral questions (prepare STAR stories)
+REF_QUESTIONS_BEHAVIORAL = """## Behavioral questions (prepare STAR stories)
 
 - Tell me about a production incident you handled.
 - A time you disagreed with a developer or manager about release risk.
@@ -372,8 +338,7 @@ REF_QUESTIONS_BEHAVIORAL = """
 **Guide:** [STAR method (MIT CAPD)](https://capd.mit.edu/resources/the-star-method-for-behavioral-interviews/)
 """
 
-REF_QUESTIONS_ENTERPRISE = """
-## Enterprise / industrial DevOps interview questions
+REF_QUESTIONS_ENTERPRISE = """## Enterprise / industrial DevOps interview questions
 
 1. Design CI/CD for microservices on AKS with quality gates and audit trail.
 2. How do you balance release velocity with automotive/industrial safety culture?
@@ -387,8 +352,7 @@ REF_QUESTIONS_ENTERPRISE = """
 **Spine:** safety → traceability → automate → measure → improve.
 """
 
-REF_MASTER_INDEX = """
-## Master reference index
+REF_MASTER_INDEX = """## Master reference index
 
 ### Immigration (verify before applying)
 - Sweden: [Migrationsverket](https://www.migrationsverket.se/English.html)
@@ -413,7 +377,7 @@ REF_MASTER_INDEX = """
 - [CNCF Slack](https://slack.cncf.io/)
 
 ### DevResurge questlines (pair with this sprint)
-- [Interview sprints & regional electives](/learn/) — merged learning map
+- [Interview sprints & regional electives](/learn/relocation-sweden/) — pick your visa region on ~/learn
 - [Migration sponsor paths](/learn/sponsor-employers-sweden/) — Volvo, IFS, enterprise (SE · AU · US)
 - [DevOps & SRE craft](/learn/devops-sre/)
 - [System design](/learn/system-design/)

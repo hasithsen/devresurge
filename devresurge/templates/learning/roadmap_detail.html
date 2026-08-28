@@ -27,7 +27,7 @@
 
     <div class="dr-panel dr-mt-lg">
       <div class="dr-panel__body dr-stack">
-        <p class="dr-mb-0">{{ roadmap.description }}</p>
+        <div class="dr-mb-0 dr-markdown">{{ description_html|safe }}</div>
         <p class="dr-muted dr-text-sm">
           <strong>{% trans "Who this is for" %}:</strong> {{ roadmap.audience }}
         </p>

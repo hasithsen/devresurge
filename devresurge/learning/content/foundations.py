@@ -34,8 +34,7 @@ ROADMAP = {
                 "Map the full delivery loop",
                 "Know what 'done' means beyond a PR merge",
             ),
-            "body": """
-## The delivery loop
+            "body": """## The delivery loop
 
 Merging a PR is the tutorial island. The real map is:
 
@@ -78,8 +77,7 @@ Before your next feature, write one paragraph: problem, success metric, rollback
                 "Estimate time/space for common operations",
                 "Spot O(n²) traps in interviews and production",
             ),
-            "body": """
-## Mental model
+            "body": """## Mental model
 
 - **CPU** executes instructions; cache misses are expensive.
 - **RAM** is fast and scarce relative to disk.
@@ -117,8 +115,7 @@ Fix the largest bottleneck first — usually I/O, not micro-optimizing Python lo
                 "Trace a request through DNS → TLS → HTTP",
                 "Distinguish 4xx vs 5xx and idempotent methods",
             ),
-            "body": """
-## Path of a request
+            "body": """## Path of a request
 
 1. **DNS** resolves `api.example.com` → IP.
 2. **TCP** handshake establishes a reliable byte stream.
@@ -157,8 +154,7 @@ Use `curl -v` against a public API and label each stage of the handshake in the 
                 "Keep main releasable",
                 "Give and receive high-signal review comments",
             ),
-            "body": """
-## Non-negotiables
+            "body": """## Non-negotiables
 
 - Never force-push **shared** main.
 - Prefer small, bisectable commits with why-focused messages.
@@ -200,8 +196,7 @@ On your next PR, add a **Test plan** checklist and a **Risk** note (what could b
                 "Run a disciplined debug loop",
                 "Choose unit vs integration tests intentionally",
             ),
-            "body": """
-## Debug loop
+            "body": """## Debug loop
 
 1. **Reproduce** reliably (or capture failing inputs).
 2. **Isolate** — binary search the change set / layer.
@@ -237,8 +232,7 @@ Take a recent bug. Write the smallest test that fails without the fix and passes
                 "Write crisp design/status updates",
                 "Aim work at measurable impact",
             ),
-            "body": """
-## Writing is a core engineering skill
+            "body": """## Writing is a core engineering skill
 
 At top companies, promotion packets and design reviews reward clarity:
 

@@ -52,8 +52,7 @@ ROADMAP = {
             "summary": "Hyperscale interview loops, daily schedule, and what bar-raisers actually score.",
             "minutes": 14,
             "outcomes": ("Block your calendar for four focused weeks",),
-            "body": """
-## How this questline works
+            "body": """## How this questline works
 
 **This map** — universal DevOps/SRE technical prep at the bar used by top product companies.
 
@@ -135,8 +134,7 @@ Top-tier DevOps/SRE interviews reward **depth + judgment**, not certification tr
             "minutes": 16,
             "quiz_slug": "linux-shell",
             "outcomes": ("Debug a connectivity issue with shell tools",),
-            "body": """
-## Commands interviewers expect
+            "body": """## Commands interviewers expect
 
 ```bash
 # Processes & resources
@@ -201,8 +199,7 @@ that survives audit and on-call handoffs.
             "minutes": 14,
             "quiz_slug": "git-collaboration",
             "outcomes": ("Describe your PR and review process in 60 seconds",),
-            "body": """
-## Branching strategy interviewers want
+            "body": """## Branching strategy interviewers want
 
 - **Trunk-based development** — main always releasable
 - Short-lived branches (< 2 days) or direct to main with flags
@@ -244,8 +241,7 @@ fewer rollbacks, faster lead time (cite **DORA** metrics if you have them).
             "minutes": 15,
             "quiz_slug": "networking-fundamentals",
             "outcomes": ("Trace a request from client to pod",),
-            "body": """
-## The request path (draw this in every design round)
+            "body": """## The request path (draw this in every design round)
 
 ```
 Client → DNS → CDN/edge → WAF → L7 LB → Ingress/service mesh → Pod
@@ -291,8 +287,7 @@ service-to-service auth if they push further.
             "summary": "Linux, Git, networking, and a timed scripting exercise.",
             "minutes": 14,
             "outcomes": ("Complete the week-1 troubleshooting and scripting scenarios",),
-            "body": """
-## Week 1 recap
+            "body": """## Week 1 recap
 
 Explain in 2 minutes each:
 
@@ -334,8 +329,7 @@ Redo weak areas before Week 2.
             "minutes": 16,
             "quiz_slug": "cicd-devops",
             "outcomes": ("Whiteboard an 8-stage pipeline from memory",),
-            "body": """
-## The pipeline bar-raisers expect
+            "body": """## The pipeline bar-raisers expect
 
 ```
 Commit → Lint/Test → Build artifact → Scan → Deploy staging
@@ -380,8 +374,7 @@ automation action item (not "more careful").
             "summary": "YAML pipelines, environments, OIDC, and GitOps patterns used at scale.",
             "minutes": 16,
             "outcomes": ("Sketch a multi-stage YAML pipeline with progressive prod deploy",),
-            "body": """
-## Why release engineering matters
+            "body": """## Why release engineering matters
 
 Hyperscale teams ship **hundreds to thousands of times per day** across many services.
 Interviewers want pipeline **design**, not click-ops nostalgia.
@@ -452,8 +445,7 @@ layer cache hiding bugs, insufficient permissions on OIDC role.
             "minutes": 15,
             "quiz_slug": "containers-docker",
             "outcomes": ("Defend a production Dockerfile line by line",),
-            "body": """
-## Production Dockerfile checklist
+            "body": """## Production Dockerfile checklist
 
 ```dockerfile
 FROM python:3.12-slim AS build
@@ -503,8 +495,7 @@ wrong entrypoint, OOMKilled.
             "summary": "Workloads, scheduling, networking, and rollouts at scale.",
             "minutes": 16,
             "outcomes": ("Explain rolling deploy, rollback, and failure containment in Kubernetes",),
-            "body": """
-## Core objects (whiteboard map)
+            "body": """## Core objects (whiteboard map)
 
 | Object | Purpose |
 |--------|---------|
@@ -550,8 +541,7 @@ schema, rollback plan if migration irreversible.
             "summary": "CI/CD, containers, and Kubernetes in one demo-ready artifact.",
             "minutes": 12,
             "outcomes": ("Ship a containerized app through a YAML pipeline to Kubernetes",),
-            "body": """
-## Week 2 recap — no notes
+            "body": """## Week 2 recap — no notes
 
 - 8-stage pipeline with scans and progressive prod
 - OIDC or scoped credentials — no long-lived secrets in YAML
@@ -593,8 +583,7 @@ Need 3/3 before infra design week.
             "summary": "State, modules, blast radius, and IaC interview scenarios.",
             "minutes": 16,
             "outcomes": ("Explain Terraform state risks and team workflows",),
-            "body": """
-## Fundamentals interviewers probe
+            "body": """## Fundamentals interviewers probe
 
 - Providers, resources, data sources, variables/outputs
 - **Modules** — versioning, composition, blast-radius boundaries
@@ -642,8 +631,7 @@ state by hand without runbook; communicate in shared channel before retry.
             "summary": "IAM, compute, networking, and the services you map in design rounds.",
             "minutes": 15,
             "outcomes": ("Map a multi-team platform to cloud services with IAM boundaries",),
-            "body": """
-## Platform building blocks (AWS example — translate to GCP/Azure)
+            "body": """## Platform building blocks (AWS example — translate to GCP/Azure)
 
 | Need | Service |
 |------|---------|
@@ -689,8 +677,7 @@ Pass [System design basics](/quizzes/system-design-basics/) before mock design r
             "summary": "Environment parity, rotation, and dynamic config without secret sprawl.",
             "minutes": 14,
             "outcomes": ("Separate config from secrets in platform design",),
-            "body": """
-## Twelve-factor highlights
+            "body": """## Twelve-factor highlights
 
 3. **Config** in environment, not repo
 5. **Build, release, run** — strict separation
@@ -731,8 +718,7 @@ never in build artifacts.
             "minutes": 15,
             "quiz_slug": "security-basics",
             "outcomes": ("List proportional security gates for high-velocity teams",),
-            "body": """
-## Shift-left pipeline (proportional, not theatrical)
+            "body": """## Shift-left pipeline (proportional, not theatrical)
 
 1. Secret scanning on every commit
 2. SAST on PR
@@ -767,8 +753,7 @@ show you respect audit without blocking every fix.
             "summary": "Terraform, cloud platform, and a timed infra system design.",
             "minutes": 14,
             "outcomes": ("Complete a 35-minute infra system design aloud",),
-            "body": """
-## Week 3 recap
+            "body": """## Week 3 recap
 
 Without notes:
 
@@ -806,8 +791,7 @@ If design rounds still feel fuzzy, repeat one mock before interview week.
             "minutes": 16,
             "quiz_slug": "observability-basics",
             "outcomes": ("Define SLIs, SLOs, and error budgets for a service you know",),
-            "body": """
-## Three pillars (+ profiling)
+            "body": """## Three pillars (+ profiling)
 
 - **Metrics**: Prometheus/Datadog/CloudWatch — RED for services, USE for resources
 - **Logs**: structured JSON, trace/ request IDs
@@ -847,8 +831,7 @@ trace failing spans → comms cadence → postmortem if sustained.
             "summary": "Mitigate first, communicate clearly, improve systems — on-call bar.",
             "minutes": 14,
             "outcomes": ("Tell a blameless postmortem story with tracked action items",),
-            "body": """
-## Incident lifecycle
+            "body": """## Incident lifecycle
 
 1. **Detect** — alert or customer signal
 2. **Triage** — severity, incident commander
@@ -888,8 +871,7 @@ not those who hide outages or blame individuals.
             "summary": "STAR stories mapped to ownership, customer impact, and technical disagreement.",
             "minutes": 15,
             "outcomes": ("Prepare five STAR stories for hyperscale behavioral loops",),
-            "body": """
-## Five stories to write (STAR, <3 min each)
+            "body": """## Five stories to write (STAR, <3 min each)
 
 1. **Automated toil** — metric: hours saved, fewer incidents, faster lead time
 2. **Technical disagreement** — data-driven; customer/SLO centered resolution
@@ -929,8 +911,7 @@ Strong questions signal seniority.
             "summary": "Pipeline design, K8s debug, infra design, scripting — timed.",
             "minutes": 18,
             "outcomes": ("Complete four timed mock scenarios out loud",),
-            "body": """
-## Drill 1 — Pipeline design (20 min)
+            "body": """## Drill 1 — Pipeline design (20 min)
 
 *"CI/CD for 20 microservices, 200 commits/day, strict prod SLO."*
 
@@ -975,8 +956,7 @@ never parallel applies on shared state.
             "summary": "Cheat sheet, calm execution, and loop strategy.",
             "minutes": 14,
             "outcomes": ("Enter the loop with a one-page cheat sheet and five polished stories",),
-            "body": """
-## One-page cheat sheet (handwrite)
+            "body": """## One-page cheat sheet (handwrite)
 
 **Pipeline**: build once → scan → stage → progressive prod → rollback
 
@@ -1024,8 +1004,7 @@ Journal questions, weak spots, one improvement. Update cheat sheet — loops are
             "summary": "Quizzes, labs, design prompts, and final audit before you schedule loops.",
             "minutes": 18,
             "outcomes": ("Verify every pass gate before booking interviews",),
-            "body": """
-## Sprint complete when
+            "body": """## Sprint complete when
 
 - [ ] All lessons cleared on DevResurge
 - [ ] Eight core quizzes passed (Linux, Git, Docker, CI/CD, Observability, Networking, Security, System design)

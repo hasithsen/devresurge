@@ -30,8 +30,7 @@ ROADMAP = {
             "minutes": 14,
             "quiz_slug": "http-apis",
             "outcomes": ("Ship APIs clients can love for years",),
-            "body": """
-## Resource thinking
+            "body": """## Resource thinking
 
 Model nouns, not RPC soup — unless gRPC/RPC is the team standard.
 
@@ -63,8 +62,7 @@ Consumer-driven checks catch breaking changes before prod.
             "minutes": 16,
             "quiz_slug": "sql-fundamentals",
             "outcomes": ("Prevent lost updates and dual-write bugs",),
-            "body": """
-## ACID in practice
+            "body": """## ACID in practice
 
 - Keep transactions **short**
 - Know isolation: read committed vs repeatable read vs serializable
@@ -92,8 +90,7 @@ Implement transfer between two accounts without negative balances under concurre
             "summary": "Expand/contract, online changes, and zero-downtime deploys.",
             "minutes": 12,
             "outcomes": ("Migrate schemas without locking out users",),
-            "body": """
-## Expand / contract
+            "body": """## Expand / contract
 
 1. **Expand** — add nullable columns / new tables; deploy code that writes both.
 2. **Backfill** — in batches with throttling.
@@ -117,8 +114,7 @@ During rolling deploys, schema must be compatible with **both** old and new code
             "summary": "Monolith modularity first; microservices when forced by scale/org.",
             "minutes": 12,
             "outcomes": ("Avoid distributed monoliths",),
-            "body": """
-## Start modular
+            "body": """## Start modular
 
 A well-modular monolith beats premature microservices:
 
@@ -148,8 +144,7 @@ If you can't draw a clean data boundary, you're not ready to split.
             "minutes": 12,
             "quiz_slug": "security-basics",
             "outcomes": ("Build with secure defaults",),
-            "body": """
-## Must-not-miss
+            "body": """## Must-not-miss
 
 - Parameterized queries everywhere
 - Output encoding for XSS surfaces
@@ -175,8 +170,7 @@ For each endpoint: who can call it, on whose data, what is the blast radius?
             "summary": "Make 3am you grateful. Instrument before you need it.",
             "minutes": 12,
             "outcomes": ("Ship features that on-call can diagnose",),
-            "body": """
-## Three pillars
+            "body": """## Three pillars
 
 - **Metrics** — RED/USE; SLIs tied to user pain
 - **Logs** — structured, correlatable (`request_id`)

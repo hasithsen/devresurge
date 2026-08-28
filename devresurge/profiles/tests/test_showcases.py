@@ -8,7 +8,10 @@ from django.urls import reverse
 from devresurge.profiles.github import GitHubFetchError
 from devresurge.profiles.github import companion_preview_paths
 from devresurge.profiles.github import detect_kind
+from devresurge.profiles.github import is_excalidraw_embed
+from devresurge.profiles.github import is_excalidraw_source
 from devresurge.profiles.github import parse_github_url
+from devresurge.profiles.github import resolve_excalidraw_ref
 from devresurge.profiles.models import ShowcaseItem
 from devresurge.profiles.models import ShowcaseKind
 from devresurge.profiles.tests.factories import ProfileFactory
@@ -43,10 +46,78 @@ def test_parse_rejects_non_github():
 
 
 def test_detect_kind_and_companions():
+    assert detect_kind("a/b/design.excalidraw.png") == ShowcaseKind.EXCALIDRAW
     assert detect_kind("a/b/design.excalidraw") == ShowcaseKind.EXCALIDRAW
+    assert is_excalidraw_embed("design.excalidraw.png")
+    assert is_excalidraw_source("design.excalidraw")
+    assert not is_excalidraw_source("design.excalidraw.png")
     assert detect_kind("notes/lfs.md") == ShowcaseKind.MARKDOWN
     assert detect_kind("img/arch.png") == ShowcaseKind.IMAGE
-    assert "design.excalidraw.png" in companion_preview_paths("design.excalidraw")
+    assert companion_preview_paths("design.excalidraw") == ["design.excalidraw.png"]
+
+
+def test_resolve_excalidraw_ref_prefers_embedded_png():
+    ref = parse_github_url(
+        "https://github.com/acme/lab/blob/main/designs/api.excalidraw",
+    )
+    with patch("devresurge.profiles.github.fetch_bytes", return_value=b"PNG"):
+        resolved = resolve_excalidraw_ref(ref)
+    assert resolved.path == "designs/api.excalidraw.png"
+
+
+def test_resolve_excalidraw_ref_keeps_png_url():
+    ref = parse_github_url(
+        "https://github.com/acme/lab/blob/main/designs/api.excalidraw.png",
+    )
+    with patch("devresurge.profiles.github.fetch_bytes", return_value=b"PNG") as fetch:
+        resolved = resolve_excalidraw_ref(ref)
+    fetch.assert_called_once()
+    assert resolved.path == "designs/api.excalidraw.png"
+
+
+def test_resolve_excalidraw_ref_rejects_json_without_png():
+    ref = parse_github_url(
+        "https://github.com/acme/lab/blob/main/designs/api.excalidraw",
+    )
+    with patch("devresurge.profiles.github.fetch_bytes", side_effect=GitHubFetchError("missing")):
+        with pytest.raises(GitHubFetchError, match="excalidraw.png"):
+            resolve_excalidraw_ref(ref)
+
+
+def test_showcase_sync_excalidraw_png():
+    profile = ProfileFactory()
+    item = ShowcaseItem(
+        profile=profile,
+        title="URL shortener",
+        github_url="https://github.com/acme/lab/blob/main/designs/api.excalidraw.png",
+    )
+    with patch("devresurge.profiles.github.fetch_bytes", return_value=b"\x89PNG"):
+        item.sync_from_github()
+    assert item.kind == ShowcaseKind.EXCALIDRAW
+    assert item.preview_image_url.endswith("designs/api.excalidraw.png")
+    assert item.content_cache == ""
+    assert item.content_sha
+
+
+def test_public_showcase_detail_renders_excalidraw_png(client):
+    profile = ProfileFactory(is_public=True, handle="ada")
+    item = ShowcaseItemFactory(
+        profile=profile,
+        title="System design",
+        slug="system-design",
+        kind=ShowcaseKind.EXCALIDRAW,
+        github_path="designs/api.excalidraw.png",
+        preview_image_url=(
+            "https://raw.githubusercontent.com/acme/lab/main/designs/api.excalidraw.png"
+        ),
+        content_cache="",
+        is_published=True,
+    )
+    response = client.get(item.get_absolute_url())
+    assert response.status_code == 200
+    assert b"api.excalidraw.png" in response.content
+    assert b"esm.sh" not in response.content
+    assert b"dr-excalidraw-mount" not in response.content
 
 
 def test_showcase_create_syncs_from_github(client):

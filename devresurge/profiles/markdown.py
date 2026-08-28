@@ -50,6 +50,11 @@ def _safe_href(url: str) -> str | None:
     return html.escape(cleaned, quote=True)
 
 
+def _join_wrapped_lines(lines: list[str]) -> str:
+    """Merge soft-wrapped source lines into one flow (single newlines → spaces)."""
+    return " ".join(line.strip() for line in lines if line.strip())
+
+
 def _inline(text: str, *, links: bool = True) -> str:
     """Apply inline Markdown to a plain-text segment (escaped before output)."""
     placeholders: list[str] = []
@@ -73,10 +78,12 @@ def _inline(text: str, *, links: bool = True) -> str:
             label = _inline(raw_label, links=False)
             if href is None:
                 return label
-            return (
-                f'<a href="{href}" rel="noopener nofollow ugc" target="_blank">'
-                f"{label}</a>"
-            )
+            cleaned = raw_url.strip()
+            is_internal = cleaned.startswith("/") and not cleaned.startswith("//")
+            attrs = f'href="{href}"'
+            if not is_internal:
+                attrs += ' rel="noopener nofollow ugc" target="_blank"'
+            return f"<a {attrs}>{label}</a>"
 
         escaped = _RE_LINK.sub(link_sub, escaped)
 
@@ -167,13 +174,9 @@ def _render_table(lines: list[str]) -> str:
 
 
 def _render_blockquote(lines: list[str]) -> str:
-    parts: list[str] = []
-    for line in lines:
-        text = line.lstrip(">").lstrip()
-        if text:
-            parts.append(_inline(text))
-    inner = "<br />".join(parts) if len(parts) > 1 else (parts[0] if parts else "")
-    return f"<blockquote class=\"dr-markdown-quote\">{inner}</blockquote>"
+    text_lines = [line.lstrip(">").lstrip() for line in lines]
+    inner = _inline(_join_wrapped_lines(text_lines))
+    return f'<blockquote class="dr-markdown-quote">{inner}</blockquote>'
 
 
 def _is_table_line(line: str) -> bool:
@@ -283,7 +286,7 @@ def render_markdown(source: str, *, heading_ids: bool = False) -> SafeString:
                 break
             para_lines.append(nxt)
             i += 1
-        inner = _inline("\n".join(para_lines)).replace("\n", "<br />")
+        inner = _inline(_join_wrapped_lines(para_lines))
         blocks.append(f"<p>{inner}</p>")
 
     return mark_safe("\n".join(blocks))  # noqa: S308 — built from escaped + safe tags

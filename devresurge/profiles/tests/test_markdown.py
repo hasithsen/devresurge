@@ -24,6 +24,13 @@ def test_render_markdown_same_site_relative_links():
     )
     assert 'href="/learn/data-science-interview/"' in html
     assert 'href="/quizzes/sql-fundamentals/"' in html
+    assert 'target="_blank"' not in html
+
+
+def test_render_markdown_external_links_open_new_tab():
+    html = render_markdown("[docs](https://example.com/docs)")
+    assert 'href="https://example.com/docs"' in html
+    assert 'target="_blank"' in html
 
 
 def test_render_markdown_headings_lists_and_code():
@@ -76,6 +83,16 @@ def test_render_markdown_heading_ids():
     assert 'id="first"' in html
     assert 'id="nested"' in html
     assert 'id="second"' in html
+
+
+def test_render_markdown_soft_wraps_paragraph_lines():
+    source = (
+        "Many employers **sponsor\n"
+        "work permits** for qualified DevOps, platform, and SRE candidates."
+    )
+    html = render_markdown(source)
+    assert "<strong>sponsor work permits</strong>" in html
+    assert "<br />" not in html
 
 
 def test_render_markdown_empty():

@@ -25,8 +25,7 @@ ROADMAP = {
             "minutes": 12,
             "quiz_slug": "system-design-basics",
             "outcomes": ("Never freeze — always have a next step",),
-            "body": """
-## 45-minute spine
+            "body": """## 45-minute spine
 
 1. **Requirements** — functional + non-functional (QPS, latency, consistency).
 2. **Back-of-envelope** — users, QPS, storage, bandwidth.
@@ -51,8 +50,7 @@ Draw boxes; narrate trade-offs; invite interviewer constraints.
             "summary": "QPS, storage, p99 latency, error budgets — speak in numbers.",
             "minutes": 12,
             "outcomes": ("Estimate load without a calculator panic",),
-            "body": """
-## Quick estimates
+            "body": """## Quick estimates
 
 - 1M DAU × 10 actions/day ≈ 10M events/day ≈ ~115 QPS average (bursts higher).
 - Peak ≈ 2–5× average unless told otherwise.
@@ -78,8 +76,7 @@ Design for URL shortener: 100M new URLs/month, 10:1 read/write — estimate stor
             "summary": "SQL vs NoSQL vs blob vs search — pick for access patterns.",
             "minutes": 14,
             "outcomes": ("Map access patterns to storage tech",),
-            "body": """
-## Decision drivers
+            "body": """## Decision drivers
 
 - Access pattern (key lookup, range, full-text, graph)
 - Consistency needs
@@ -110,8 +107,7 @@ For a news feed: list read/write patterns first, then pick stores.
             "summary": "The three levers that save databases and smooth spikes.",
             "minutes": 14,
             "outcomes": ("Place cache/queue/CDN with clear invalidation stories",),
-            "body": """
-## Caching
+            "body": """## Caching
 
 - **CDN** for static & edge content
 - **App cache** (Redis) for hot keys / sessions
@@ -140,8 +136,7 @@ When consumers lag, shedding load beats unbounded queue growth.
             "summary": "Timeouts, retries, idempotency, circuit breakers, graceful degradation.",
             "minutes": 14,
             "outcomes": ("Design for failure as the default",),
-            "body": """
-## Defaults of resilient services
+            "body": """## Defaults of resilient services
 
 - Timeouts on every remote call
 - Retries with **jittered exponential backoff**
@@ -168,8 +163,7 @@ Design payment capture: exactly-once *effect* with at-least-once delivery.
             "summary": "URL shortener, news feed, chat, rate limiter — reusable building blocks.",
             "minutes": 16,
             "outcomes": ("Reuse components across prompts",),
-            "body": """
-## URL shortener
+            "body": """## URL shortener
 
 - Key generation (hash vs counter + base62)
 - 301/302 semantics & analytics

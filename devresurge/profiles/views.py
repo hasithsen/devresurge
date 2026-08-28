@@ -1281,17 +1281,10 @@ class ShowcasePublicDetailView(DetailView):
         )
         body = item.content_cache or ""
         ctx["body_html"] = ""
-        ctx["excalidraw_data"] = None
-        ctx["excalidraw_parse_error"] = False
         if item.kind in {"markdown", "notes"}:
             from .markdown import render_markdown
 
             ctx["body_html"] = render_markdown(body)
-        elif item.kind == "excalidraw" and body:
-            try:
-                ctx["excalidraw_data"] = json.loads(body)
-            except json.JSONDecodeError:
-                ctx["excalidraw_parse_error"] = True
         return ctx
 
 

@@ -30,8 +30,7 @@ ROADMAP = {
             "summary": "Not leetcode alone — ownership, judgment, communication, proof.",
             "minutes": 10,
             "outcomes": ("Define personal excellence metrics",),
-            "body": """
-## Elite ≠ trivia
+            "body": """## Elite ≠ trivia
 
 Imagine two candidates. One recites 47 sorting algorithms. The other shipped
 a rate-limited API, wrote the runbook, and can explain the trade-off in a
@@ -69,8 +68,7 @@ LinkedIn remains the network; here you show **signal**.
             "summary": "Months 1–2 foundations, 3–4 depth, 5–6 proof + interviews.",
             "minutes": 14,
             "outcomes": ("Pick this week's focus without FOMO",),
-            "body": """
-## Months 1–2 — Foundations
+            "body": """## Months 1–2 — Foundations
 
 - Strong foundations roadmap (all lessons)
 - Git + HTTP + Linux + testing quizzes
@@ -101,8 +99,7 @@ Never drop **shipping**. Theory without artifacts is invisible.
             "summary": "Choose projects that demonstrate production instincts.",
             "minutes": 12,
             "outcomes": ("Scope a portfolio project with elite signals",),
-            "body": """
-## Portfolio bar
+            "body": """## Portfolio bar
 
 Weak: todo app clones with no tests.
 Strong: constrained real problem + trade-off writeup + deploy + metrics.
@@ -134,8 +131,7 @@ Put the project on your DevResurge profile with stack tags and a crisp README li
             "minutes": 12,
             "quiz_slug": "algorithms-patterns",
             "outcomes": ("Install a sustainable practice loop",),
-            "body": """
-## DSA loop (60–90 min)
+            "body": """## DSA loop (60–90 min)
 
 1. Pick a pattern focus for the week
 2. Warm-up easy (15m)
@@ -165,8 +161,7 @@ Mock with a peer monthly — communication is scored.
             "minutes": 12,
             "quiz_slug": "system-design-basics",
             "outcomes": ("Execute a calm interview week",),
-            "body": """
-## Two weeks out
+            "body": """## Two weeks out
 
 - Revisit weak DSA patterns
 - Rehearse 4 classic system designs
@@ -197,8 +192,7 @@ Update DevResurge badges after each quiz pass — visible proof compounds.
             "summary": "Compound learning: teaching, writing, and reusable tools.",
             "minutes": 10,
             "outcomes": ("Turn learning into durable leverage",),
-            "body": """
-## Leverage loops
+            "body": """## Leverage loops
 
 - Teach a concept in a short post → gaps appear → mastery
 - Build tiny tools you reuse (scripts, templates, checklists)

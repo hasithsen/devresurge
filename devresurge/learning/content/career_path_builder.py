@@ -265,8 +265,7 @@ def _lesson(
 def _role_core_content(role_key: str) -> dict[str, str]:
     if role_key == "data-eng":
         return {
-            "foundations": """
-## Shared data foundations (DE + DS)
+            "foundations": """## Shared data foundations (DE + DS)
 
 SQL, Python, and data intuition — both data engineering and data science loops test these.
 
@@ -281,8 +280,7 @@ SQL, Python, and data intuition — both data engineering and data science loops
 Pass [SQL fundamentals](/quizzes/sql-fundamentals/) and [Python fundamentals](/quizzes/python-fundamentals/).
 Also explore [Data science sprint](/learn/data-science-interview/) if your target role is model-heavy.
 """,
-            "core1": """
-## Data modeling & warehousing
+            "core1": """## Data modeling & warehousing
 
 - **Medallion:** bronze (raw) → silver (cleaned) → gold (business-ready)
 - **Star schema:** fact table grain, dimensions, surrogate keys
@@ -295,8 +293,7 @@ Also explore [Data science sprint](/learn/data-science-interview/) if your targe
 
 State grain, fact/dimension split, and one SCD decision with trade-offs.
 """,
-            "core2": """
-## Batch pipelines & orchestration
+            "core2": """## Batch pipelines & orchestration
 
 - **Extract:** full vs incremental (watermark, CDC)
 - **Orchestration:** Airflow/Prefect/Dagster — retries, SLAs, alerting
@@ -307,8 +304,7 @@ State grain, fact/dimension split, and one SCD decision with trade-offs.
 
 Source → land raw → transform → publish marts → monitor freshness.
 """,
-            "core3": """
-## Streaming & CDC
+            "core3": """## Streaming & CDC
 
 - Kafka: topics, partitions, consumer groups, offsets
 - **At-least-once** processing + idempotent sinks
@@ -317,8 +313,7 @@ Source → land raw → transform → publish marts → monitor freshness.
 
 When streaming vs batch: latency needs vs cost/complexity.
 """,
-            "core4": """
-## Data quality & observability
+            "core4": """## Data quality & observability
 
 - dbt tests, Great Expectations, custom SQL checks
 - **Freshness SLAs** and volume anomaly alerts
@@ -327,8 +322,7 @@ When streaming vs batch: latency needs vs cost/complexity.
 
 Pair with [Databases deep](/learn/databases-deep/) for SQL internals.
 """,
-            "core5": """
-## Cloud warehouses & lakehouse
+            "core5": """## Cloud warehouses & lakehouse
 
 | Platform | Interview talking points |
 |----------|-------------------------|
@@ -342,8 +336,7 @@ Know one stack deeply; compare cost, ops burden, and lock-in for others.
         }
     if role_key == "data-science":
         return {
-            "foundations": """
-## Shared data foundations (DE + DS)
+            "foundations": """## Shared data foundations (DE + DS)
 
 Statistics, SQL, and Python — every DS loop tests literacy here before ML depth.
 
@@ -357,8 +350,7 @@ Statistics, SQL, and Python — every DS loop tests literacy here before ML dept
 
 Pass [SQL](/quizzes/sql-fundamentals/) and [Python](/quizzes/python-fundamentals/) quizzes; [Data structures](/quizzes/data-structures/) for coding rounds.
 """,
-            "core1": """
-## Statistics & probability for interviews
+            "core1": """## Statistics & probability for interviews
 
 - Mean/median, variance, confidence intervals (interpret, don't memorize formulas only)
 - **Bias-variance trade-off** — under/overfitting in plain language
@@ -367,8 +359,7 @@ Pass [SQL](/quizzes/sql-fundamentals/) and [Python](/quizzes/python-fundamentals
 
 Explain how you'd detect a misleading metric in a dashboard.
 """,
-            "core2": """
-## Machine learning fundamentals
+            "core2": """## Machine learning fundamentals
 
 - Supervised: regression vs classification; linear, tree, ensemble models
 - Unsupervised: clustering, dimensionality reduction — when useful
@@ -377,8 +368,7 @@ Explain how you'd detect a misleading metric in a dashboard.
 
 Interview: *"How would you predict customer churn?"* — features, metric, baseline, iteration.
 """,
-            "core3": """
-## Experimentation & causal thinking
+            "core3": """## Experimentation & causal thinking
 
 - A/B test design: sample size, power, guardrail metrics
 - **P-hacking and peeking** — sequential testing awareness
@@ -387,8 +377,7 @@ Interview: *"How would you predict customer churn?"* — features, metric, basel
 
 Tell a story about an experiment that changed a product decision.
 """,
-            "core4": """
-## ML in production (ML engineer angle)
+            "core4": """## ML in production (ML engineer angle)
 
 - Feature stores, batch vs online features
 - Model serving: batch scores vs real-time API
@@ -397,8 +386,7 @@ Tell a story about an experiment that changed a product decision.
 
 DS who understands deployment beats notebook-only candidates.
 """,
-            "core5": """
-## Case studies & communication
+            "core5": """## Case studies & communication
 
 - Structure: business question → data → method → result → recommendation → risks
 - **Executive summary first** — numbers with context
@@ -410,8 +398,7 @@ Practice 15-min case aloud: fraud detection, recommendation, pricing — pick on
         }
     if role_key == "devsecops":
         return {
-            "foundations": """
-## Security foundations for DevSecOps
+            "foundations": """## Security foundations for DevSecOps
 
 - **CIA triad** + STRIDE threat modeling at service level
 - OWASP Top 10 — know how to test and prevent in CI
@@ -421,8 +408,7 @@ Pass [Security basics](/quizzes/security-basics/) and [Linux shell](/quizzes/lin
 
 Pair with [DevOps interview sprint](/learn/devops-interview/) — DevSecOps interviews assume pipeline fluency.
 """,
-            "core1": """
-## Shift-left in CI/CD
+            "core1": """## Shift-left in CI/CD
 
 Security gates in order of cost vs value:
 
@@ -435,8 +421,7 @@ Security gates in order of cost vs value:
 
 **Proportional control** — not every deploy needs manual security sign-off if automation proves low escape rate.
 """,
-            "core2": """
-## Supply chain security
+            "core2": """## Supply chain security
 
 - **SBOM** generation and storage with artifacts
 - Sign images (Cosign) and verify at deploy (admission controller)
@@ -445,8 +430,7 @@ Security gates in order of cost vs value:
 
 Interview: *"Developer wants to skip scan for hotfix."* — risk data, exception process, rollback ready.
 """,
-            "core3": """
-## Cloud & container hardening
+            "core3": """## Cloud & container hardening
 
 - IAM: roles not users, short-lived creds, OIDC for CI
 - K8s: NetworkPolicy, Pod Security Standards, workload identity
@@ -455,8 +439,7 @@ Interview: *"Developer wants to skip scan for hotfix."* — risk data, exception
 
 Draw trust boundaries for a microservice handling PII.
 """,
-            "core4": """
-## Compliance & audit collaboration
+            "core4": """## Compliance & audit collaboration
 
 - **SOC 2** trust principles mapped to pipeline controls
 - GDPR: data minimization, retention, access logging
@@ -465,8 +448,7 @@ Draw trust boundaries for a microservice handling PII.
 
 You enable compliance; legal/compliance owns interpretation.
 """,
-            "core5": """
-## SecOps collaboration & incidents
+            "core5": """## SecOps collaboration & incidents
 
 - Vulnerability SLAs by severity (CVSS + exploitability)
 - Security incident vs availability incident — coordinated response
@@ -478,104 +460,86 @@ STAR story: prevented or responded to a security issue with systemic fix.
         }
     if role_key == "qa":
         return {
-            "foundations": """
-## Test fundamentals
+            "foundations": """## Test fundamentals
 
 Pyramid/trophy, equivalence partitioning, risk-based prioritization.
 
 Pass [Testing fundamentals](/quizzes/testing-fundamentals/).
 """,
-            "core1": """
-## Test design
+            "core1": """## Test design
 
 Plans, traceability, exploratory charters, crisp bug reports.
 """,
-            "core2": """
-## API automation
+            "core2": """## API automation
 
 pytest + httpx, contract tests, CI on every PR.
 """,
-            "core3": """
-## UI automation & SDET
+            "core3": """## UI automation & SDET
 
 Playwright/Cypress, stable selectors, parallel CI, flake quarantine policy.
 """,
-            "core4": """
-## CI quality gates
+            "core4": """## CI quality gates
 
 Stages, coverage as signal, load smoke tests, release criteria.
 """,
-            "core5": """
-## Security & performance awareness
+            "core5": """## Security & performance awareness
 
 OWASP collaboration, load vs stress vs soak — when each matters.
 """,
         }
     if role_key == "backend":
         return {
-            "foundations": """
-## HTTP & SQL baseline
+            "foundations": """## HTTP & SQL baseline
 
 REST, status codes, pagination, indexes, transactions.
 
 Pass [HTTP APIs](/quizzes/http-apis/) and [SQL fundamentals](/quizzes/sql-fundamentals/).
 """,
-            "core1": """
-## API design & auth
+            "core1": """## API design & auth
 
 REST contracts, OAuth/JWT overview, idempotency, rate limits.
 """,
-            "core2": """
-## Databases & migrations
+            "core2": """## Databases & migrations
 
 Isolation levels, N+1, expand/contract migrations.
 """,
-            "core3": """
-## Caching & messaging
+            "core3": """## Caching & messaging
 
 Cache-aside, Redis, queues, idempotent consumers, outbox pattern.
 """,
-            "core4": """
-## Operability & security
+            "core4": """## Operability & security
 
 Health checks, structured logs, authz on every object.
 """,
-            "core5": """
-## System design
+            "core5": """## System design
 
 45-min framework — practice URL shortener, rate limiter from [System design](/learn/system-design/).
 """,
         }
     return {
-        "foundations": """
-## Cloud fundamentals
+        "foundations": """## Cloud fundamentals
 
 Regions/AZs, shared responsibility, IAM, VPC/VNet basics.
 
 Pass [Networking](/quizzes/networking-fundamentals/) and [Linux shell](/quizzes/linux-shell/).
 """,
-        "core1": """
-## Landing zones
+        "core1": """## Landing zones
 
 Multi-account/org structure, policies, tagging, guardrails.
 """,
-        "core2": """
-## Infrastructure as code
+        "core2": """## Infrastructure as code
 
 Terraform modules, remote state, plan review in CI, drift.
 """,
-        "core3": """
-## Compute platforms
+        "core3": """## Compute platforms
 
 EKS/AKS/Lambda/App Service decision matrix, autoscaling.
 """,
-        "core4": """
-## Security, DR & FinOps
+        "core4": """## Security, DR & FinOps
 
 Encryption, backup/RTO/RPO, cost controls, Well-Architected reviews.
 """,
-        "core5": """
-## Migration & hybrid
+        "core5": """## Migration & hybrid
 
 6 R's, strangler fig, hybrid connectivity — vs hands-on DevOps on-call roles.
 """,
@@ -584,8 +548,7 @@ Encryption, backup/RTO/RPO, cost controls, Well-Architected reviews.
 
 def _regional_employers_market(region_key: str) -> str:
     markets = {
-        "sweden": """
-| Discipline | Notable sponsors & stacks |
+        "sweden": """| Discipline | Notable sponsors & stacks |
 |------------|---------------------------|
 | DevOps/SRE | Volvo Group/Cars, Scania, IFS, Ericsson — Azure, AKS, GitHub |
 | DevSecOps | Same enterprises + fintech — pipeline gates, ISO/SOC culture |
@@ -595,8 +558,7 @@ def _regional_employers_market(region_key: str) -> str:
 | Backend | Klarna, Mojang, payments APIs at scale |
 | Cloud | Enterprise Azure, industrial hybrid cloud |
 """,
-        "australia": """
-| Discipline | Notable sponsors & stacks |
+        "australia": """| Discipline | Notable sponsors & stacks |
 |------------|---------------------------|
 | DevOps/SRE | Atlassian, IFS, banks, Telstra — AWS EKS, change control |
 | DevSecOps | Banks (CPS 234), Atlassian — Essential Eight alignment |
@@ -606,8 +568,7 @@ def _regional_employers_market(region_key: str) -> str:
 | Backend | Atlassian, Canva, REA — Java/Python microservices |
 | Cloud | Big bank migration programs, AWS/Azure |
 """,
-        "new-zealand": """
-| Discipline | Notable sponsors & stacks |
+        "new-zealand": """| Discipline | Notable sponsors & stacks |
 |------------|---------------------------|
 | All roles | Xero, Datacom — lean teams, end-to-end ownership |
 | DevOps/SRE | Smaller platforms, AWS/Azure, pragmatic automation |
@@ -615,8 +576,7 @@ def _regional_employers_market(region_key: str) -> str:
 | Data eng / science | Xero analytics, agritech — SQL + pragmatic ML |
 | QA/SDET | Health tech, SaaS — manual + automation blend |
 """,
-        "usa": """
-| Discipline | Notable sponsors & stacks |
+        "usa": """| Discipline | Notable sponsors & stacks |
 |------------|---------------------------|
 | All | H-1B Tier-1 filers — depth + system design at senior levels |
 | DevOps/SRE | Tier-1 + IFS, Oracle, SAP — H-1B history varies by team |
@@ -627,8 +587,7 @@ def _regional_employers_market(region_key: str) -> str:
 | Backend | Standard coding + design loops |
 | Cloud | Solutions architect vs engineer — clarify title early |
 """,
-        "uk": """
-| Discipline | Notable sponsors & stacks |
+        "uk": """| Discipline | Notable sponsors & stacks |
 |------------|---------------------------|
 | DevOps/SRE | Fintech GitOps, regulated deploy audit trails |
 | DevSecOps | FCA resilience, GDPR, supply-chain scrutiny in fintech |
@@ -644,30 +603,25 @@ def _regional_employers_market(region_key: str) -> str:
 
 def _regional_culture(region_key: str) -> str:
     cultures = {
-        "sweden": """
-- Flat hierarchy — challenge ideas respectfully
+        "sweden": """- Flat hierarchy — challenge ideas respectfully
 - Consensus and written decisions; **lagom** pace (safe speed)
 - English interviews standard; Swedish helps daily life
 - Fika and sustainable work-life balance are cultural signals
 """,
-        "australia": """
-- Direct but informal communication; first names common
+        "australia": """- Direct but informal communication; first names common
 - **Tall poppy syndrome** — team wins over solo hero stories
 - Work-life balance valued; visa via 482/186 + ACS for many ICT roles
 """,
-        "new-zealand": """
-- Humble, practical tone in interviews (**Kiwi humility**)
+        "new-zealand": """- Humble, practical tone in interviews (**Kiwi humility**)
 - Small market — generalist ownership common
 - Accredited Employer Work Visa — verify employer accreditation early
 """,
-        "usa": """
-- Think aloud in technical loops; STAR behavioral depth
+        "usa": """- Think aloud in technical loops; STAR behavioral depth
 - Leadership Principles at Amazon-style companies
 - H-1B lottery timing — plan Tier-1 sponsors and O-1 backup
 - Negotiate total comp (base + equity + signing)
 """,
-        "uk": """
-- Professional politeness + structured STAR answers
+        "uk": """- Professional politeness + structured STAR answers
 - Skilled Worker visa + sponsor register verification mandatory
 - Fintech: regulated change control and audit awareness
 - Good closing questions signal seniority
@@ -690,15 +644,13 @@ def _extra_battle_plan_notes(role_key: str) -> str:
     if role_key in ("data-eng", "data-science"):
         sibling = "Data science" if role_key == "data-eng" else "Data engineering"
         slug = "data-science-interview" if role_key == "data-eng" else "data-eng-interview"
-        return f"""
-### Data track electives
+        return f"""### Data track electives
 
 - [Data fundamentals elective](/learn/{DATA_FUNDAMENTALS_SLUG}/) — shared SQL, Python, stats refresh (both DE & DS)
 - [{sibling} sprint](/learn/{slug}/) — explore the sibling path if job descriptions blur roles
 """
     if role_key == "devsecops":
-        return """
-### Recommended pairing
+        return """### Recommended pairing
 
 - [DevOps interview sprint](/learn/devops-interview/) — delivery, K8s, and on-call craft DevSecOps builds on
 """
@@ -719,8 +671,7 @@ def build_core_roadmap(role_key: str) -> dict[str, Any]:
             f"{short}-battle-plan",
             "Week 0: Your 30-day battle plan",
             "Universal schedule, pass gates, and how to pick a regional elective.",
-            f"""
-## How this questline works
+            f"""## How this questline works
 
 **Core sprint (this map)** — technical and behavioral skills every market tests.
 
@@ -764,8 +715,7 @@ Run your core sprint in parallel; add the elective if you target sponsored roles
             f"{short}-week1-checkpoint",
             "Week 1 checkpoint",
             "Self-audit before Week 2 depth.",
-            """
-Rate each 1–5 (target 4+): portfolio pitch, foundation quizzes, daily streak.
+            """Rate each 1–5 (target 4+): portfolio pitch, foundation quizzes, daily streak.
 Pick one interview question from references; answer aloud in 20 minutes.
 """,
             outcomes=("Complete honest self-audit",),
@@ -839,8 +789,7 @@ Pick one interview question from references; answer aloud in 20 minutes.
                 f"{short}-behavioral",
                 "Week 4: Behavioral prep",
                 "STAR stories that work in any culture — tune examples in your elective.",
-                """
-Prepare five STAR stories: shipped impact, incident/quality fix, disagreement, mentoring, fast learning.
+                """Prepare five STAR stories: shipped impact, incident/quality fix, disagreement, mentoring, fast learning.
 
 Regional electives add culture-specific behavioral tips for your target country.
 """,
@@ -850,8 +799,7 @@ Regional electives add culture-specific behavioral tips for your target country.
                 f"{short}-mock-final",
                 "Week 4: Mock drills & interview day",
                 "Timed technical + portfolio + behavioral practice.",
-                """
-## Mocks
+                """## Mocks
 
 1. Technical (25 min) — use role question bank in references
 2. Portfolio defense (15 min)
@@ -867,8 +815,7 @@ Clarify questions, think aloud, admit gaps honestly, ask strong closing question
                 f"{short}-complete-resources",
                 "Complete pass checklist",
                 "Final audit before booking interviews.",
-                """
-- [ ] Core lessons cleared
+                """- [ ] Core lessons cleared
 - [ ] Quizzes passed
 - [ ] Portfolio live with README metrics
 - [ ] Regional elective cleared (if visa path)
@@ -928,8 +875,7 @@ def build_data_fundamentals_elective() -> dict[str, Any]:
                 "df-intro",
                 "How this elective fits DE & DS",
                 "One shared foundation — two specialized sprints.",
-                """
-## Why this exists
+                """## Why this exists
 
 Data **engineering** and data **science** interviews overlap on SQL, Python, and thinking clearly about data — then diverge:
 
@@ -948,8 +894,7 @@ Also add a [regional elective](/learn/relocation-sweden/) if you need visa guida
                 "df-sql",
                 "SQL depth for data interviews",
                 "Window functions, CTEs, and analytical queries.",
-                """
-## Must-know SQL
+                """## Must-know SQL
 
 - JOINs (inner/left), GROUP BY, HAVING pitfalls
 - Window functions: `ROW_NUMBER`, `RANK`, `LAG`, running totals
@@ -969,8 +914,7 @@ Pass [SQL fundamentals](/quizzes/sql-fundamentals/) quiz.
                 "df-python",
                 "Python for data work",
                 "pandas, numpy, and clean notebook habits.",
-                """
-## Python bar
+                """## Python bar
 
 - pandas: filter, groupby, merge, handle nulls
 - numpy: vectorization mindset (avoid row loops)
@@ -986,8 +930,7 @@ Pass [Python fundamentals](/quizzes/python-fundamentals/) quiz.
                 "df-stats",
                 "Statistics refresher",
                 "What DS loops test; what DE quality teams expect.",
-                """
-## Core concepts
+                """## Core concepts
 
 - Mean vs median — when median wins
 - Variance, standard deviation, correlation ≠ causation
@@ -1003,8 +946,7 @@ DS candidates: go deeper in the [Data science sprint](/learn/data-science-interv
                 "df-checklist",
                 "Data fundamentals complete",
                 "Ready for DE or DS core sprint.",
-                """
-- [ ] SQL drill completed
+                """- [ ] SQL drill completed
 - [ ] Python/pandas drill completed
 - [ ] SQL + Python quizzes passed
 - [ ] Chosen DE, DS, or both core sprints
@@ -1032,13 +974,13 @@ def build_relocation_roadmap(region_key: str) -> dict[str, Any]:
     sponsor_slug = SPONSOR_PATH_BY_REGION.get(region_key)
     sponsor_block = ""
     if sponsor_slug:
-        sponsor_block = f"""
-### Migration sponsor deep-dive (recommended)
-
-If you target **Volvo, IFS, or similar visa sponsors** in this market, add the dedicated employer path:
-
-- [Migration sponsor path](/learn/{sponsor_slug}/) — interview stacks, application tactics, checklists
-"""
+        sponsor_block = (
+            "### Migration sponsor deep-dive (recommended)\n\n"
+            "If you target **Volvo, IFS, or similar visa sponsors** in this market, "
+            "add the dedicated employer path:\n\n"
+            f"- [Migration sponsor path](/learn/{sponsor_slug}/) — "
+            "interview stacks, application tactics, checklists"
+        )
 
     core_links = "\n".join(
         f"- [{s.replace('-', ' ').title()}](/learn/{s}/)" for s in INTERVIEW_CORE_SLUGS
@@ -1047,31 +989,39 @@ If you target **Volvo, IFS, or similar visa sponsors** in this market, add the d
     if sponsor_slug:
         related.insert(0, sponsor_slug)
 
+    intro_parts = [
+        f"## You chose: {region['title']}",
+        "",
+        "This elective is **optional** and **shared across disciplines**. "
+        "Complete it once alongside any core interview sprint(s) you are running.",
+        "",
+        "### Compatible core sprints",
+        "",
+        core_links,
+    ]
+    if sponsor_block:
+        intro_parts.extend(["", sponsor_block])
+    intro_parts.extend(
+        [
+            "",
+            "> Not legal advice. Verify immigration rules with official government sources.",
+        ],
+    )
+    intro_body = "\n".join(intro_parts)
+
     lessons = [
         _lesson(
             f"reloc-{code}-intro",
             "How to use this regional elective",
             "Pair with any interview sprint — visa, employers, culture, relocation.",
-            f"""
-## You chose: {region['title']}
-
-This elective is **optional** and **shared across disciplines**. Complete it once alongside any core interview sprint(s) you are running.
-
-### Compatible core sprints
-
-{core_links}
-{sponsor_block}
-
-> Not legal advice. Verify immigration rules with official government sources.
-""",
+            intro_body,
             outcomes=("Link this elective to your active core sprint",),
         ),
         _lesson(
             f"reloc-{code}-visa",
             "Visa sponsorship landscape",
             "Routes, sponsor signals, red flags, pre-offer checklist.",
-            """
-## Sponsorship basics
+            """## Sponsorship basics
 
 Use official immigration links below. Confirm sponsorship in writing before relocating.
 
@@ -1094,8 +1044,7 @@ Use official immigration links below. Confirm sponsorship in writing before relo
             f"reloc-{code}-employers",
             "Employers & job market (all disciplines)",
             "Who sponsors DevOps, data, QA, backend, and cloud roles here.",
-            f"""
-## Market map
+            f"""## Market map
 
 {employers}
 
@@ -1112,8 +1061,7 @@ Use official immigration links below. Confirm sponsorship in writing before relo
             f"reloc-{code}-culture",
             "Workplace culture & behavioral fit",
             "Regional norms for interviews and team collaboration.",
-            f"""
-## Culture signals
+            f"""## Culture signals
 
 {culture}
 
@@ -1133,8 +1081,7 @@ Use STAR format from your core sprint; adapt tone and examples to regional norms
             f"reloc-{code}-settling",
             "Relocation & first 90 days",
             "Admin checklist and proving value after arrival.",
-            """
-## After signed offer
+            """## After signed offer
 
 Complete visa steps promptly; track document deadlines.
 
@@ -1155,8 +1102,7 @@ Understand renewal and permanent residency paths — rules change; verify offici
             f"reloc-{code}-checklist",
             "Regional elective complete checklist",
             "Final gates before you relocate or sign.",
-            """
-- [ ] Official visa route understood
+            """- [ ] Official visa route understood
 - [ ] Sponsor verified (register / accreditation where applicable)
 - [ ] Salary meets visa and market bars
 - [ ] Core interview sprint progressing in parallel

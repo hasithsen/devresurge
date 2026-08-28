@@ -359,7 +359,7 @@ class ShowcaseItemForm(forms.ModelForm):
             ),
             "github_url": forms.URLInput(
                 attrs={
-                    "placeholder": "https://github.com/you/lab/blob/main/designs/url-shortener.excalidraw",
+                    "placeholder": "https://github.com/you/lab/blob/main/designs/url-shortener.excalidraw.png",
                 },
             ),
             "tags": forms.TextInput(

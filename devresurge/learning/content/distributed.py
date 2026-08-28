@@ -25,8 +25,7 @@ ROADMAP = {
             "minutes": 12,
             "quiz_slug": "distributed-systems-basics",
             "outcomes": ("Stop assuming reliable networks",),
-            "body": """
-## Truths of distributed systems
+            "body": """## Truths of distributed systems
 
 - Messages can be delayed, duplicated, or reordered
 - Nodes can pause (GC) and look dead
@@ -51,8 +50,7 @@ ROADMAP = {
             "summary": "Leader/follower, quorum, linearizability vs eventual.",
             "minutes": 16,
             "outcomes": ("Match consistency to product needs",),
-            "body": """
-## Replication styles
+            "body": """## Replication styles
 
 - Single-leader
 - Multi-leader
@@ -80,8 +78,7 @@ During partition, you choose behavior. Don't recite CAP — apply it to the feat
             "summary": "Why Raft/Paxos exist; split brain; fencing tokens.",
             "minutes": 14,
             "outcomes": ("Explain leader election risks",),
-            "body": """
-## Why consensus
+            "body": """## Why consensus
 
 Agreeing on a value/leader among unreliable nodes needs a protocol (Raft/Paxos family).
 
@@ -104,8 +101,7 @@ You don't implement Raft live — you explain why naive "ping the leader" fails.
             "summary": "At-most-once, at-least-once, exactly-once *effects*.",
             "minutes": 14,
             "outcomes": ("Build idempotent consumers",),
-            "body": """
-## Delivery guarantees
+            "body": """## Delivery guarantees
 
 - **At-most-once** — may lose messages
 - **At-least-once** — may duplicate (common default)
@@ -129,8 +125,7 @@ Partitions scale throughput; key chooses partition; consumers track offsets.
             "summary": "Unique ID generation, distributed locks, and saga workflows.",
             "minutes": 14,
             "outcomes": ("Apply patterns to classic prompts",),
-            "body": """
-## Unique IDs
+            "body": """## Unique IDs
 
 - DB sequences (single point)
 - Snowflake-style (timestamp + worker + seq)

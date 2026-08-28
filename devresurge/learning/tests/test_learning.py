@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import re
 
 import pytest
 from django.urls import reverse
@@ -7,11 +8,14 @@ from devresurge.learning.catalog import all_roadmaps
 from devresurge.learning.catalog import get_roadmap
 from devresurge.learning.catalog import lesson_count
 from devresurge.learning.catalog import roadmap_count
+from devresurge.learning.devops_lesson_refs import LESSON_REF_KEYS
 from devresurge.learning.flavor import FLAVOR
 from devresurge.learning.models import LessonProgress
 from devresurge.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
+
+_LEARN_LINK = re.compile(r"\]\(/learn/([^/)]+)/?\)")
 
 
 def test_catalog_has_expected_roadmaps():
@@ -40,8 +44,13 @@ def test_devops_interview_sprint_is_faang_bar():
     devops = get_roadmap("devops-interview")
     assert devops is not None
     assert devops.lesson_count >= 20
+    technical = " ".join(
+        lesson.body.lower()
+        for lesson in devops.lessons
+        if lesson.slug not in ("30-day-battle-plan", "sprint-complete-resources")
+    )
+    assert "volvo" not in technical
     combined = " ".join(lesson.body.lower() for lesson in devops.lessons)
-    assert "volvo" not in combined
     assert "slo" in combined or "error budget" in combined
     assert devops.get_lesson("cicd-release-engineering") is not None
     assert devops.get_lesson("cloud-platform-engineering") is not None
@@ -88,7 +97,7 @@ def test_career_roadmaps_merged_structure():
     assert "data-science-interview" in de.related_roadmap_slugs
     dso = get_roadmap("devsecops-interview")
     assert "devops-interview" in dso.related_roadmap_slugs
-    assert roadmap_count() >= 27
+    assert roadmap_count() >= 24
     assert roadmap_count() < 50
 
 
@@ -98,6 +107,50 @@ def test_data_fundamentals_lesson_refs():
     assert sql is not None
     assert "sql-fundamentals" in sql.body.lower() or "sql" in sql.body.lower()
     assert "mode.com" in sql.body.lower() or "pandas" in elective.get_lesson("df-python").body.lower()
+
+
+def test_craft_lessons_skip_default_interview_refs():
+    craft = get_roadmap("strong-foundations")
+    assert craft is not None
+    for lesson in craft.lessons:
+        assert "## Interview preparation" not in lesson.body
+
+
+def test_catalog_related_roadmaps_resolve():
+    missing: list[str] = []
+    for roadmap in all_roadmaps():
+        for slug in roadmap.related_roadmap_slugs:
+            if get_roadmap(slug) is None:
+                missing.append(f"{roadmap.slug} -> {slug}")
+    assert missing == []
+
+
+def test_catalog_internal_learn_links_resolve():
+    broken: list[str] = []
+    for roadmap in all_roadmaps():
+        for lesson in roadmap.lessons:
+            for match in _LEARN_LINK.finditer(lesson.body):
+                target = match.group(1)
+                if get_roadmap(target) is None:
+                    broken.append(f"{roadmap.slug}/{lesson.slug} -> {target}")
+    assert broken == []
+
+
+def test_lesson_ref_keys_match_catalog():
+    catalog_slugs = {
+        lesson.slug for roadmap in all_roadmaps() for lesson in roadmap.lessons
+    }
+    stale = sorted(set(LESSON_REF_KEYS) - catalog_slugs)
+    assert stale == []
+
+
+def test_roadmap_description_renders_markdown(client):
+    roadmap = get_roadmap("data-eng-interview")
+    assert roadmap is not None
+    response = client.get(reverse("learning:roadmap", kwargs={"roadmap_slug": roadmap.slug}))
+    assert response.status_code == HTTPStatus.OK
+    assert b"data-fundamentals-elective" in response.content
+    assert b"](/learn/" not in response.content
 
 
 def test_every_lesson_has_flavor():

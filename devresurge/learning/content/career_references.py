@@ -1,7 +1,6 @@
 """Role-specific reference link blocks for career interview roadmaps."""
 
-REF_DATA_ENGINEERING = """
-## Data engineering references
+REF_DATA_ENGINEERING = """## Data engineering references
 
 - [Fundamentals of Data Engineering (book)](https://www.fundamentals-of-data-engineering.com/)
 - [dbt documentation](https://docs.getdbt.com/)
@@ -13,8 +12,7 @@ REF_DATA_ENGINEERING = """
 - [DevResurge quiz: Databases internals](/quizzes/databases-internals/)
 """
 
-REF_QA_SDET = """
-## QA / SDET references
+REF_QA_SDET = """## QA / SDET references
 
 - [ISTQB syllabus overview](https://www.istqb.org/certifications/certified-tester-foundation-level)
 - [Ministry of Testing](https://www.ministryoftesting.com/)
@@ -24,8 +22,7 @@ REF_QA_SDET = """
 - [DevResurge quiz: CI/CD DevOps](/quizzes/cicd-devops/)
 """
 
-REF_BACKEND = """
-## Backend engineering references
+REF_BACKEND = """## Backend engineering references
 
 - [DevResurge — Backend engineering roadmap](/learn/backend-engineering/)
 - [HTTP APIs quiz](/quizzes/http-apis/)
@@ -35,8 +32,7 @@ REF_BACKEND = """
 - [Twelve-Factor App](https://12factor.net/)
 """
 
-REF_CLOUD = """
-## Cloud engineering references
+REF_CLOUD = """## Cloud engineering references
 
 - [AWS Skill Builder](https://skillbuilder.aws/)
 - [Azure Learn paths](https://learn.microsoft.com/en-us/training/azure/)
@@ -45,8 +41,7 @@ REF_CLOUD = """
 - [DevResurge — DevOps & SRE roadmap](/learn/devops-sre/)
 """
 
-REF_DATA_SCIENCE = """
-## Data science references
+REF_DATA_SCIENCE = """## Data science references
 
 - [Statistical Learning (ESL)](https://hastie.su.domains/ElemStatLearn/)
 - [scikit-learn documentation](https://scikit-learn.org/stable/user_guide.html)
@@ -58,8 +53,7 @@ REF_DATA_SCIENCE = """
 - [DevResurge quiz: Data structures](/quizzes/data-structures/)
 """
 
-REF_DEVSECOPS = """
-## DevSecOps references
+REF_DEVSECOPS = """## DevSecOps references
 
 - [OWASP DevSecOps guideline](https://owasp.org/www-project-devsecops-guideline/)
 - [NIST SSDF](https://csrc.nist.gov/publications/detail/white-paper/2022/02/04/ssdf-v1-1-final/draft)
@@ -71,8 +65,7 @@ REF_DEVSECOPS = """
 - [DevResurge quiz: CI/CD DevOps](/quizzes/cicd-devops/)
 """
 
-REF_DATA_SHARED = """
-## Shared data fundamentals (DE + DS)
+REF_DATA_SHARED = """## Shared data fundamentals (DE + DS)
 
 - [Mode SQL tutorial](https://mode.com/sql-tutorial/)
 - [pandas documentation](https://pandas.pydata.org/docs/user_guide/index.html)
@@ -81,8 +74,7 @@ REF_DATA_SHARED = """
 - [Data engineering sprint](/learn/data-eng-interview/) · [Data science sprint](/learn/data-science-interview/)
 """
 
-REF_QUESTIONS_DATA = """
-## Common data engineering interview questions
+REF_QUESTIONS_DATA = """## Common data engineering interview questions
 
 1. Design a batch pipeline from raw logs to analytics-ready tables.
 2. Batch vs streaming — when would you pick each?
@@ -96,8 +88,7 @@ REF_QUESTIONS_DATA = """
 **Spine:** sources → ingest → storage zones → transform → serve → monitor.
 """
 
-REF_QUESTIONS_DATA_SCIENCE = """
-## Common data science interview questions
+REF_QUESTIONS_DATA_SCIENCE = """## Common data science interview questions
 
 1. How would you predict customer churn? Walk through features, metric, baseline.
 2. Explain bias-variance and how you'd diagnose overfitting.
@@ -111,8 +102,7 @@ REF_QUESTIONS_DATA_SCIENCE = """
 **Spine:** business question → data → method → metric → recommendation → risks.
 """
 
-REF_QUESTIONS_DEVSECOPS = """
-## Common DevSecOps interview questions
+REF_QUESTIONS_DEVSECOPS = """## Common DevSecOps interview questions
 
 1. Where would you place security gates in a CI/CD pipeline and why?
 2. Explain SBOM, artifact signing, and dependency scanning trade-offs.
@@ -126,8 +116,7 @@ REF_QUESTIONS_DEVSECOPS = """
 **Spine:** threat → proportional control → automation → evidence → culture.
 """
 
-REF_QUESTIONS_QA = """
-## Common QA / SDET interview questions
+REF_QUESTIONS_QA = """## Common QA / SDET interview questions
 
 1. Test pyramid vs trophy — where do E2E tests fit?
 2. How do you test a REST API without a UI?
@@ -141,8 +130,7 @@ REF_QUESTIONS_QA = """
 **Spine:** risk → test types → automation ROI → CI gates → escape rate.
 """
 
-REF_QUESTIONS_BACKEND = """
-## Common backend interview questions
+REF_QUESTIONS_BACKEND = """## Common backend interview questions
 
 1. Design REST API with pagination and auth.
 2. Idempotency keys in payment APIs.
@@ -156,8 +144,7 @@ REF_QUESTIONS_BACKEND = """
 **Spine:** clarify → API → data model → scale → failure modes → observability.
 """
 
-REF_QUESTIONS_CLOUD = """
-## Common cloud engineer interview questions
+REF_QUESTIONS_CLOUD = """## Common cloud engineer interview questions
 
 1. Design multi-account landing zone.
 2. Network topology for hybrid cloud.
@@ -171,8 +158,7 @@ REF_QUESTIONS_CLOUD = """
 **Spine:** requirements → architecture → security → ops → cost → migration.
 """
 
-REF_CAREER_MASTER = """
-## Career sprint master index
+REF_CAREER_MASTER = """## Career sprint master index
 
 ### Interview sprints (pick your role)
 

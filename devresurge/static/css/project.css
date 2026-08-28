@@ -43,6 +43,11 @@
   --accent: #7cf0a8;        /* phosphor green */
   --accent-soft: rgba(124, 240, 168, 0.14);
   --accent-strong: #b6ffd0;
+  --on-accent: #0b0f0d;
+  --accent-on-soft: var(--accent);
+  --btn-primary-bg: var(--accent);
+  --btn-primary-bg-hover: var(--accent-strong);
+  --btn-primary-fg: var(--on-accent);
   --warn: #ffb86b;
   --error: #ff6b81;
   --link: #8be9fd;
@@ -65,8 +70,13 @@
   --text-muted: #545b54;
   --text-dim: #8a9389;
   --accent: #1f7a3a;
-  --accent-soft: rgba(31, 122, 58, 0.1);
+  --accent-soft: rgba(31, 122, 58, 0.14);
   --accent-strong: #145024;
+  --on-accent: #ffffff;
+  --accent-on-soft: #0f4d22;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-bg-hover: var(--accent-strong);
+  --btn-primary-fg: var(--on-accent);
   --warn: #b35a00;
   --error: #b3284b;
   --link: #1356a1;
@@ -346,7 +356,7 @@ code {
 }
 
 .dr-nav__links a[aria-current="page"] {
-  color: var(--accent);
+  color: var(--accent-on-soft);
   border-color: var(--border-strong);
   background: var(--accent-soft);
 }
@@ -442,7 +452,7 @@ code {
   }
 
   .dr-nav__links a[aria-current="page"] {
-    border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+    border-color: color-mix(in oklab, var(--accent-on-soft) 40%, transparent);
   }
 }
 
@@ -473,7 +483,7 @@ code {
     box-shadow 120ms var(--ease);
 }
 
-.dr-btn:hover {
+.dr-btn:not(.dr-btn--primary):not(.dr-btn--danger):hover {
   border-color: var(--accent);
   color: var(--accent);
   box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 80%, transparent);
@@ -485,18 +495,21 @@ code {
 }
 
 .dr-btn--primary {
-  --btn-bg: var(--accent);
-  --btn-fg: #0b0f0d;
-  --btn-bd: var(--accent);
+  --btn-bg: var(--btn-primary-bg);
+  --btn-fg: var(--btn-primary-fg);
+  --btn-bd: var(--btn-primary-bg);
   font-weight: 600;
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent-strong) 55%, #000);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--btn-primary-bg-hover) 55%, #000);
 }
 
-.dr-btn--primary:hover {
-  --btn-bg: var(--accent-strong);
-  --btn-bd: var(--accent-strong);
-  color: #0b0f0d;
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent-strong) 70%, #000);
+.dr-btn--primary:hover,
+.dr-btn--primary:focus-visible {
+  --btn-bg: var(--btn-primary-bg-hover);
+  --btn-bd: var(--btn-primary-bg-hover);
+  --btn-fg: var(--btn-primary-fg);
+  border-color: var(--btn-primary-bg-hover);
+  color: var(--btn-primary-fg);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--btn-primary-bg-hover) 70%, #000);
 }
 
 .dr-btn--ghost {
@@ -891,8 +904,8 @@ a.dr-profile-card {
   display: inline-block;
   padding: 0.18rem 0.5rem;
   background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--accent-on-soft);
+  border: 1px solid color-mix(in oklab, var(--accent-on-soft) 35%, transparent);
   border-radius: 999px;
   font-size: 0.76rem;
   letter-spacing: 0.02em;
@@ -1106,8 +1119,8 @@ form ul.errorlist li::before {
   content: "";
   width: 10px;
   height: 6px;
-  border-left: 2px solid #0b0f0d;
-  border-bottom: 2px solid #0b0f0d;
+  border-left: 2px solid var(--on-accent);
+  border-bottom: 2px solid var(--on-accent);
   transform: rotate(-45deg) translate(1px, -1px);
 }
 
@@ -1501,8 +1514,8 @@ form ul.errorlist li::before {
 }
 
 .dr-pager .current {
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  border: 1px solid color-mix(in oklab, var(--accent-on-soft) 40%, transparent);
+  color: var(--accent-on-soft);
   background: var(--accent-soft);
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-sm);
@@ -1732,9 +1745,9 @@ form ul.errorlist li::before {
 }
 
 .dr-range a[aria-current="page"] {
-  color: var(--accent);
+  color: var(--accent-on-soft);
   background: var(--accent-soft);
-  border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-on-soft) 40%, transparent);
 }
 
 /* Daily views chart ----------------------------------------------------- */
@@ -2247,16 +2260,20 @@ form ul.errorlist li::before {
   justify-content: center;
   padding: 0.55rem 0.9rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: #0b0f0d;
+  border: 1px solid var(--btn-primary-bg);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-mono);
   cursor: pointer;
   text-decoration: none;
 }
 
-.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
-.btn:hover { color: #0b0f0d; }
+.btn-primary:hover {
+  background: var(--btn-primary-bg-hover);
+  border-color: var(--btn-primary-bg-hover);
+  color: var(--btn-primary-fg);
+}
+.btn:hover { color: var(--btn-primary-fg); }
 
 .visually-hidden,
 .sr-only {
@@ -2301,9 +2318,9 @@ form ul.errorlist li::before {
 
 .dr-subnav a[aria-current="page"],
 .dr-subnav a.is-active {
-  color: var(--accent);
+  color: var(--accent-on-soft);
   background: var(--accent-soft);
-  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  border-color: color-mix(in oklab, var(--accent-on-soft) 40%, transparent);
 }
 
 /* Breadcrumb ----------------------------------------------------------- */
@@ -2535,10 +2552,17 @@ form ul.errorlist li::before {
 }
 
 .dr-share-btn--primary {
-  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
-  background: color-mix(in oklab, var(--accent) 12%, transparent);
-  color: var(--accent);
+  border-color: var(--btn-primary-bg);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-weight: 600;
+}
+
+.dr-share-btn--primary:hover,
+.dr-share-btn--primary:focus-visible {
+  border-color: var(--btn-primary-bg-hover);
+  background: var(--btn-primary-bg-hover);
+  color: var(--btn-primary-fg);
 }
 
 .dr-badge-celebrate {
@@ -2880,8 +2904,8 @@ a.dr-tag:hover {
   height: 1.25rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--btn-primary-bg);
+  color: var(--on-accent);
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
@@ -2904,13 +2928,13 @@ a.dr-tag:hover {
 .dr-pill--new {
   border-color: var(--border-strong);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-on-soft);
 }
 
 .dr-pill--ok {
   border-color: var(--border-strong);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-on-soft);
 }
 
 .dr-pager__status {
@@ -3578,7 +3602,7 @@ a.dr-tag:hover {
 
 .dr-learn-cleared {
   margin: 0;
-  color: var(--accent-strong);
+  color: var(--accent-on-soft);
   font-size: 0.9rem;
 }
 
@@ -3588,7 +3612,7 @@ a.dr-tag:hover {
 }
 
 .dr-learn-toc a.is-cleared .dr-learn-toc__n {
-  color: var(--accent-strong);
+  color: var(--accent-on-soft);
 }
 
 .dr-learn-hero .dr-btn-row {
@@ -3685,20 +3709,6 @@ a.dr-tag:hover {
   background: var(--bg);
 }
 
-.dr-showcase-excalidraw__stage {
-  min-height: 12rem;
-  overflow: auto;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem;
-  background: var(--bg);
-}
-
-.dr-showcase-excalidraw__stage svg {
-  display: block;
-  margin: 0 auto;
-}
-
 .dr-showcase-notes .dr-markdown {
   font-size: 0.95rem;
   line-height: 1.7;
@@ -3777,7 +3787,7 @@ a.dr-achieve:hover {
 }
 
 .dr-achieve__icon {
-  color: var(--accent);
+  color: var(--accent-on-soft);
   font-weight: 700;
   flex: 0 0 auto;
   line-height: 1.35;
@@ -3854,9 +3864,9 @@ a.dr-achieve:hover {
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklab, var(--accent-on-soft) 35%, transparent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-on-soft);
   font-size: 1.35rem;
   flex-shrink: 0;
 }
@@ -5204,10 +5214,10 @@ body.dr-map-body .dr-main--map {
   top: 0.65rem;
   z-index: 100;
   padding: 0.55rem 0.85rem;
-  background: var(--accent);
-  color: #0b0f0d;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-weight: 600;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--btn-primary-bg);
   border-radius: var(--radius-sm);
   text-decoration: none;
   transform: translateY(-160%);
@@ -5301,7 +5311,7 @@ a.dr-btn.dr-btn--primary:hover,
 a.dr-btn.dr-btn--primary:focus-visible {
   border-color: var(--btn-bd);
   border-bottom-color: var(--btn-bd);
-  color: #0b0f0d;
+  color: var(--btn-primary-fg);
 }
 
 a.dr-btn.dr-btn--ghost:hover,
@@ -5567,8 +5577,8 @@ a.dr-achieve:focus-visible {
 }
 
 .dr-pager .current {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent-on-soft) 40%, transparent);
+  color: var(--accent-on-soft);
   background: var(--accent-soft);
 }
 

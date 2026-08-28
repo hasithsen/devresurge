@@ -121,9 +121,28 @@ class Roadmap:
         return -1
 
 
+def normalize_lesson_markdown(body: str) -> str:
+    """Normalize lesson markdown: LF endings, trim lines, collapse extra blank lines."""
+    if not body:
+        return ""
+    text = body.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line.rstrip() for line in text.split("\n")]
+    out: list[str] = []
+    blank_run = 0
+    for line in lines:
+        if not line.strip():
+            blank_run += 1
+            if blank_run <= 1:
+                out.append("")
+        else:
+            blank_run = 0
+            out.append(line)
+    return "\n".join(out).strip()
+
+
 def _append_reference_blocks(body: str, ref_keys: tuple[str, ...]) -> str:
     if not ref_keys:
-        return body
+        return normalize_lesson_markdown(body)
     blocks: list[str] = [body]
     seen: set[str] = set()
     for key in ref_keys:
@@ -133,7 +152,7 @@ def _append_reference_blocks(body: str, ref_keys: tuple[str, ...]) -> str:
         if block:
             blocks.append(block.strip())
             seen.add(key)
-    return "\n\n".join(blocks)
+    return normalize_lesson_markdown("\n\n".join(blocks))
 
 
 def _as_text(value: Any) -> str:
@@ -210,6 +229,17 @@ if _dupes:
 ROADMAPS: tuple[Roadmap, ...] = _built
 
 _BY_SLUG: dict[str, Roadmap] = {roadmap.slug: roadmap for roadmap in ROADMAPS}
+
+for _roadmap in ROADMAPS:
+    _lesson_slugs = [lesson.slug for lesson in _roadmap.lessons]
+    _dup_lessons = [slug for slug, n in Counter(_lesson_slugs).items() if n > 1]
+    if _dup_lessons:
+        msg = f"Duplicate lesson slug(s) in {_roadmap.slug}: {', '.join(sorted(_dup_lessons))}"
+        raise RuntimeError(msg)
+    for _related in _roadmap.related_roadmap_slugs:
+        if _related not in _BY_SLUG:
+            msg = f"Unknown related roadmap {_related!r} on {_roadmap.slug!r}"
+            raise RuntimeError(msg)
 
 
 def resolve_roadmap_slug(slug: str) -> str:

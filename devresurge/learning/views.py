@@ -119,6 +119,7 @@ def roadmap_detail_view(request: HttpRequest, roadmap_slug: str) -> HttpResponse
         "learning/roadmap_detail.html",
         {
             "roadmap": roadmap,
+            "description_html": render_markdown(roadmap.description),
             "related_quizzes": quizzes,
             "learn_stats": stats,
             "completed_lessons": completed,

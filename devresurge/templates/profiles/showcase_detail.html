@@ -48,85 +48,36 @@
       </div>
     {% endif %}
 
-    {% if showcase.kind == "image" or showcase.preview_image_url %}
-      <figure class="dr-showcase-preview dr-panel" style="margin-top: 1.25rem;">
-        <div class="dr-panel__body">
-          <img src="{{ showcase.preview_image_url|default:showcase.raw_url }}"
-               alt="{{ showcase.title }}"
-               loading="lazy"
-               class="dr-showcase-preview__img" />
-        </div>
-      </figure>
-    {% endif %}
-
-    {% if showcase.kind == "excalidraw" %}
-      <div class="dr-panel dr-showcase-excalidraw" style="margin-top: 1.25rem;">
-        <div class="dr-panel__header">
-          <span class="dr-dots"><span></span><span></span><span></span></span>
-          <span class="dr-panel__title">{{ showcase.github_path|default:"scene.excalidraw" }}</span>
-        </div>
-        <div class="dr-panel__body">
-          {% if excalidraw_parse_error %}
-            <p class="dr-muted" style="margin: 0;">{% trans "Cached Excalidraw JSON could not be parsed. Re-sync from GitHub." %}</p>
-          {% elif not excalidraw_data %}
-            <p class="dr-muted" style="margin: 0;">{% trans "No content cached yet — owner should sync from GitHub." %}</p>
-          {% else %}
-            {{ excalidraw_data|json_script:"dr-excalidraw-data" }}
-            <div id="dr-excalidraw-mount"
-                 class="dr-showcase-excalidraw__stage"
-                 data-excalidraw
-                 data-title="{{ showcase.title }}"
-                 aria-live="polite">
-              <p class="dr-muted" style="margin: 0;">{% trans "Rendering Excalidraw scene…" %}</p>
+    {% if showcase.kind == "image" or showcase.kind == "excalidraw" %}
+      {% with img_url=showcase.preview_image_url|default:showcase.raw_url %}
+        {% if img_url %}
+          <figure class="dr-showcase-preview dr-panel" style="margin-top: 1.25rem;">
+            <div class="dr-panel__header">
+              <span class="dr-dots"><span></span><span></span><span></span></span>
+              <span class="dr-panel__title">{{ showcase.github_path|default:"diagram" }}</span>
             </div>
-            <div class="dr-btn-row" style="margin-top: 0.85rem;">
-              {% if showcase.raw_url %}
-                <a class="dr-btn dr-btn--sm" href="{{ showcase.raw_url }}" rel="noopener nofollow ugc" target="_blank">{% trans "raw JSON" %} ↗</a>
+            <div class="dr-panel__body">
+              <img src="{{ img_url }}"
+                   alt="{{ showcase.title }}"
+                   loading="lazy"
+                   class="dr-showcase-preview__img" />
+              {% if showcase.kind == "excalidraw" %}
+                <p class="dr-helptext dr-mt-sm">
+                  {% trans "Embedded Excalidraw export — open in Excalidraw or Excalidraw.com to edit the scene." %}
+                </p>
               {% endif %}
             </div>
-          {% endif %}
-        </div>
-      </div>
-      {% if excalidraw_data %}
-        <script type="module">
-          (async function () {
-            var mount = document.getElementById("dr-excalidraw-mount");
-            var raw = document.getElementById("dr-excalidraw-data");
-            if (!mount || !raw) return;
-            var scene;
-            try {
-              scene = JSON.parse(raw.textContent || "{}");
-            } catch (err) {
-              mount.innerHTML = "<p class='dr-muted'>Could not parse Excalidraw JSON.</p>";
-              return;
-            }
-            var elements = scene.elements || scene;
-            if (!Array.isArray(elements)) {
-              mount.innerHTML = "<p class='dr-muted'>Excalidraw file has no elements array.</p>";
-              return;
-            }
-            try {
-              var utils = await import("https://esm.sh/@excalidraw/utils@0.1.2");
-              var svg = await utils.exportToSvg({
-                elements: elements,
-                appState: Object.assign(
-                  { exportBackground: true, viewBackgroundColor: "#0b0f0d" },
-                  scene.appState || {},
-                ),
-                files: scene.files || null,
-              });
-              mount.replaceChildren(svg);
-              svg.setAttribute("role", "img");
-              svg.setAttribute("aria-label", mount.getAttribute("data-title") || "diagram");
-              svg.style.width = "100%";
-              svg.style.height = "auto";
-              svg.style.maxHeight = "70vh";
-            } catch (err) {
-              mount.innerHTML = "<p class='dr-muted'>Live SVG export unavailable — use raw JSON or a companion PNG in the repo.</p>";
-            }
-          })();
-        </script>
-      {% endif %}
+          </figure>
+        {% elif showcase.kind == "excalidraw" %}
+          <div class="dr-panel" style="margin-top: 1.25rem;">
+            <div class="dr-panel__body">
+              <p class="dr-muted" style="margin: 0;">
+                {% trans "No embedded PNG cached yet — link a .excalidraw.png file (Export → PNG with “Embed scene”) and sync from GitHub." %}
+              </p>
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
     {% elif showcase.kind == "markdown" or showcase.kind == "notes" %}
       <article class="dr-panel dr-showcase-notes" style="margin-top: 1.25rem;">
         <div class="dr-panel__header">

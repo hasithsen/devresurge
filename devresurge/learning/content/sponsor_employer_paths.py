@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-INTERVIEW_CORE_LINKS = """
-- [DevOps interview sprint](/learn/devops-interview/) · [DevSecOps](/learn/devsecops-interview/)
+INTERVIEW_CORE_LINKS = """- [DevOps interview sprint](/learn/devops-interview/) · [DevSecOps](/learn/devsecops-interview/)
 - [Data engineering](/learn/data-eng-interview/) · [Data science](/learn/data-science-interview/)
 - [QA / SDET](/learn/qa-interview/) · [Backend](/learn/backend-interview/) · [Cloud](/learn/cloud-interview/)
 """
@@ -79,8 +78,7 @@ def build_sponsor_path_sweden() -> dict[str, Any]:
                 "sp-se-intro",
                 "How to use this sponsor path",
                 "Volvo, IFS, and peers — paired with regional + core sprints.",
-                f"""
-## Three layers (run in parallel)
+                f"""## Three layers (run in parallel)
 
 1. **Core interview sprint** — technical depth ([DevOps](/learn/devops-interview/) recommended)
 2. **[Sweden relocation elective](/learn/relocation-sweden/)** — visa rules, culture, settling
@@ -96,8 +94,7 @@ def build_sponsor_path_sweden() -> dict[str, Any]:
                 "sp-se-volvo-ecosystem",
                 "Volvo ecosystem — Group, Cars, Scania",
                 "Automotive/industrial Azure platforms and interview culture.",
-                """
-## Know the landscape
+                """## Know the landscape
 
 | Entity | Focus | Typical locations |
 |--------|-------|-------------------|
@@ -140,8 +137,7 @@ Use [DevOps interview sprint](/learn/devops-interview/) for SRE fundamentals; us
                 "sp-se-ifs-platform",
                 "IFS — global enterprise cloud platform",
                 "ERP/EAM/FSM SaaS, multi-cloud delivery, Lund HQ and global hubs.",
-                """
-## What IFS builds
+                """## What IFS builds
 
 **IFS** (HQ Lund, Sweden) delivers enterprise cloud software — ERP, field service (FSM),
 asset management (EAM) — to global customers. Platform engineering spans **multi-cloud**
@@ -181,8 +177,7 @@ SRE, and security engineers. Roles often list English as working language.
                 "sp-se-industrial-peers",
                 "Ericsson, SKF, Atlas Copco & industrial peers",
                 "Telecom and industrial sponsors beyond automotive.",
-                """
-## Additional Swedish sponsors (verify openings)
+                """## Additional Swedish sponsors (verify openings)
 
 | Employer | Domain | Stack signals |
 |----------|--------|---------------|
@@ -213,8 +208,7 @@ Shortlist **10 employers**; track sponsorship mention, stack, city, and applicat
                 "sp-se-enterprise-interviews",
                 "Enterprise DevOps interviews in Sweden",
                 "Azure/K8s loops, behavioral tone, and mock scenarios.",
-                """
-## Technical scenarios (practice aloud)
+                """## Technical scenarios (practice aloud)
 
 1. Design CI/CD for microservices on **AKS** with scan gates and manual prod approval
 2. Debug **502** after Ingress change — probes, backend pool, TLS
@@ -246,8 +240,7 @@ Pass [Containers](/quizzes/containers-docker/) and [CI/CD](/quizzes/cicd-devops/
                 "sp-se-checklist",
                 "Sweden sponsor path — complete checklist",
                 "Gates before you sign or relocate.",
-                """
-- [ ] [Sweden relocation elective](/learn/relocation-sweden/) in progress or complete
+                """- [ ] [Sweden relocation elective](/learn/relocation-sweden/) in progress or complete
 - [ ] Core interview sprint Week 2+ complete
 - [ ] Volvo / IFS / peer employer list with sponsorship verified
 - [ ] Enterprise Azure + K8s mock completed
@@ -299,8 +292,7 @@ def build_sponsor_path_australia() -> dict[str, Any]:
                 "sp-au-intro",
                 "How to use this sponsor path",
                 "IFS, product cos, and banks — with 482/186 context.",
-                f"""
-## Parallel study plan
+                f"""## Parallel study plan
 
 1. Core sprint — [DevOps interview](/learn/devops-interview/) or your discipline
 2. [Australia relocation elective](/learn/relocation-australia/) — 482/186, ACS, culture
@@ -316,8 +308,7 @@ Confirm **Skilled Occupation List** alignment and ACS assessment timing early fo
                 "sp-au-ifs-platform",
                 "IFS in Australia",
                 "Enterprise cloud platform roles — Sydney, Melbourne, remote-hybrid.",
-                """
-## IFS in AU
+                """## IFS in AU
 
 IFS maintains Australian presence supporting APAC customers and global platform delivery.
 Platform/DevOps roles may sit in **Sydney**, **Melbourne**, or hybrid arrangements — verify on [IFS careers](https://www.ifs.com/about/careers).
@@ -339,8 +330,7 @@ Employer must be willing to **nominate** for 482 TSS or 186 ENS where eligible �
                 "sp-au-product-sponsors",
                 "Atlassian, Canva, REA & product sponsors",
                 "High-growth product companies with skilled visa history.",
-                """
-## Product-tier sponsors (verify per role)
+                """## Product-tier sponsors (verify per role)
 
 | Employer | Notes |
 |----------|-------|
@@ -364,8 +354,7 @@ Job title and duties must match **ANZSCO** occupation for skills assessment — 
                 "sp-au-banks-regulated",
                 "Big banks & regulated employers",
                 "CBA, NAB, Westpac, Macquarie — CPS 234 and change advisory.",
-                """
-## Regulated sponsors
+                """## Regulated sponsors
 
 Major banks and insurers sponsor **482/186** for senior platform roles when skills are scarce — competition is high; referrals help.
 
@@ -390,8 +379,7 @@ Major banks and insurers sponsor **482/186** for senior platform roles when skil
                 "sp-au-other-sponsors",
                 "Telstra, Woolworths, gov digital & more",
                 "Telecom, retail tech, and public-sector digital sponsors.",
-                """
-## Additional sponsor categories
+                """## Additional sponsor categories
 
 | Sector | Examples | Signals |
 |--------|----------|---------|
@@ -417,8 +405,7 @@ Major banks and insurers sponsor **482/186** for senior platform roles when skil
                 "sp-au-checklist",
                 "Australia sponsor path — complete checklist",
                 "ACS, nomination, and interview gates.",
-                """
-- [ ] [Australia relocation elective](/learn/relocation-australia/) complete
+                """- [ ] [Australia relocation elective](/learn/relocation-australia/) complete
 - [ ] ACS skills assessment submitted or timed (if required)
 - [ ] Occupation code matches role duties
 - [ ] IFS + product + bank tier lists active
@@ -469,8 +456,7 @@ def build_sponsor_path_usa() -> dict[str, Any]:
                 "sp-us-intro",
                 "How to use this sponsor path",
                 "Visa tiers, IFS, enterprise, and when to run the hyperscale sprint.",
-                f"""
-## Two prep tracks (pick primary + backup)
+                f"""## Two prep tracks (pick primary + backup)
 
 | Target | Prep emphasis |
 |--------|----------------|
@@ -488,8 +474,7 @@ Always run [USA relocation elective](/learn/relocation-usa/) for H-1B/O-1 mechan
                 "sp-us-ifs-platform",
                 "IFS North America",
                 "Enterprise cloud platform — US hubs and SaaS operations.",
-                """
-## IFS in the USA
+                """## IFS in the USA
 
 IFS operates North American offices supporting sales, services, and **platform engineering**
 for IFS Cloud. Search US platform/DevOps/SRE titles on official careers.
@@ -517,8 +502,7 @@ Prepare SaaS incident and pipeline stories with customer impact metrics.
                 "sp-us-volvo-industrial",
                 "Volvo Group & industrial US operations",
                 "North American automotive/industrial Azure delivery.",
-                """
-## Volvo in the USA
+                """## Volvo in the USA
 
 **Volvo Group** (trucks, buses, powertrain) and **Volvo Cars** (US operations) hire platform
 and DevOps engineers — often aligned with **global Azure/AKS** standards from Sweden.
@@ -543,8 +527,7 @@ Caterpillar tech, John Deere IT, Siemens USA, Bosch — enterprise cloud; verify
                 "sp-us-tier1-hyperscale",
                 "Tier-1 tech sponsors (H-1B)",
                 "Amazon, Google, Microsoft, Meta — lottery, bar, and prep routing.",
-                """
-## Tier-1 sponsors
+                """## Tier-1 sponsors
 
 Public H-1B filers with platform orgs: **Amazon**, **Google**, **Microsoft**, **Meta**, **Apple**, **Netflix**, etc.
 
@@ -571,8 +554,7 @@ Strong publication, talks, or critical role history? Explore **O-1** with immigr
                 "sp-us-enterprise-sponsors",
                 "Enterprise SaaS & services sponsors",
                 "Oracle, SAP, ServiceNow, Accenture (verify entity), and mid-cap SaaS.",
-                """
-## Enterprise tier
+                """## Enterprise tier
 
 | Type | Examples | Interview flavor |
 |------|----------|------------------|
@@ -597,8 +579,7 @@ release trains, and audit-friendly pipelines in interviews.
                 "sp-us-checklist",
                 "USA sponsor path — complete checklist",
                 "H-1B, mocks, and offer gates.",
-                """
-- [ ] [USA relocation elective](/learn/relocation-usa/) complete
+                """- [ ] [USA relocation elective](/learn/relocation-usa/) complete
 - [ ] Primary track chosen: Tier-1 vs enterprise (IFS/industrial)
 - [ ] [DevOps interview sprint](/learn/devops-interview/) Week 3+ if Tier-1
 - [ ] IFS / enterprise stories with customer-impact metrics

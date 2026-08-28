@@ -30,8 +30,7 @@ ROADMAP = {
             "minutes": 14,
             "quiz_slug": "cicd-devops",
             "outcomes": ("Sketch a pipeline for a real service",),
-            "body": """
-## Pipeline stages
+            "body": """## Pipeline stages
 
 1. Lint / typecheck / unit tests (fast fail)
 2. Build artifact (image / binary) with immutable tag
@@ -69,8 +68,7 @@ Build once; promote the same artifact across environments.
             "minutes": 14,
             "quiz_slug": "containers-docker",
             "outcomes": ("Write production-minded Dockerfiles",),
-            "body": """
-## Image hygiene
+            "body": """## Image hygiene
 
 - Minimal base images
 - Non-root user
@@ -101,8 +99,7 @@ Multi-stage Dockerfile for a web app; run with memory limit; break healthcheck o
             "minutes": 14,
             "quiz_slug": "linux-shell",
             "outcomes": ("Debug a broken deploy with shell tools",),
-            "body": """
-## Everyday toolkit
+            "body": """## Everyday toolkit
 
 `ps`, `top`/`htop`, `ss`/`lsof`, `curl`, `dig`, `jq`, `tail -F`, `strace` (sparingly).
 
@@ -128,8 +125,7 @@ Trace why service A cannot reach service B — write the decision tree.
             "summary": "Reproducible infra; env parity; secrets and config separation.",
             "minutes": 12,
             "outcomes": ("Treat infra changes like code reviews",),
-            "body": """
-## Why IaC
+            "body": """## Why IaC
 
 ClickOps doesn't scale and can't be reviewed. Terraform/CloudFormation/Pulumi make changes auditable.
 
@@ -155,8 +151,7 @@ Infra PRs need blast-radius notes and plan output review.
             "minutes": 14,
             "quiz_slug": "observability-basics",
             "outcomes": ("Define SLIs for a service you know",),
-            "body": """
-## SLI → SLO → alert
+            "body": """## SLI → SLO → alert
 
 - SLI: measurable user happiness proxy (availability, latency)
 - SLO: target over a window
@@ -181,8 +176,7 @@ Pages must be actionable. If not, fix the alert — don't accept pager spam.
             "summary": "Mitigate first, then diagnose; blameless postmortems that change systems.",
             "minutes": 12,
             "outcomes": ("Run a crisp incident timeline",),
-            "body": """
-## During the fire
+            "body": """## During the fire
 
 1. Declare incident / severity
 2. Mitigate user impact (rollback, failover, feature flag off)
@@ -211,8 +205,7 @@ Tabletop: "p99 latency 10× after deploy" — what do you check first?
             "summary": "Official docs, quizzes, labs, and pass checklist for production craft.",
             "minutes": 15,
             "outcomes": ("Use as ongoing reference after clearing all quests",),
-            "body": """
-## Pass criteria — DevOps & SRE questline
+            "body": """## Pass criteria — DevOps & SRE questline
 
 - [ ] All 7 lessons cleared (6 core + this guide)
 - [ ] Quizzes passed: [CI/CD](/quizzes/cicd-devops/), [Docker](/quizzes/containers-docker/), [Linux](/quizzes/linux-shell/), [Observability](/quizzes/observability-basics/)
@@ -222,7 +215,7 @@ Tabletop: "p99 latency 10× after deploy" — what do you check first?
 
 ## Interview sprint paths (visa sponsors)
 
-Preparing for relocation interviews? Add one [regional elective](/learn/) (visa + culture) alongside this craft path.
+Preparing for relocation interviews? Add one [regional elective](/learn/relocation-sweden/) (visa + culture) alongside this craft path.
 """,
         },
     ],

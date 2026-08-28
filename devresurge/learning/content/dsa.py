@@ -24,8 +24,7 @@ ROADMAP = {
             "summary": "Clarify → examples → brute force → optimize → code → test.",
             "minutes": 10,
             "outcomes": ("Run a repeatable interview script under time pressure",),
-            "body": """
-## The 45-minute script
+            "body": """## The 45-minute script
 
 1. **Restate** the problem and constraints (n size, duplicates, sorted?).
 2. **Examples** — normal, edge (empty, one element), adversarial.
@@ -59,8 +58,7 @@ Every practice problem: speak the script aloud — even alone.
                 "Use hash maps for O(n) pair/complement problems",
                 "Apply two pointers on sorted or partitioned arrays",
             ),
-            "body": """
-## Hash map reflexes
+            "body": """## Hash map reflexes
 
 - Two-sum / complements → value → index map
 - Frequency counting → Counter / dict
@@ -103,8 +101,7 @@ Solve: two-sum, longest substring without repeating chars, container with most w
                 "Implement DFS/BFS without panic",
                 "Use recursion with clear base cases",
             ),
-            "body": """
-## Traversals
+            "body": """## Traversals
 
 - **DFS**: preorder / inorder / postorder (recursion or explicit stack)
 - **BFS**: level-order with a queue
@@ -138,8 +135,7 @@ Max depth, lowest common ancestor, level-order zigzag, validate BST.
                 "Model problems as graphs",
                 "Choose BFS vs DFS vs topo correctly",
             ),
-            "body": """
-## Representation
+            "body": """## Representation
 
 Prefer **adjacency list** for interviews unless dense matrix is natural (grid).
 
@@ -172,8 +168,7 @@ Number of islands, course schedule, clone graph, word ladder (BFS).
                 "Use heaps for top-k and scheduling",
                 "Binary-search answers, not only arrays",
             ),
-            "body": """
-## Heaps
+            "body": """## Heaps
 
 - Top-k → size-k heap
 - Merge k sorted lists
@@ -208,8 +203,7 @@ Kth largest, merge intervals, search in rotated array, koko eating bananas.
                 "Define DP state clearly",
                 "Convert recursion + memo to bottom-up",
             ),
-            "body": """
-## DP recipe
+            "body": """## DP recipe
 
 1. **Define state** — what decisions remain? (`dp[i]`, `dp[i][j]`)
 2. **Transition** — how do you build from smaller states?

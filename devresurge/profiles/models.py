@@ -629,7 +629,7 @@ class ProjectLink(models.Model):
 
 
 class ShowcaseKind(models.TextChoices):
-    EXCALIDRAW = "excalidraw", _("Excalidraw system design")
+    EXCALIDRAW = "excalidraw", _("Excalidraw diagram (embedded PNG)")
     MARKDOWN = "markdown", _("Markdown notes")
     NOTES = "notes", _("Plain / LFS-style notes")
     IMAGE = "image", _("Diagram / image")
@@ -661,7 +661,7 @@ class ShowcaseItem(models.Model):
         _("GitHub file URL"),
         max_length=500,
         help_text=_(
-            "Public file link, e.g. https://github.com/you/repo/blob/main/designs/api.excalidraw",
+            "Public file link, e.g. https://github.com/you/repo/blob/main/designs/api.excalidraw.png",
         ),
     )
     github_owner = models.CharField(max_length=100, blank=True)
@@ -760,26 +760,36 @@ class ShowcaseItem(models.Model):
         """Pull the public file into ``content_cache`` (and optional preview)."""
         from .github import GitHubFetchError
         from .github import detect_kind
+        from .github import fetch_bytes
         from .github import fetch_text
-        from .github import find_preview_url
+        from .github import is_excalidraw_embed
         from .github import parse_github_url
+        from .github import resolve_excalidraw_ref
 
         try:
             ref = parse_github_url(self.github_url, default_ref=self.github_ref or "main")
-            text = fetch_text(ref)
+            ref = resolve_excalidraw_ref(ref)
             self.github_owner = ref.owner
             self.github_repo = ref.repo
             self.github_path = ref.path
             self.github_ref = ref.ref
             self.github_url = ref.html_url
             self.kind = detect_kind(ref.path)
-            self.content_cache = text
-            self.content_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
-            self.preview_image_url = ""
-            if self.kind == ShowcaseKind.EXCALIDRAW:
-                self.preview_image_url = find_preview_url(ref)
-            elif self.kind == ShowcaseKind.IMAGE:
+            if is_excalidraw_embed(ref.path):
+                data = fetch_bytes(ref)
+                self.content_cache = ""
+                self.content_sha = hashlib.sha256(data).hexdigest()
                 self.preview_image_url = ref.raw_url
+            elif self.kind == ShowcaseKind.IMAGE:
+                data = fetch_bytes(ref)
+                self.content_cache = ""
+                self.content_sha = hashlib.sha256(data).hexdigest()
+                self.preview_image_url = ref.raw_url
+            else:
+                text = fetch_text(ref)
+                self.content_cache = text
+                self.content_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+                self.preview_image_url = ""
             self.fetch_error = ""
             self.fetched_at = timezone.now()
         except GitHubFetchError as exc:
