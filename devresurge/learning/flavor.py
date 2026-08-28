@@ -612,7 +612,7 @@ try:
             _slug = _lesson["slug"]
             if _slug not in FLAVOR:
                 FLAVOR[_slug] = _register_career_flavor(_slug, _lesson["title"])
-except ImportError:
+except Exception:  # noqa: BLE001 — keep static FLAVOR usable if generated packs fail
     pass
 
 

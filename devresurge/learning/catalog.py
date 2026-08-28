@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
@@ -135,6 +136,17 @@ def _append_reference_blocks(body: str, ref_keys: tuple[str, ...]) -> str:
     return "\n\n".join(blocks)
 
 
+def _as_text(value: Any) -> str:
+    """Coerce roadmap string fields; join accidental tuple/list audiences."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (tuple, list)):
+        return " ".join(str(part) for part in value if part is not None)
+    return str(value)
+
+
 def _lesson(data: dict[str, Any]) -> Lesson:
     minutes = int(data.get("minutes", 12))
     hook, boss_fight = flavor_for(data["slug"])
@@ -157,13 +169,13 @@ def _roadmap(data: dict[str, Any]) -> Roadmap:
     return Roadmap(
         slug=data["slug"],
         title=data["title"],
-        tagline=data["tagline"],
-        description=data["description"],
+        tagline=_as_text(data["tagline"]),
+        description=_as_text(data["description"]),
         domain=data["domain"],
         level=data["level"],
         icon=data["icon"],
         order=int(data["order"]),
-        audience=data["audience"],
+        audience=_as_text(data["audience"]),
         outcomes=tuple(data.get("outcomes") or ()),
         lessons=tuple(_lesson(item) for item in data["lessons"]),
         related_quiz_slugs=tuple(data.get("related_quiz_slugs") or ()),
@@ -187,9 +199,15 @@ ROADMAP_SOURCES: tuple[dict[str, Any], ...] = (
     elite_path.ROADMAP,
 )
 
-ROADMAPS: tuple[Roadmap, ...] = tuple(
+_built = tuple(
     sorted((_roadmap(src) for src in ROADMAP_SOURCES), key=lambda r: (r.order, r.title)),
 )
+_dupes = [slug for slug, n in Counter(r.slug for r in _built).items() if n > 1]
+if _dupes:
+    msg = f"Duplicate roadmap slug(s): {', '.join(sorted(_dupes))}"
+    raise RuntimeError(msg)
+
+ROADMAPS: tuple[Roadmap, ...] = _built
 
 _BY_SLUG: dict[str, Roadmap] = {roadmap.slug: roadmap for roadmap in ROADMAPS}
 

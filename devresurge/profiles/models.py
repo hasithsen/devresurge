@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import timedelta
 
 from django.conf import settings
@@ -251,6 +252,7 @@ class Profile(models.Model):
         render a progress bar and deep-link to the right editor.
         """
         has_projects = self.projects.exists() if self.pk else False
+        has_showcases = self.showcases.filter(is_published=True).exists() if self.pk else False
         has_links = bool(self.website_url) or (
             self.social_links.exists() if self.pk else False
         )
@@ -300,6 +302,12 @@ class Profile(models.Model):
                 "label": _("At least one project"),
                 "done": has_projects,
                 "url_name": "profiles:project_create",
+            },
+            {
+                "key": "showcases",
+                "label": _("GitHub showcase (design / notes)"),
+                "done": has_showcases,
+                "url_name": "profiles:showcase_create",
             },
             {
                 "key": "links",
@@ -409,6 +417,17 @@ class Profile(models.Model):
                     lines.append(" · ".join(extras))
                 lines.append("")
 
+        showcases = (
+            list(self.showcases.filter(is_published=True)) if self.pk else []
+        )
+        if showcases:
+            lines.extend(["## Lab · showcases", ""])
+            for item in showcases:
+                mark = "★ " if item.is_featured else ""
+                url = f"{base_url.rstrip('/')}{item.get_absolute_url()}" if base_url else item.github_url
+                lines.append(f"- {mark}[{item.title}]({url}) — {item.get_kind_display()}")
+            lines.append("")
+
         recommendations = list(self.recommendations_received.filter(is_public=True)[:5]) if self.pk else []
         if recommendations:
             lines.extend(["## Recommendations", ""])
@@ -509,6 +528,169 @@ class ProjectLink(models.Model):
                 seen.add(tag)
                 out.append(tag)
         return out
+
+
+class ShowcaseKind(models.TextChoices):
+    EXCALIDRAW = "excalidraw", _("Excalidraw system design")
+    MARKDOWN = "markdown", _("Markdown notes")
+    NOTES = "notes", _("Plain / LFS-style notes")
+    IMAGE = "image", _("Diagram / image")
+
+
+class ShowcaseItem(models.Model):
+    """A GitHub-backed artifact on a public profile (designs, notes, diagrams)."""
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="showcases",
+    )
+    slug = models.SlugField(max_length=80)
+    title = models.CharField(_("title"), max_length=140)
+    summary = models.CharField(
+        _("summary"),
+        max_length=280,
+        blank=True,
+        help_text=_("One line visitors see on your profile card."),
+    )
+    kind = models.CharField(
+        _("kind"),
+        max_length=20,
+        choices=ShowcaseKind.choices,
+        default=ShowcaseKind.MARKDOWN,
+    )
+    github_url = models.URLField(
+        _("GitHub file URL"),
+        max_length=500,
+        help_text=_(
+            "Public file link, e.g. https://github.com/you/repo/blob/main/designs/api.excalidraw",
+        ),
+    )
+    github_owner = models.CharField(max_length=100, blank=True)
+    github_repo = models.CharField(max_length=100, blank=True)
+    github_path = models.CharField(max_length=400, blank=True)
+    github_ref = models.CharField(max_length=120, blank=True, default="main")
+    tags = models.CharField(
+        _("tags"),
+        max_length=240,
+        blank=True,
+        help_text=_("Comma-separated, e.g. 'system-design, excalidraw, linux'."),
+    )
+    content_cache = models.TextField(blank=True)
+    preview_image_url = models.URLField(max_length=500, blank=True)
+    content_sha = models.CharField(max_length=64, blank=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    fetch_error = models.CharField(max_length=240, blank=True)
+    is_featured = models.BooleanField(_("featured"), default=False)
+    is_published = models.BooleanField(
+        _("published"),
+        default=True,
+        help_text=_("Unpublish to hide from your public profile without deleting."),
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("order", "-updated_at")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("profile", "slug"),
+                name="profiles_showcaseitem_unique_slug_per_profile",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return self.title
+
+    def get_absolute_url(self) -> str:
+        return reverse(
+            "profiles:showcase_detail",
+            kwargs={"handle": self.profile.handle, "slug": self.slug},
+        )
+
+    @property
+    def tags_list(self) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in self.tags.split(","):
+            tag = raw.strip().lower()
+            if tag and tag not in seen:
+                seen.add(tag)
+                out.append(tag)
+        return out
+
+    @property
+    def raw_url(self) -> str:
+        if self.github_owner and self.github_repo and self.github_path:
+            from .github import GitHubRef
+
+            return GitHubRef(
+                owner=self.github_owner,
+                repo=self.github_repo,
+                path=self.github_path,
+                ref=self.github_ref or "main",
+            ).raw_url
+        return ""
+
+    @property
+    def kind_icon(self) -> str:
+        return {
+            ShowcaseKind.EXCALIDRAW: "◇",
+            ShowcaseKind.MARKDOWN: "☰",
+            ShowcaseKind.NOTES: "✎",
+            ShowcaseKind.IMAGE: "▣",
+        }.get(self.kind, "·")
+
+    def ensure_slug(self) -> None:
+        if self.slug:
+            self.slug = slugify(self.slug)[:80] or "showcase"
+            return
+        base = slugify(self.title)[:70] or "showcase"
+        candidate = base
+        suffix = 1
+        qs = ShowcaseItem.objects.filter(profile_id=self.profile_id)
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        while qs.filter(slug=candidate).exists():
+            suffix += 1
+            tail = f"-{suffix}"
+            candidate = f"{base[: 80 - len(tail)]}{tail}"
+        self.slug = candidate
+
+    def sync_from_github(self) -> None:
+        """Pull the public file into ``content_cache`` (and optional preview)."""
+        from .github import GitHubFetchError
+        from .github import detect_kind
+        from .github import fetch_text
+        from .github import find_preview_url
+        from .github import parse_github_url
+
+        try:
+            ref = parse_github_url(self.github_url, default_ref=self.github_ref or "main")
+            text = fetch_text(ref)
+            self.github_owner = ref.owner
+            self.github_repo = ref.repo
+            self.github_path = ref.path
+            self.github_ref = ref.ref
+            self.github_url = ref.html_url
+            self.kind = detect_kind(ref.path)
+            self.content_cache = text
+            self.content_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            self.preview_image_url = ""
+            if self.kind == ShowcaseKind.EXCALIDRAW:
+                self.preview_image_url = find_preview_url(ref)
+            elif self.kind == ShowcaseKind.IMAGE:
+                self.preview_image_url = ref.raw_url
+            self.fetch_error = ""
+            self.fetched_at = timezone.now()
+        except GitHubFetchError as exc:
+            self.fetch_error = str(exc)[:240]
+            raise
+
+    def save(self, *args, **kwargs) -> None:
+        self.ensure_slug()
+        super().save(*args, **kwargs)
 
 
 class SocialLink(models.Model):

@@ -6,6 +6,7 @@ from .models import Profile
 from .models import ProfileView
 from .models import ProjectLink
 from .models import Recommendation
+from .models import ShowcaseItem
 from .models import SkillEndorsement
 from .models import SocialLink
 from .models import WorkExperience
@@ -15,6 +16,13 @@ class ProjectLinkInline(admin.TabularInline):
     model = ProjectLink
     extra = 0
     fields = ("title", "url", "repo_url", "is_featured", "order")
+
+
+class ShowcaseItemInline(admin.TabularInline):
+    model = ShowcaseItem
+    extra = 0
+    fields = ("title", "kind", "slug", "is_featured", "is_published", "order")
+    readonly_fields = ("slug",)
 
 
 class SocialLinkInline(admin.TabularInline):
@@ -50,7 +58,7 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     search_fields = ("handle", "display_name", "headline", "user__email", "tech_stack", "location")
     autocomplete_fields = ("user",)
-    inlines = (SocialLinkInline, ProjectLinkInline, WorkExperienceInline)
+    inlines = (SocialLinkInline, ProjectLinkInline, ShowcaseItemInline, WorkExperienceInline)
     readonly_fields = ("created_at", "updated_at")
 
 
@@ -59,6 +67,33 @@ class ProjectLinkAdmin(admin.ModelAdmin):
     list_display = ("title", "profile", "is_featured", "order", "created_at")
     list_filter = ("is_featured",)
     search_fields = ("title", "description", "profile__handle")
+
+
+@admin.register(ShowcaseItem)
+class ShowcaseItemAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "profile",
+        "kind",
+        "is_published",
+        "is_featured",
+        "fetched_at",
+        "order",
+    )
+    list_filter = ("kind", "is_published", "is_featured")
+    search_fields = ("title", "summary", "github_url", "profile__handle")
+    readonly_fields = (
+        "slug",
+        "github_owner",
+        "github_repo",
+        "github_path",
+        "github_ref",
+        "content_sha",
+        "fetched_at",
+        "fetch_error",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(SocialLink)

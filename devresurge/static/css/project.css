@@ -463,31 +463,40 @@ code {
   color: var(--btn-fg);
   background: var(--btn-bg);
   border: 1px solid var(--btn-bd);
+  /* Soft bottom edge so the outline reads clearly on dark panels */
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--btn-bd) 70%, transparent);
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-decoration: none;
   transition: transform 80ms var(--ease), border-color 120ms var(--ease),
-    background-color 120ms var(--ease), color 120ms var(--ease);
+    background-color 120ms var(--ease), color 120ms var(--ease),
+    box-shadow 120ms var(--ease);
 }
 
 .dr-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 80%, transparent);
 }
 
-.dr-btn:active { transform: translateY(1px); }
+.dr-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
 
 .dr-btn--primary {
   --btn-bg: var(--accent);
   --btn-fg: #0b0f0d;
   --btn-bd: var(--accent);
   font-weight: 600;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent-strong) 55%, #000);
 }
 
 .dr-btn--primary:hover {
   --btn-bg: var(--accent-strong);
   --btn-bd: var(--accent-strong);
   color: #0b0f0d;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent-strong) 70%, #000);
 }
 
 .dr-btn--ghost {
@@ -3156,6 +3165,25 @@ a.dr-tag:hover {
 
 /* Learning roadmaps + lessons -------------------------------------------- */
 
+.dr-panel--highlight {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--border));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent),
+    var(--shadow-sm);
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 100% 0%,
+      color-mix(in oklab, var(--accent) 12%, transparent),
+      transparent 55%
+    ),
+    var(--panel);
+}
+
+/* Panels with CTAs: keep button edges from clipping under overflow:hidden */
+.dr-panel__body .dr-btn-row {
+  padding-bottom: 2px;
+}
+
 .dr-learn-label {
   font-size: 0.75rem;
   text-transform: lowercase;
@@ -3196,14 +3224,18 @@ a.dr-tag:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elev);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--border-strong) 55%, transparent);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .dr-learn-toc a:hover {
   border-color: var(--accent);
   background: var(--bg-elev-2);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 70%, transparent);
+  transform: translateY(-1px);
 }
 
 .dr-learn-toc__n {
@@ -3237,14 +3269,40 @@ a.dr-tag:hover {
   gap: 0.75rem;
   margin-top: 1.25rem;
   flex-wrap: wrap;
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--bg-elev) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
+}
+
+.dr-learn-pager .dr-btn {
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .dr-lesson-body .dr-markdown {
   font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.dr-lesson-body .dr-markdown h2,
+.dr-lesson-body .dr-markdown h3 {
+  margin-top: 1.35em;
+  scroll-margin-top: 5rem;
 }
 
 .dr-page--lesson .dr-page__head h1 {
   font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+}
+
+.dr-page--lesson {
+  padding-bottom: 5.5rem;
 }
 
 .dr-learn-xpbar {
@@ -3278,6 +3336,7 @@ a.dr-tag:hover {
   border: 1px dashed color-mix(in oklab, var(--accent) 45%, var(--border));
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--accent) 8%, var(--bg-elev));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 12%, transparent);
 }
 
 .dr-learn-hook p {
@@ -3293,6 +3352,18 @@ a.dr-tag:hover {
 
 .dr-learn-boss {
   margin-top: 1rem;
+  border-color: color-mix(in oklab, var(--warn) 40%, var(--border));
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 0% 0%,
+      color-mix(in oklab, var(--warn) 10%, transparent),
+      transparent 55%
+    ),
+    var(--panel);
+}
+
+.dr-learn-boss .dr-panel__title {
+  color: var(--warn);
 }
 
 .dr-learn-cleared {
@@ -3301,8 +3372,126 @@ a.dr-tag:hover {
   font-size: 0.9rem;
 }
 
+.dr-learn-toc a.is-cleared {
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: color-mix(in oklab, var(--accent) 6%, var(--bg-elev));
+}
+
 .dr-learn-toc a.is-cleared .dr-learn-toc__n {
   color: var(--accent-strong);
+}
+
+.dr-learn-hero .dr-btn-row {
+  align-items: stretch;
+}
+
+@media (max-width: 640px) {
+  .dr-learn-pager {
+    bottom: 0;
+    margin-left: -0.15rem;
+    margin-right: -0.15rem;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0));
+  }
+
+  .dr-learn-toc a {
+    grid-template-columns: auto 1fr;
+  }
+
+  .dr-learn-toc__meta {
+    grid-column: 2;
+    white-space: normal;
+  }
+}
+
+/* Profile lab / GitHub showcases ----------------------------------------- */
+
+.dr-showcase-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dr-showcase-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--border-strong) 55%, transparent);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 140ms var(--ease), transform 140ms var(--ease),
+    box-shadow 140ms var(--ease);
+}
+
+.dr-showcase-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 70%, transparent);
+  color: inherit;
+}
+
+.dr-showcase-card__icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--accent) 10%, var(--bg-elev-2));
+  color: var(--accent-strong);
+  font-size: 1rem;
+}
+
+.dr-showcase-card__title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dr-showcase-card__meta {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: lowercase;
+}
+
+.dr-showcase-card__summary {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dr-showcase-preview__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.dr-showcase-excalidraw__stage {
+  min-height: 12rem;
+  overflow: auto;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  background: var(--bg);
+}
+
+.dr-showcase-excalidraw__stage svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.dr-showcase-notes .dr-markdown {
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
 /* Quizzes + achievement badges ------------------------------------------- */
@@ -4779,18 +4968,36 @@ body.dr-map-body .dr-main--map {
   }
 }
 
-/* Kill global dotted underline on tile / CTA anchors */
+/* Kill global dotted underline on tile / CTA anchors.
+   Do NOT set border-bottom: none on a.dr-btn — that override beats .dr-btn's
+   border shorthand and hides the bottom outline on every link-button. */
 a.dr-profile-card,
 a.dr-home-map__card,
 a.dr-dash-mapcta,
 a.dr-achieve,
 a.dr-profile-mapcta__main,
+a.dr-showcase-card,
 .dr-dash__nav a,
-a.dr-btn,
 .dr-nav__brand,
 .dr-nav__links a {
   border-bottom: none;
   text-decoration: none;
+}
+
+/* Anchor CTAs: keep the full box border (and ignore global dotted a:underline). */
+a.dr-btn {
+  text-decoration: none;
+  border: 1px solid var(--btn-bd);
+  border-bottom-style: solid;
+}
+
+a.dr-btn:hover {
+  border-color: var(--accent);
+}
+
+a.dr-btn.dr-btn--primary:hover {
+  border-color: var(--btn-bd);
+  color: #0b0f0d;
 }
 
 a.dr-profile-card,

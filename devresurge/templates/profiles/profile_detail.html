@@ -383,6 +383,59 @@
           </div>
         {% endif %}
 
+        {% with showcases=profile.showcases.all %}
+          {% if showcases %}
+            <div>
+              <h2 class="dr-section-title">lab · showcases</h2>
+              <p class="dr-helptext" style="margin-top: -0.35rem;">
+                {% trans "System designs, notes, and diagrams synced from GitHub." %}
+              </p>
+              <div class="dr-showcase-grid">
+                {% for item in showcases %}
+                  {% if item.is_published or is_owner %}
+                    <a class="dr-showcase-card" href="{% if item.is_published %}{{ item.get_absolute_url }}{% else %}{% url 'profiles:showcase_update' item.pk %}{% endif %}">
+                      <div class="dr-showcase-card__icon" aria-hidden="true">{{ item.kind_icon }}</div>
+                      <div class="dr-showcase-card__body">
+                        <div class="dr-showcase-card__title">
+                          {% if item.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                          {{ item.title }}
+                          {% if not item.is_published %}<span class="dr-pill">{% trans "draft" %}</span>{% endif %}
+                        </div>
+                        <div class="dr-showcase-card__meta">{{ item.get_kind_display }}</div>
+                        {% if item.summary %}
+                          <p class="dr-showcase-card__summary">{{ item.summary }}</p>
+                        {% endif %}
+                        {% if item.tags_list %}
+                          <div class="dr-tags" style="margin-top: 0.45rem;">
+                            {% for tag in item.tags_list %}<span class="dr-tag dr-tag--ghost">{{ tag }}</span>{% endfor %}
+                          </div>
+                        {% endif %}
+                      </div>
+                      <span class="dr-list-row__chev" aria-hidden="true">→</span>
+                    </a>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              {% if is_owner %}
+                <div class="dr-btn-row" style="margin-top: 0.75rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:showcase_list' %}">{% trans "manage lab" %}</a>
+                </div>
+              {% endif %}
+            </div>
+          {% elif is_owner %}
+            <div>
+              <h2 class="dr-section-title">lab · showcases</h2>
+              <div class="dr-empty dr-empty--inline">
+                <div class="dr-emoji" aria-hidden="true">◇</div>
+                <p>{% trans "Showcase Excalidraw designs and study notes from a public GitHub repo." %}</p>
+                <div class="dr-btn-row">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:showcase_create' %}">{% trans "add a showcase" %}</a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
+
         {% if profile.social_links.all or profile.website_url or profile.show_email %}
           <div>
             <h2 class="dr-section-title">links</h2>

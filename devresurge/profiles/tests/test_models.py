@@ -233,9 +233,11 @@ def test_readiness_complete_when_fully_filled():
     )
     from devresurge.profiles.models import WorkExperience
     from devresurge.profiles.tests.factories import ProjectLinkFactory
+    from devresurge.profiles.tests.factories import ShowcaseItemFactory
     from devresurge.profiles.tests.factories import SocialLinkFactory
 
     ProjectLinkFactory(profile=profile)
+    ShowcaseItemFactory(profile=profile, is_published=True)
     SocialLinkFactory(profile=profile, platform="linkedin", url="https://linkedin.com/in/x")
     WorkExperience.objects.create(
         profile=profile,

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/me/lab — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>lab</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls lab/ ← github</span></p>
+        <h1 style="margin: 0;">{% trans "lab · showcases" %}</h1>
+        <p style="margin: 0.35rem 0 0; color: var(--text-muted);">
+          {% trans "Pull Excalidraw system designs, Linux-from-scratch notes, and diagrams from a public GitHub repo onto your profile." %}
+        </p>
+      </div>
+      <div class="dr-btn-row dr-page__head-actions">
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:showcase_create' %}">+ {% trans "new showcase" %}</a>
+      </div>
+    </header>
+
+    {% if showcases %}
+      {% csrf_token %}
+      <p class="dr-helptext" id="dr-showcases-help">
+        {% trans "Tip: drag ≡ to reorder. Sync refreshes content from GitHub." %}
+        <span class="dr-sortable__status" data-sortable-status aria-live="polite"></span>
+      </p>
+      <ul class="dr-link-list dr-sortable"
+          data-sortable
+          data-sortable-url="{% url 'profiles:showcase_reorder' %}"
+          aria-describedby="dr-showcases-help">
+        {% for item in showcases %}
+          <li class="dr-list-row dr-list-row--card"
+              data-sortable-item
+              data-id="{{ item.pk }}">
+            <button type="button"
+                    class="dr-sortable__handle"
+                    data-sortable-handle
+                    aria-label="{% blocktranslate with title=item.title %}Drag to reorder “{{ title }}”{% endblocktranslate %}"
+                    title="{% translate 'Drag to reorder' %}">
+              <span aria-hidden="true">≡</span>
+            </button>
+            <a class="dr-list-row__link"
+               href="{% url 'profiles:showcase_update' item.pk %}"
+               aria-label="{% blocktranslate with title=item.title %}Edit “{{ title }}”{% endblocktranslate %}">
+              <div class="dr-list-row__main">
+                <div class="dr-list-row__title">
+                  <span aria-hidden="true">{{ item.kind_icon }}</span>
+                  {% if item.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                  {{ item.title }}
+                  {% if not item.is_published %}<span class="dr-pill">{% trans "draft" %}</span>{% endif %}
+                </div>
+                <span class="dr-list-row__url">
+                  {{ item.get_kind_display }}
+                  {% if item.github_path %} · {{ item.github_owner }}/{{ item.github_repo }}:{{ item.github_path }}{% endif %}
+                </span>
+                {% if item.fetch_error %}
+                  <span class="dr-list-row__url" style="color: var(--error);">{{ item.fetch_error }}</span>
+                {% elif item.fetched_at %}
+                  <span class="dr-list-row__url">{% blocktranslate with when=item.fetched_at %}synced {{ when }}{% endblocktranslate %}</span>
+                {% endif %}
+              </div>
+            </a>
+            <div class="dr-btn-row dr-list-row__actions">
+              <form method="post" action="{% url 'profiles:showcase_sync' item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="dr-btn dr-btn--sm dr-btn--ghost">{% trans "sync" %}</button>
+              </form>
+              {% if item.is_published %}
+                <a class="dr-btn dr-btn--sm" href="{{ item.get_absolute_url }}">{% trans "view" %}</a>
+              {% endif %}
+              <a class="dr-btn dr-btn--sm dr-btn--danger"
+                 href="{% url 'profiles:showcase_delete' item.pk %}">rm</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty">
+        <div class="dr-emoji">◇</div>
+        <p>
+          {% trans "No lab artifacts yet." %}
+          <a href="{% url 'profiles:showcase_create' %}">{% trans "Import from GitHub." %}</a>
+        </p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

@@ -58,8 +58,10 @@ from .forms import EducationForm
 from .forms import ProfileForm
 from .forms import ProjectLinkForm
 from .forms import RecommendationForm
+from .forms import ShowcaseItemForm
 from .forms import SocialLinkForm
 from .forms import WorkExperienceForm
+from .github import GitHubFetchError
 from .models import Education
 from .models import LinkClick
 from .models import LinkKind
@@ -68,6 +70,7 @@ from .models import Profile
 from .models import ProfileView as ProfileViewEvent
 from .models import ProjectLink
 from .models import Recommendation
+from .models import ShowcaseItem
 from .models import SkillEndorsement
 from .models import SocialLink
 from .models import WorkExperience
@@ -447,6 +450,7 @@ class ProfilePublicView(DetailView):
             .prefetch_related(
                 "social_links",
                 "projects",
+                "showcases",
                 "experiences",
                 "education",
                 Prefetch(
@@ -1077,6 +1081,184 @@ def link_reorder_view(request: HttpRequest) -> HttpResponse:
     return _reorder(request, SocialLink)
 
 
+@login_required
+@require_POST
+def showcase_reorder_view(request: HttpRequest) -> HttpResponse:
+    return _reorder(request, ShowcaseItem)
+
+
+# ---------------------------------------------------------------------------
+# GitHub showcase CRUD
+# ---------------------------------------------------------------------------
+
+
+class ShowcaseListView(LoginRequiredMixin, ListView):
+    model = ShowcaseItem
+    template_name = "profiles/showcase_list.html"
+    context_object_name = "showcases"
+
+    def get_queryset(self) -> QuerySet[ShowcaseItem]:
+        return _get_or_create_profile(self.request.user).showcases.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        ctx["profile"] = _get_or_create_profile(self.request.user)
+        return ctx
+
+
+def _sync_showcase(item: ShowcaseItem, *, sync: bool) -> None:
+    if not sync:
+        return
+    try:
+        item.sync_from_github()
+    except GitHubFetchError:
+        item.save(
+            update_fields=[
+                "github_url",
+                "github_owner",
+                "github_repo",
+                "github_path",
+                "github_ref",
+                "kind",
+                "fetch_error",
+                "updated_at",
+            ],
+        )
+        raise
+    item.save(
+        update_fields=[
+            "github_url",
+            "github_owner",
+            "github_repo",
+            "github_path",
+            "github_ref",
+            "kind",
+            "content_cache",
+            "content_sha",
+            "preview_image_url",
+            "fetch_error",
+            "fetched_at",
+            "updated_at",
+        ],
+    )
+
+
+class ShowcaseCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = ShowcaseItem
+    form_class = ShowcaseItemForm
+    template_name = "profiles/showcase_form.html"
+    success_url = reverse_lazy("profiles:showcase_list")
+    success_message = _("Showcase added.")
+
+    def form_valid(self, form: ShowcaseItemForm):
+        form.instance.profile = _get_or_create_profile(self.request.user)
+        try:
+            response = super().form_valid(form)
+            _sync_showcase(self.object, sync=bool(form.cleaned_data.get("sync_now")))
+        except GitHubFetchError as exc:
+            messages.warning(
+                self.request,
+                _("Saved, but GitHub sync failed: %(err)s") % {"err": str(exc)},
+            )
+            return redirect(self.success_url)
+        return response
+
+
+class ShowcaseUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
+    model = ShowcaseItem
+    form_class = ShowcaseItemForm
+    template_name = "profiles/showcase_form.html"
+    success_url = reverse_lazy("profiles:showcase_list")
+    success_message = _("Showcase updated.")
+
+    def form_valid(self, form: ShowcaseItemForm):
+        try:
+            response = super().form_valid(form)
+            _sync_showcase(self.object, sync=bool(form.cleaned_data.get("sync_now")))
+        except GitHubFetchError as exc:
+            messages.warning(
+                self.request,
+                _("Saved, but GitHub sync failed: %(err)s") % {"err": str(exc)},
+            )
+            return redirect(self.success_url)
+        return response
+
+
+class ShowcaseDeleteView(_OwnerScopedMixin, DeleteView):
+    model = ShowcaseItem
+    template_name = "profiles/showcase_confirm_delete.html"
+    success_url = reverse_lazy("profiles:showcase_list")
+
+
+@login_required
+@require_POST
+def showcase_sync_view(request: HttpRequest, pk: int) -> HttpResponse:
+    profile = _get_or_create_profile(request.user)
+    item = get_object_or_404(ShowcaseItem, pk=pk, profile=profile)
+    try:
+        _sync_showcase(item, sync=True)
+        messages.success(request, _("Synced from GitHub."))
+    except GitHubFetchError as exc:
+        messages.error(request, str(exc))
+    return redirect("profiles:showcase_list")
+
+
+class ShowcasePublicDetailView(DetailView):
+    """Public page for one GitHub-backed showcase artifact."""
+
+    model = ShowcaseItem
+    template_name = "profiles/showcase_detail.html"
+    context_object_name = "showcase"
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self) -> QuerySet[ShowcaseItem]:
+        handle = Profile.normalize_handle(self.kwargs.get("handle", ""))
+        qs = ShowcaseItem.objects.select_related("profile", "profile__user").filter(
+            profile__handle=handle,
+        )
+        user = self.request.user
+        if user.is_authenticated:
+            # Owners can preview drafts; everyone else only sees published.
+            return qs.filter(Q(is_published=True) | Q(profile__user=user))
+        return qs.filter(is_published=True)
+
+    def get_object(self, queryset: QuerySet[ShowcaseItem] | None = None) -> ShowcaseItem:
+        obj = super().get_object(queryset)
+        profile = obj.profile
+        owner_viewing = (
+            self.request.user.is_authenticated and profile.user_id == self.request.user.pk
+        )
+        if not profile.is_public and not owner_viewing:
+            err = _("This profile is private.")
+            raise Http404(err)
+        if not obj.is_published and not owner_viewing:
+            err = _("Showcase not found.")
+            raise Http404(err)
+        return obj
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        item = self.object
+        ctx["profile"] = item.profile
+        ctx["is_owner"] = (
+            self.request.user.is_authenticated and item.profile.user_id == self.request.user.pk
+        )
+        body = item.content_cache or ""
+        ctx["body_html"] = ""
+        ctx["excalidraw_data"] = None
+        ctx["excalidraw_parse_error"] = False
+        if item.kind in {"markdown", "notes"}:
+            from .markdown import render_markdown
+
+            ctx["body_html"] = render_markdown(body)
+        elif item.kind == "excalidraw" and body:
+            try:
+                ctx["excalidraw_data"] = json.loads(body)
+            except json.JSONDecodeError:
+                ctx["excalidraw_parse_error"] = True
+        return ctx
+
+
 # ---------------------------------------------------------------------------
 # Experience + education CRUD
 # ---------------------------------------------------------------------------
@@ -1286,6 +1468,11 @@ project_list_view = ProjectLinkListView.as_view()
 project_create_view = ProjectLinkCreateView.as_view()
 project_update_view = ProjectLinkUpdateView.as_view()
 project_delete_view = ProjectLinkDeleteView.as_view()
+showcase_list_view = ShowcaseListView.as_view()
+showcase_create_view = ShowcaseCreateView.as_view()
+showcase_update_view = ShowcaseUpdateView.as_view()
+showcase_delete_view = ShowcaseDeleteView.as_view()
+showcase_detail_view = ShowcasePublicDetailView.as_view()
 link_list_view = SocialLinkListView.as_view()
 link_create_view = SocialLinkCreateView.as_view()
 link_update_view = SocialLinkUpdateView.as_view()

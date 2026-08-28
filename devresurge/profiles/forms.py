@@ -15,6 +15,7 @@ from .models import Education
 from .models import Profile
 from .models import ProjectLink
 from .models import Recommendation
+from .models import ShowcaseItem
 from .models import SocialLink
 from .models import WorkExperience
 
@@ -55,7 +56,7 @@ class ProfileForm(forms.ModelForm):
                     "placeholder": "# about\n\nI ship **reliable** systems.\n\n- python\n- django",
                 },
             ),
-            "headline": forms.TextInput(attrs={"placeholder": "Senior Backend Engineer · Python & Go"}),
+            "headline": forms.TextInput(attrs={"placeholder": "Senior Backend Engineer ? Python & Go"}),
             "tech_stack": forms.TextInput(attrs={"placeholder": "python, django, postgres, aws"}),
             "handle": forms.TextInput(attrs={"placeholder": "your-handle"}),
             "avatar": forms.ClearableFileInput(
@@ -73,7 +74,7 @@ class ProfileForm(forms.ModelForm):
         )
 
     def clean_avatar(self):
-        """Defence-in-depth — model validators run too, but better UX here."""
+        """Defence-in-depth ? model validators run too, but better UX here."""
         avatar = self.cleaned_data.get("avatar")
         if not avatar:
             return avatar
@@ -187,7 +188,7 @@ class WorkExperienceForm(forms.ModelForm):
         )
         widgets = {
             "description": forms.Textarea(
-                attrs={"rows": 4, "placeholder": "Shipped X, led Y, reduced Z…"},
+                attrs={"rows": 4, "placeholder": "Shipped X, led Y, reduced Z?"},
             ),
             "title": forms.TextInput(attrs={"placeholder": "Senior Backend Engineer"}),
             "company": forms.TextInput(attrs={"placeholder": "Acme"}),
@@ -223,7 +224,7 @@ class RecommendationForm(forms.ModelForm):
             "body": forms.Textarea(
                 attrs={
                     "rows": 5,
-                    "placeholder": "What they’re strong at, and how you know.",
+                    "placeholder": "What they?re strong at, and how you know.",
                     "maxlength": 800,
                 },
             ),
@@ -234,3 +235,60 @@ class RecommendationForm(forms.ModelForm):
         if len(body) < 40:
             raise ValidationError(_("Write at least a couple of sentences (40+ chars)."))
         return body
+
+
+class ShowcaseItemForm(forms.ModelForm):
+    sync_now = forms.BooleanField(
+        required=False,
+        initial=True,
+        label=_("Fetch from GitHub now"),
+        help_text=_("Pull the public file into DevResurge so visitors can read it here."),
+    )
+
+    class Meta:
+        model = ShowcaseItem
+        fields = (
+            "title",
+            "summary",
+            "kind",
+            "github_url",
+            "tags",
+            "is_featured",
+            "is_published",
+        )
+        widgets = {
+            "title": forms.TextInput(
+                attrs={"placeholder": "URL shortener ? system design"},
+            ),
+            "summary": forms.Textarea(
+                attrs={
+                    "rows": 2,
+                    "placeholder": "Excalidraw walkthrough of a FAANG-style design round.",
+                },
+            ),
+            "github_url": forms.URLInput(
+                attrs={
+                    "placeholder": "https://github.com/you/lab/blob/main/designs/url-shortener.excalidraw",
+                },
+            ),
+            "tags": forms.TextInput(
+                attrs={"placeholder": "system-design, excalidraw, linux"},
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["kind"].help_text = _(
+            "Auto-detected from the file extension on sync when possible.",
+        )
+
+    def clean_github_url(self) -> str:
+        from .github import GitHubFetchError
+        from .github import parse_github_url
+
+        url = (self.cleaned_data.get("github_url") or "").strip()
+        try:
+            ref = parse_github_url(url)
+        except GitHubFetchError as exc:
+            raise ValidationError(str(exc)) from exc
+        return ref.html_url
