@@ -12,6 +12,11 @@ from .content import distributed
 from .content import dsa
 from .content import elite_path
 from .content import foundations
+from .content import devops_interview_australia
+from .content import devops_interview_new_zealand
+from .content import devops_interview_sweden
+from .content import devops_interview_uk
+from .content import devops_interview_usa
 from .content import system_design
 from .content import volvo_devops_interview
 from .flavor import flavor_for
@@ -107,6 +112,11 @@ ROADMAP_SOURCES: tuple[dict[str, Any], ...] = (
     system_design.ROADMAP,
     backend.ROADMAP,
     volvo_devops_interview.ROADMAP,
+    devops_interview_sweden.ROADMAP,
+    devops_interview_australia.ROADMAP,
+    devops_interview_new_zealand.ROADMAP,
+    devops_interview_usa.ROADMAP,
+    devops_interview_uk.ROADMAP,
     devops.ROADMAP,
     databases.ROADMAP,
     distributed.ROADMAP,
