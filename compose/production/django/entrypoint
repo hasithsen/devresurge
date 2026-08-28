@@ -14,9 +14,12 @@ wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
 >&2 echo 'PostgreSQL is available'
 
 # Redis backs the production cache; wait so Gunicorn does not start cold-missing it.
-REDIS_HOST="${REDIS_HOST:-redis}"
-REDIS_PORT="${REDIS_PORT:-6379}"
-wait-for-it "${REDIS_HOST}:${REDIS_PORT}" -t 30
->&2 echo 'Redis is available'
+# Local compose has no Redis (LocMemCache) and shares this entrypoint — only wait when configured.
+if [ -n "${REDIS_URL:-}" ] || [ -n "${REDIS_HOST:-}" ]; then
+  REDIS_HOST="${REDIS_HOST:-redis}"
+  REDIS_PORT="${REDIS_PORT:-6379}"
+  wait-for-it "${REDIS_HOST}:${REDIS_PORT}" -t 30
+  >&2 echo 'Redis is available'
+fi
 
 exec "$@"
