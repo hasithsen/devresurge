@@ -210,6 +210,7 @@ def test_readiness_scores_incomplete_profile():
     assert "display_name" in keys
     assert "public" in keys
     assert "practice" in keys
+    assert "tools" in keys
 
 
 def test_readiness_complete_when_fully_filled():
@@ -233,11 +234,13 @@ def test_readiness_complete_when_fully_filled():
         save=True,
     )
     from devresurge.profiles.models import WorkExperience
+    from devresurge.profiles.tests.factories import ProfileToolFactory
     from devresurge.profiles.tests.factories import ProjectLinkFactory
     from devresurge.profiles.tests.factories import ShowcaseItemFactory
     from devresurge.profiles.tests.factories import SocialLinkFactory
 
     ProjectLinkFactory(profile=profile)
+    ProfileToolFactory(profile=profile, name="Kubernetes")
     ShowcaseItemFactory(profile=profile, is_published=True)
     SocialLinkFactory(profile=profile, platform="linkedin", url="https://linkedin.com/in/x")
     SocialLinkFactory(
@@ -268,10 +271,23 @@ def test_to_readme_markdown_includes_core_sections():
         available_for_hire=True,
         location="London",
     )
+    from devresurge.profiles.tests.factories import ProfileToolFactory
     from devresurge.profiles.tests.factories import ProjectLinkFactory
     from devresurge.profiles.tests.factories import SocialLinkFactory
 
     ProjectLinkFactory(profile=profile, title="Analytical Engine", is_featured=True)
+    ProfileToolFactory(
+        profile=profile,
+        name="Analytical Engine",
+        category="languages",
+        note="Difference engine companion",
+    )
+    ProfileToolFactory(
+        profile=profile,
+        name="Difference Engine desk",
+        category="devices",
+        note="Brass & iron",
+    )
     SocialLinkFactory(
         profile=profile,
         platform="leetcode",
@@ -286,14 +302,45 @@ def test_to_readme_markdown_includes_core_sections():
     assert "# Ada" in md
     assert f"**@{profile.handle}**" in md
     assert "## Stack" in md
-    assert "## Projects" in md
+    assert "## Tools" in md
+    assert "## Setup" in md
     assert "Analytical Engine" in md
+    assert "Difference Engine desk" in md
+    assert "## Projects" in md
     assert "## Practice" in md
     assert "leetcode.com/u/ada" in md
     assert "## Links" in md
     assert "github.com/ada" in md
     assert "open to work" in md
     assert "https://devresurge.test" in md
+
+
+def test_tools_grouped_by_category():
+    profile = ProfileFactory()
+    from devresurge.profiles.models import ToolCategory
+    from devresurge.profiles.tests.factories import ProfileToolFactory
+
+    ProfileToolFactory(profile=profile, name="Docker", category=ToolCategory.INFRA, order=0)
+    ProfileToolFactory(profile=profile, name="Python", category=ToolCategory.LANGUAGES, order=1)
+    ProfileToolFactory(profile=profile, name="Kubernetes", category=ToolCategory.INFRA, order=2)
+    ProfileToolFactory(
+        profile=profile,
+        name="MacBook Pro",
+        category=ToolCategory.DEVICES,
+        order=3,
+    )
+    ProfileToolFactory(
+        profile=profile,
+        name="Keychron K2",
+        category=ToolCategory.PERIPHERALS,
+        order=4,
+    )
+    software = profile.software_tools_grouped()
+    devices = profile.device_tools_grouped()
+    assert [g["category"] for g in software] == [ToolCategory.INFRA, ToolCategory.LANGUAGES]
+    assert [t.name for t in software[0]["tools"]] == ["Docker", "Kubernetes"]
+    assert [g["category"] for g in devices] == [ToolCategory.DEVICES, ToolCategory.PERIPHERALS]
+    assert devices[0]["tools"][0].name == "MacBook Pro"
 
 
 def test_practice_links_split_from_network_links():

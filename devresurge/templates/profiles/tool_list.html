@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/me/tools — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>tools</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls tools/</span></p>
+        <h1 style="margin: 0;">{% trans "tools &amp; devices" %}</h1>
+        <p class="dr-helptext" style="margin: 0.35rem 0 0;">
+          {% blocktranslate with role=role_label %}Daily drivers for {{ role }}, plus the PCs and gear you ship on.{% endblocktranslate %}
+        </p>
+      </div>
+      <div class="dr-btn-row dr-page__head-actions">
+        <a class="dr-btn dr-btn--primary" href="{% url 'profiles:tool_create' %}">+ {% trans "new" %}</a>
+      </div>
+    </header>
+
+    {% if tool_suggestions %}
+      <div class="dr-panel dr-mb-lg">
+        <div class="dr-panel__body">
+          <div class="dr-learn-label">{% trans "suggested for your field" %}</div>
+          <div class="dr-tags">
+            {% for tip in tool_suggestions %}
+              <a class="dr-tag"
+                 href="{% url 'profiles:tool_create' %}?name={{ tip.name|urlencode }}&amp;category={{ tip.category }}">
+                + {{ tip.name }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if device_suggestions %}
+      <div class="dr-panel dr-mb-lg">
+        <div class="dr-panel__body">
+          <div class="dr-learn-label">{% trans "suggested devices &amp; desk" %}</div>
+          <div class="dr-tags">
+            {% for tip in device_suggestions %}
+              <a class="dr-tag"
+                 href="{% url 'profiles:tool_create' %}?name={{ tip.name|urlencode }}&amp;category={{ tip.category }}">
+                + {{ tip.name }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if tools %}
+      {% csrf_token %}
+      <p class="dr-helptext" id="dr-tools-help">
+        {% trans "Tip: drag the ≡ handle to reorder. Tap a card to edit." %}
+        <span class="dr-sortable__status" data-sortable-status aria-live="polite"></span>
+      </p>
+      <ul class="dr-link-list dr-sortable"
+          data-sortable
+          data-sortable-url="{% url 'profiles:tool_reorder' %}"
+          aria-describedby="dr-tools-help">
+        {% for tool in tools %}
+          <li class="dr-list-row dr-list-row--card"
+              data-sortable-item
+              data-id="{{ tool.pk }}">
+            <button type="button"
+                    class="dr-sortable__handle"
+                    data-sortable-handle
+                    aria-label="{% blocktranslate with name=tool.name %}Drag to reorder “{{ name }}”{% endblocktranslate %}"
+                    title="{% translate 'Drag to reorder' %}">
+              <span aria-hidden="true">≡</span>
+            </button>
+            <a class="dr-list-row__link"
+               href="{% url 'profiles:tool_update' tool.pk %}"
+               aria-label="{% blocktranslate with name=tool.name %}Edit “{{ name }}”{% endblocktranslate %}">
+              <div class="dr-list-row__main">
+                <div class="dr-list-row__title">
+                  <span class="dr-tool-card__icon" aria-hidden="true">{{ tool.category_icon }}</span>
+                  {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}{{ tool.name }}
+                </div>
+                <div class="dr-list-row__url">{{ tool.get_category_display }}{% if tool.note %} · {{ tool.note }}{% endif %}</div>
+              </div>
+            </a>
+            <div class="dr-btn-row dr-list-row__actions">
+              <a class="dr-btn dr-btn--sm dr-btn--danger"
+                 href="{% url 'profiles:tool_delete' tool.pk %}"
+                 aria-label="{% blocktranslate with name=tool.name %}Delete “{{ name }}”{% endblocktranslate %}">rm</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty">
+        <div class="dr-emoji">∅</div>
+        <p>
+          {% trans "No tools or devices yet." %}
+          <a href="{% url 'profiles:tool_create' %}">{% trans "Add your first." %}</a>
+        </p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

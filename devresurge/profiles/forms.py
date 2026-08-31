@@ -15,6 +15,7 @@ from .models import PLATFORM_PROFILE_URLS
 from .models import PLATFORM_URL_HINTS
 from .models import Education
 from .models import Profile
+from .models import ProfileTool
 from .models import ProjectLink
 from .models import Recommendation
 from .models import ShowcaseItem
@@ -198,6 +199,40 @@ class ProjectLinkForm(forms.ModelForm):
             err = _("Provide at least a live URL or a repository URL.")
             raise ValidationError(err)
         return cleaned
+
+
+class ProfileToolForm(forms.ModelForm):
+    class Meta:
+        model = ProfileTool
+        fields = ("name", "category", "url", "note", "is_featured")
+        widgets = {
+            "name": forms.TextInput(
+                attrs={"placeholder": "Kubernetes, MacBook Pro, Figma…"},
+            ),
+            "note": forms.TextInput(
+                attrs={"placeholder": "M3 / 32GB · prod clusters · or skip"},
+            ),
+            "url": forms.URLInput(attrs={"placeholder": "https://… (optional)"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.profile = kwargs.pop("profile", None)
+        super().__init__(*args, **kwargs)
+        self.fields["category"].help_text = _(
+            "Software by field, or PCs & devices / peripherals for your setup.",
+        )
+
+    def clean_name(self) -> str:
+        name = " ".join((self.cleaned_data.get("name") or "").split())
+        if not name:
+            raise ValidationError(_("Enter a tool name."))
+        if self.profile is not None:
+            qs = ProfileTool.objects.filter(profile=self.profile, name__iexact=name)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError(_("You already listed that tool."))
+        return name
 
 
 class SocialLinkForm(forms.ModelForm):

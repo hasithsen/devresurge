@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{% if object %}edit tool{% else %}new tool{% endif %} — DevResurge{% endblock title %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:dashboard' %}">~/me</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{% url 'profiles:tool_list' %}">tools</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>{% if object %}edit{% else %}new{% endif %}</span>
+    </nav>
+
+    <div class="dr-narrow dr-narrow--wide">
+      <article class="dr-panel">
+        <header class="dr-panel__header">
+          <span class="dr-dots"><span></span><span></span><span></span></span>
+          <span class="dr-panel__title">
+            {% if object %}tools/{{ object.pk }}/edit{% else %}tools/new{% endif %}
+          </span>
+        </header>
+        <div class="dr-panel__body">
+          <p class="dr-cli">
+            <span class="dr-prompt"></span>
+            <span class="cmd">which {{ form.name.value|default:"tool" }}</span>
+          </p>
+          <p class="dr-helptext">
+            {% trans "Software of your field, or the laptop / PC / peripherals you work on." %}
+          </p>
+
+          {% if form.non_field_errors %}
+            <div class="dr-alert dr-alert--error">
+              <span class="dr-alert__body">{{ form.non_field_errors }}</span>
+            </div>
+          {% endif %}
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% include "profiles/_field.html" with field=form.name %}
+            <div class="dr-grid dr-grid--2">
+              {% include "profiles/_field.html" with field=form.category %}
+              {% include "profiles/_field.html" with field=form.is_featured %}
+            </div>
+            {% include "profiles/_field.html" with field=form.url %}
+            {% include "profiles/_field.html" with field=form.note %}
+            <p class="dr-helptext" style="margin-top: -0.5rem;">
+              {% trans "Drag rows on the tools list to change order." %}
+            </p>
+
+            <div class="dr-btn-row" style="margin-top: 1rem;">
+              <button type="submit" class="dr-btn dr-btn--primary">{% trans "save" %}</button>
+              <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:tool_list' %}">{% trans "cancel" %}</a>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+{% endblock content %}

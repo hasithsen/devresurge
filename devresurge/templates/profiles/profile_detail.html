@@ -258,12 +258,105 @@
         {% elif is_owner %}
           <div class="dr-empty dr-empty--inline">
             <div class="dr-emoji" aria-hidden="true">∅</div>
-            <p>{% trans "No stack listed yet — add the tools you ship with." %}</p>
+            <p>{% trans "No skills listed yet — add languages and frameworks on your stack." %}</p>
             <div class="dr-btn-row">
               <a class="dr-btn dr-btn--sm" href="{% url 'profiles:edit' %}">{% trans "edit profile" %}</a>
             </div>
           </div>
         {% endif %}
+
+        {% with software_groups=profile.software_tools_grouped device_groups=profile.device_tools_grouped %}
+          {% if software_groups %}
+            <div>
+              <h2 class="dr-section-title">tools · daily drivers</h2>
+              <p class="dr-helptext" style="margin-top: -0.35rem;">
+                {% blocktranslate with role=profile.get_primary_role_display %}What {{ role }} work looks like in practice.{% endblocktranslate %}
+              </p>
+              <div class="dr-tool-groups">
+                {% for group in software_groups %}
+                  <div class="dr-tool-group">
+                    <div class="dr-learn-label">{{ group.label }}</div>
+                    <ul class="dr-tool-list">
+                      {% for tool in group.tools %}
+                        <li class="dr-tool-card{% if tool.is_featured %} dr-tool-card--featured{% endif %}">
+                          <span class="dr-tool-card__icon" aria-hidden="true">{{ tool.category_icon }}</span>
+                          <div class="dr-tool-card__body">
+                            <div class="dr-tool-card__name">
+                              {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                              {% if tool.url %}
+                                <a href="{{ tool.url }}" rel="noopener nofollow ugc" target="_blank">{{ tool.name }}</a>
+                              {% else %}
+                                {{ tool.name }}
+                              {% endif %}
+                            </div>
+                            {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if is_owner %}
+                <div class="dr-btn-row" style="margin-top: 0.75rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_list' %}">{% trans "manage tools" %}</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if device_groups %}
+            <div>
+              <h2 class="dr-section-title">setup · devices</h2>
+              <p class="dr-helptext" style="margin-top: -0.35rem;">
+                {% trans "Laptops, PCs, and gear on the desk." %}
+              </p>
+              <div class="dr-tool-groups">
+                {% for group in device_groups %}
+                  <div class="dr-tool-group">
+                    <div class="dr-learn-label">{{ group.label }}</div>
+                    <ul class="dr-tool-list">
+                      {% for tool in group.tools %}
+                        <li class="dr-tool-card{% if tool.is_featured %} dr-tool-card--featured{% endif %}">
+                          <span class="dr-tool-card__icon" aria-hidden="true">{{ tool.category_icon }}</span>
+                          <div class="dr-tool-card__body">
+                            <div class="dr-tool-card__name">
+                              {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                              {% if tool.url %}
+                                <a href="{{ tool.url }}" rel="noopener nofollow ugc" target="_blank">{{ tool.name }}</a>
+                              {% else %}
+                                {{ tool.name }}
+                              {% endif %}
+                            </div>
+                            {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if is_owner %}
+                <div class="dr-btn-row" style="margin-top: 0.75rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_list' %}">{% trans "manage devices" %}</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if is_owner and not software_groups and not device_groups %}
+            <div>
+              <h2 class="dr-section-title">tools &amp; devices</h2>
+              <div class="dr-empty dr-empty--inline">
+                <div class="dr-emoji" aria-hidden="true">⚙</div>
+                <p>{% trans "List field tools and the PCs / gear you use — IDEs, clouds, laptop, keyboard." %}</p>
+                <div class="dr-btn-row">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_create' %}">{% trans "add a tool or device" %}</a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
 
         {% if profile.bio %}
           <div>

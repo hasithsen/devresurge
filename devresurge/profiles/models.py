@@ -318,6 +318,7 @@ class Profile(models.Model):
         render a progress bar and deep-link to the right editor.
         """
         has_projects = self.projects.exists() if self.pk else False
+        has_tools = self.tools.exists() if self.pk else False
         has_showcases = self.showcases.filter(is_published=True).exists() if self.pk else False
         has_links = bool(self.website_url) or (
             self.social_links.exists() if self.pk else False
@@ -370,6 +371,12 @@ class Profile(models.Model):
                 "label": _("At least one project"),
                 "done": has_projects,
                 "url_name": "profiles:project_create",
+            },
+            {
+                "key": "tools",
+                "label": _("Tools & devices"),
+                "done": has_tools,
+                "url_name": "profiles:tool_create",
             },
             {
                 "key": "showcases",
@@ -431,6 +438,42 @@ class Profile(models.Model):
             return []
         return [link for link in self.social_links.all() if link.platform not in PRACTICE_PLATFORMS]
 
+    def tools_grouped(self, *, hardware: bool | None = None) -> list[dict]:
+        """Tools grouped by category for the public profile.
+
+        Pass ``hardware=True`` for PCs/devices/peripherals only,
+        ``hardware=False`` for software/field tools only, or omit for all.
+        """
+        if not self.pk:
+            return []
+        buckets: dict[str, list] = {}
+        order: list[str] = []
+        for tool in self.tools.all():
+            is_hw = tool.category in HARDWARE_CATEGORIES
+            if hardware is True and not is_hw:
+                continue
+            if hardware is False and is_hw:
+                continue
+            key = tool.category
+            if key not in buckets:
+                buckets[key] = []
+                order.append(key)
+            buckets[key].append(tool)
+        return [
+            {
+                "category": key,
+                "label": dict(ToolCategory.choices).get(key, key),
+                "tools": buckets[key],
+            }
+            for key in order
+        ]
+
+    def software_tools_grouped(self) -> list[dict]:
+        return self.tools_grouped(hardware=False)
+
+    def device_tools_grouped(self) -> list[dict]:
+        return self.tools_grouped(hardware=True)
+
     def to_readme_markdown(self, *, base_url: str = "") -> str:
         """Serialize this profile as a shareable README.md document."""
         name = self.display_name or self.handle
@@ -458,6 +501,30 @@ class Profile(models.Model):
 
         if self.tech_stack_list:
             lines.extend(["## Stack", "", ", ".join(f"`{t}`" for t in self.tech_stack_list), ""])
+
+        tools = list(self.tools.all()) if self.pk else []
+        software = [t for t in tools if t.category not in HARDWARE_CATEGORIES]
+        hardware = [t for t in tools if t.category in HARDWARE_CATEGORIES]
+        if software:
+            lines.extend(["## Tools", ""])
+            for tool in software:
+                bit = f"- **{tool.name}** ({tool.get_category_display()})"
+                if tool.note:
+                    bit += f" — {tool.note}"
+                if tool.url:
+                    bit += f" · [link]({tool.url})"
+                lines.append(bit)
+            lines.append("")
+        if hardware:
+            lines.extend(["## Setup", ""])
+            for tool in hardware:
+                bit = f"- **{tool.name}** ({tool.get_category_display()})"
+                if tool.note:
+                    bit += f" — {tool.note}"
+                if tool.url:
+                    bit += f" · [link]({tool.url})"
+                lines.append(bit)
+            lines.append("")
 
         if self.bio:
             lines.extend(["## About", "", self.bio.strip(), ""])
@@ -580,6 +647,162 @@ class Profile(models.Model):
         return link.url if link else ""
 
 
+class ToolCategory(models.TextChoices):
+    LANGUAGES = "languages", _("Languages")
+    FRAMEWORKS = "frameworks", _("Frameworks & libraries")
+    INFRA = "infra", _("Infra & cloud")
+    DATA = "data", _("Data & analytics")
+    OBSERVABILITY = "observability", _("Observability")
+    SECURITY = "security", _("Security")
+    COLLAB = "collab", _("Collaboration")
+    DESIGN = "design", _("Design")
+    AI = "ai", _("AI / ML")
+    DEVICES = "devices", _("PCs & devices")
+    PERIPHERALS = "peripherals", _("Peripherals & desk")
+    OTHER = "other", _("Other")
+
+
+HARDWARE_CATEGORIES: frozenset[str] = frozenset(
+    {
+        ToolCategory.DEVICES,
+        ToolCategory.PERIPHERALS,
+    },
+)
+
+# Desk / machine quick-adds — shown alongside role-based software suggestions.
+DEVICE_SUGGESTIONS: tuple[tuple[str, str], ...] = (
+    ("MacBook Pro", ToolCategory.DEVICES),
+    ("MacBook Air", ToolCategory.DEVICES),
+    ("Framework Laptop", ToolCategory.DEVICES),
+    ("ThinkPad", ToolCategory.DEVICES),
+    ("Dell XPS", ToolCategory.DEVICES),
+    ("Custom desktop PC", ToolCategory.DEVICES),
+    ("iPad", ToolCategory.DEVICES),
+    ("iPhone", ToolCategory.DEVICES),
+    ("Android phone", ToolCategory.DEVICES),
+    ("Mechanical keyboard", ToolCategory.PERIPHERALS),
+    ("External monitor", ToolCategory.PERIPHERALS),
+    ("Docking station", ToolCategory.PERIPHERALS),
+    ("Noise-cancelling headphones", ToolCategory.PERIPHERALS),
+    ("Trackpad / mouse", ToolCategory.PERIPHERALS),
+)
+
+
+# Suggested daily drivers by primary role — quick-add chips on the tools list.
+ROLE_TOOL_SUGGESTIONS: dict[str, tuple[tuple[str, str], ...]] = {
+    PrimaryRole.BACKEND: (
+        ("Python", ToolCategory.LANGUAGES),
+        ("Go", ToolCategory.LANGUAGES),
+        ("Django", ToolCategory.FRAMEWORKS),
+        ("FastAPI", ToolCategory.FRAMEWORKS),
+        ("PostgreSQL", ToolCategory.DATA),
+        ("Redis", ToolCategory.DATA),
+        ("Docker", ToolCategory.INFRA),
+        ("Kubernetes", ToolCategory.INFRA),
+    ),
+    PrimaryRole.FRONTEND: (
+        ("TypeScript", ToolCategory.LANGUAGES),
+        ("React", ToolCategory.FRAMEWORKS),
+        ("Next.js", ToolCategory.FRAMEWORKS),
+        ("Vite", ToolCategory.FRAMEWORKS),
+        ("Tailwind CSS", ToolCategory.FRAMEWORKS),
+        ("Figma", ToolCategory.DESIGN),
+        ("Storybook", ToolCategory.COLLAB),
+    ),
+    PrimaryRole.FULLSTACK: (
+        ("TypeScript", ToolCategory.LANGUAGES),
+        ("Python", ToolCategory.LANGUAGES),
+        ("React", ToolCategory.FRAMEWORKS),
+        ("Django", ToolCategory.FRAMEWORKS),
+        ("PostgreSQL", ToolCategory.DATA),
+        ("Docker", ToolCategory.INFRA),
+        ("Vercel", ToolCategory.INFRA),
+    ),
+    PrimaryRole.MOBILE: (
+        ("Swift", ToolCategory.LANGUAGES),
+        ("Kotlin", ToolCategory.LANGUAGES),
+        ("Flutter", ToolCategory.FRAMEWORKS),
+        ("React Native", ToolCategory.FRAMEWORKS),
+        ("Xcode", ToolCategory.COLLAB),
+        ("Firebase", ToolCategory.INFRA),
+    ),
+    PrimaryRole.DEVOPS: (
+        ("Kubernetes", ToolCategory.INFRA),
+        ("Terraform", ToolCategory.INFRA),
+        ("AWS", ToolCategory.INFRA),
+        ("GitHub Actions", ToolCategory.INFRA),
+        ("Prometheus", ToolCategory.OBSERVABILITY),
+        ("Grafana", ToolCategory.OBSERVABILITY),
+        ("Docker", ToolCategory.INFRA),
+        ("Ansible", ToolCategory.INFRA),
+    ),
+    PrimaryRole.DATA: (
+        ("SQL", ToolCategory.LANGUAGES),
+        ("Python", ToolCategory.LANGUAGES),
+        ("dbt", ToolCategory.DATA),
+        ("Airflow", ToolCategory.DATA),
+        ("Spark", ToolCategory.DATA),
+        ("Snowflake", ToolCategory.DATA),
+        ("BigQuery", ToolCategory.DATA),
+        ("Kafka", ToolCategory.DATA),
+    ),
+    PrimaryRole.ML: (
+        ("Python", ToolCategory.LANGUAGES),
+        ("PyTorch", ToolCategory.AI),
+        ("TensorFlow", ToolCategory.AI),
+        ("scikit-learn", ToolCategory.AI),
+        ("Hugging Face", ToolCategory.AI),
+        ("Jupyter", ToolCategory.COLLAB),
+        ("MLflow", ToolCategory.AI),
+        ("CUDA", ToolCategory.INFRA),
+    ),
+    PrimaryRole.SECURITY: (
+        ("Burp Suite", ToolCategory.SECURITY),
+        ("OWASP ZAP", ToolCategory.SECURITY),
+        ("Nmap", ToolCategory.SECURITY),
+        ("Wireshark", ToolCategory.SECURITY),
+        ("Vault", ToolCategory.SECURITY),
+        ("Snyk", ToolCategory.SECURITY),
+        ("Trivy", ToolCategory.SECURITY),
+    ),
+    PrimaryRole.QA: (
+        ("Playwright", ToolCategory.FRAMEWORKS),
+        ("Cypress", ToolCategory.FRAMEWORKS),
+        ("pytest", ToolCategory.FRAMEWORKS),
+        ("Selenium", ToolCategory.FRAMEWORKS),
+        ("Postman", ToolCategory.COLLAB),
+        ("Jira", ToolCategory.COLLAB),
+    ),
+    PrimaryRole.DESIGN: (
+        ("Figma", ToolCategory.DESIGN),
+        ("FigJam", ToolCategory.DESIGN),
+        ("Notion", ToolCategory.COLLAB),
+        ("Miro", ToolCategory.COLLAB),
+        ("Adobe Illustrator", ToolCategory.DESIGN),
+    ),
+    PrimaryRole.PM: (
+        ("Jira", ToolCategory.COLLAB),
+        ("Linear", ToolCategory.COLLAB),
+        ("Notion", ToolCategory.COLLAB),
+        ("Amplitude", ToolCategory.DATA),
+        ("Mixpanel", ToolCategory.DATA),
+        ("Figma", ToolCategory.DESIGN),
+    ),
+    PrimaryRole.STUDENT: (
+        ("Git", ToolCategory.COLLAB),
+        ("VS Code", ToolCategory.COLLAB),
+        ("Python", ToolCategory.LANGUAGES),
+        ("Linux", ToolCategory.INFRA),
+        ("Docker", ToolCategory.INFRA),
+    ),
+    PrimaryRole.OTHER: (
+        ("Git", ToolCategory.COLLAB),
+        ("VS Code", ToolCategory.COLLAB),
+        ("Docker", ToolCategory.INFRA),
+        ("PostgreSQL", ToolCategory.DATA),
+    ),
+}
+
 
 class ProjectLink(models.Model):
     """A project a user wants to highlight on their profile."""
@@ -612,6 +835,8 @@ class ProjectLink(models.Model):
         # `order` is the user-controlled rank (drag-and-drop on the list page).
         # `is_featured` is a visual badge, not a layout override.
         ordering = ("order", "-created_at")
+        verbose_name = _("project")
+        verbose_name_plural = _("projects")
 
     def __str__(self) -> str:
         return self.title
@@ -626,6 +851,77 @@ class ProjectLink(models.Model):
                 seen.add(tag)
                 out.append(tag)
         return out
+
+
+class ProfileTool(models.Model):
+    """A tool, product, or device the member uses (software + setup)."""
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="tools",
+    )
+    name = models.CharField(_("name"), max_length=80)
+    category = models.CharField(
+        _("category"),
+        max_length=24,
+        choices=ToolCategory.choices,
+        default=ToolCategory.OTHER,
+    )
+    url = models.URLField(
+        _("URL"),
+        max_length=300,
+        blank=True,
+        help_text=_("Optional docs, product, or store page."),
+    )
+    note = models.CharField(
+        _("note"),
+        max_length=160,
+        blank=True,
+        help_text=_("How you use it, or key specs — one short line."),
+    )
+    is_featured = models.BooleanField(_("featured"), default=False)
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("order", "name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("profile", "name"),
+                name="profiles_profiletool_unique_name_per_profile",
+            ),
+        ]
+        verbose_name = _("tool")
+        verbose_name_plural = _("tools")
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def is_hardware(self) -> bool:
+        return self.category in HARDWARE_CATEGORIES
+
+    @property
+    def category_icon(self) -> str:
+        return {
+            ToolCategory.LANGUAGES: "</>",
+            ToolCategory.FRAMEWORKS: "◇",
+            ToolCategory.INFRA: "☁",
+            ToolCategory.DATA: "▦",
+            ToolCategory.OBSERVABILITY: "◎",
+            ToolCategory.SECURITY: "⛨",
+            ToolCategory.COLLAB: "⇄",
+            ToolCategory.DESIGN: "✎",
+            ToolCategory.AI: "✦",
+            ToolCategory.DEVICES: "▣",
+            ToolCategory.PERIPHERALS: "⌨",
+            ToolCategory.OTHER: "·",
+        }.get(self.category, "·")
+
+    def save(self, *args, **kwargs) -> None:
+        self.name = " ".join(self.name.split())
+        super().save(*args, **kwargs)
 
 
 class ShowcaseKind(models.TextChoices):

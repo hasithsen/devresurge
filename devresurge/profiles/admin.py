@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Education
 from .models import LinkClick
 from .models import Profile
+from .models import ProfileTool
 from .models import ProfileView
 from .models import ProjectLink
 from .models import Recommendation
@@ -16,6 +17,12 @@ class ProjectLinkInline(admin.TabularInline):
     model = ProjectLink
     extra = 0
     fields = ("title", "url", "repo_url", "is_featured", "order")
+
+
+class ProfileToolInline(admin.TabularInline):
+    model = ProfileTool
+    extra = 0
+    fields = ("name", "category", "url", "note", "is_featured", "order")
 
 
 class ShowcaseItemInline(admin.TabularInline):
@@ -58,7 +65,13 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     search_fields = ("handle", "display_name", "headline", "user__email", "tech_stack", "location")
     autocomplete_fields = ("user",)
-    inlines = (SocialLinkInline, ProjectLinkInline, ShowcaseItemInline, WorkExperienceInline)
+    inlines = (
+        SocialLinkInline,
+        ProjectLinkInline,
+        ProfileToolInline,
+        ShowcaseItemInline,
+        WorkExperienceInline,
+    )
     readonly_fields = ("created_at", "updated_at")
 
 
@@ -67,6 +80,13 @@ class ProjectLinkAdmin(admin.ModelAdmin):
     list_display = ("title", "profile", "is_featured", "order", "created_at")
     list_filter = ("is_featured",)
     search_fields = ("title", "description", "profile__handle")
+
+
+@admin.register(ProfileTool)
+class ProfileToolAdmin(admin.ModelAdmin):
+    list_display = ("name", "profile", "category", "is_featured", "order", "created_at")
+    list_filter = ("category", "is_featured")
+    search_fields = ("name", "note", "profile__handle")
 
 
 @admin.register(ShowcaseItem)

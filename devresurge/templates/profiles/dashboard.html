@@ -125,6 +125,7 @@
       <nav class="dr-dash__nav" aria-label="{% translate 'Workspace' %}">
         <a href="{% url 'profiles:edit' %}"><span>profile</span><span class="dr-dash__hint">edit</span></a>
         <a href="{% url 'profiles:project_list' %}"><span>projects</span><span class="dr-dash__hint">{{ profile.projects.count }}</span></a>
+        <a href="{% url 'profiles:tool_list' %}"><span>tools</span><span class="dr-dash__hint">{{ profile.tools.count }}</span></a>
         <a href="{% url 'profiles:showcase_list' %}"><span>lab</span><span class="dr-dash__hint">{{ profile.showcases.count }}</span></a>
         <a href="{% url 'profiles:experience_list' %}"><span>experience</span><span class="dr-dash__hint">{{ profile.experiences.count }}</span></a>
         <a href="{% url 'profiles:education_list' %}"><span>education</span><span class="dr-dash__hint">{{ profile.education.count }}</span></a>

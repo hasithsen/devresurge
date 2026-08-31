@@ -56,6 +56,7 @@ from devresurge.connections.models import NotificationKind
 from .badges import render_profile_badge_svg
 from .forms import EducationForm
 from .forms import ProfileForm
+from .forms import ProfileToolForm
 from .forms import ProjectLinkForm
 from .forms import RecommendationForm
 from .forms import ShowcaseItemForm
@@ -65,15 +66,19 @@ from .github import GitHubFetchError
 from .models import Education
 from .models import LinkClick
 from .models import LinkKind
+from .models import DEVICE_SUGGESTIONS
 from .models import PrimaryRole
 from .models import Profile
+from .models import ProfileTool
 from .models import ProfileView as ProfileViewEvent
 from .models import ProjectLink
 from .models import Recommendation
+from .models import ROLE_TOOL_SUGGESTIONS
 from .models import ShowcaseItem
 from .models import SkillEndorsement
 from .models import SocialLink
 from .models import SocialPlatform
+from .models import ToolCategory
 from .models import WorkExperience
 
 if TYPE_CHECKING:
@@ -448,6 +453,7 @@ class ProfilePublicView(DetailView):
             .prefetch_related(
                 "social_links",
                 "projects",
+                "tools",
                 "showcases",
                 "experiences",
                 "education",
@@ -982,6 +988,88 @@ class ProjectLinkCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
         return response
 
 
+# ---------------------------------------------------------------------------
+# Profile tools CRUD
+# ---------------------------------------------------------------------------
+
+
+class ProfileToolListView(LoginRequiredMixin, ListView):
+    model = ProfileTool
+    template_name = "profiles/tool_list.html"
+    context_object_name = "tools"
+
+    def get_queryset(self) -> QuerySet[ProfileTool]:
+        return _get_or_create_profile(self.request.user).tools.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        profile = _get_or_create_profile(self.request.user)
+        ctx["profile"] = profile
+        existing = {t.name.casefold() for t in ctx["tools"]}
+        suggestions = ROLE_TOOL_SUGGESTIONS.get(
+            profile.primary_role,
+            ROLE_TOOL_SUGGESTIONS[PrimaryRole.OTHER],
+        )
+        ctx["tool_suggestions"] = [
+            {"name": name, "category": category}
+            for name, category in suggestions
+            if name.casefold() not in existing
+        ]
+        ctx["device_suggestions"] = [
+            {"name": name, "category": category}
+            for name, category in DEVICE_SUGGESTIONS
+            if name.casefold() not in existing
+        ]
+        ctx["role_label"] = profile.get_primary_role_display()
+        return ctx
+
+
+class ProfileToolCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = ProfileTool
+    form_class = ProfileToolForm
+    template_name = "profiles/tool_form.html"
+    success_url = reverse_lazy("profiles:tool_list")
+    success_message = _("Tool / device added.")
+
+    def get_initial(self) -> dict[str, Any]:
+        initial = super().get_initial()
+        name = (self.request.GET.get("name") or "").strip()
+        category = (self.request.GET.get("category") or "").strip()
+        if name:
+            initial["name"] = name
+        if category in ToolCategory.values:
+            initial["category"] = category
+        return initial
+
+    def get_form_kwargs(self) -> dict[str, Any]:
+        kwargs = super().get_form_kwargs()
+        kwargs["profile"] = _get_or_create_profile(self.request.user)
+        return kwargs
+
+    def form_valid(self, form: ProfileToolForm):
+        form.instance.profile = _get_or_create_profile(self.request.user)
+        return super().form_valid(form)
+
+
+class ProfileToolUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
+    model = ProfileTool
+    form_class = ProfileToolForm
+    template_name = "profiles/tool_form.html"
+    success_url = reverse_lazy("profiles:tool_list")
+    success_message = _("Tool / device updated.")
+
+    def get_form_kwargs(self) -> dict[str, Any]:
+        kwargs = super().get_form_kwargs()
+        kwargs["profile"] = _get_or_create_profile(self.request.user)
+        return kwargs
+
+
+class ProfileToolDeleteView(_OwnerScopedMixin, DeleteView):
+    model = ProfileTool
+    template_name = "profiles/tool_confirm_delete.html"
+    success_url = reverse_lazy("profiles:tool_list")
+
+
 class ProjectLinkUpdateView(_OwnerScopedMixin, SuccessMessageMixin, UpdateView):
     model = ProjectLink
     form_class = ProjectLinkForm
@@ -1109,6 +1197,12 @@ def _reorder(request: HttpRequest, model: Any) -> HttpResponse:
 @require_POST
 def project_reorder_view(request: HttpRequest) -> HttpResponse:
     return _reorder(request, ProjectLink)
+
+
+@login_required
+@require_POST
+def tool_reorder_view(request: HttpRequest) -> HttpResponse:
+    return _reorder(request, ProfileTool)
 
 
 @login_required
@@ -1497,6 +1591,10 @@ project_list_view = ProjectLinkListView.as_view()
 project_create_view = ProjectLinkCreateView.as_view()
 project_update_view = ProjectLinkUpdateView.as_view()
 project_delete_view = ProjectLinkDeleteView.as_view()
+tool_list_view = ProfileToolListView.as_view()
+tool_create_view = ProfileToolCreateView.as_view()
+tool_update_view = ProfileToolUpdateView.as_view()
+tool_delete_view = ProfileToolDeleteView.as_view()
 showcase_list_view = ShowcaseListView.as_view()
 showcase_create_view = ShowcaseCreateView.as_view()
 showcase_update_view = ShowcaseUpdateView.as_view()

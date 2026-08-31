@@ -6,9 +6,12 @@ from http import HTTPStatus
 import pytest
 from django.urls import reverse
 
+from devresurge.profiles.models import ProfileTool
 from devresurge.profiles.models import ProjectLink
 from devresurge.profiles.models import SocialLink
+from devresurge.profiles.models import ToolCategory
 from devresurge.profiles.tests.factories import ProfileFactory
+from devresurge.profiles.tests.factories import ProfileToolFactory
 from devresurge.profiles.tests.factories import ProjectLinkFactory
 from devresurge.profiles.tests.factories import SocialLinkFactory
 from devresurge.users.tests.factories import UserFactory
@@ -204,6 +207,81 @@ def test_project_link_requires_url_or_repo(client):
     assert not ProjectLink.objects.filter(title="Bad").exists()
 
 
+def test_tool_create_and_list(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.post(
+        reverse("profiles:tool_create"),
+        data={
+            "name": "Kubernetes",
+            "category": ToolCategory.INFRA,
+            "url": "https://kubernetes.io",
+            "note": "Clusters at work",
+            "is_featured": "on",
+            "order": 0,
+        },
+    )
+    assert response.status_code == HTTPStatus.FOUND
+    tool = ProfileTool.objects.get(profile__user=user, name="Kubernetes")
+    assert tool.category == ToolCategory.INFRA
+    assert tool.is_featured is True
+
+    listing = client.get(reverse("profiles:tool_list"))
+    assert listing.status_code == HTTPStatus.OK
+    assert b"Kubernetes" in listing.content
+
+
+def test_tool_create_rejects_duplicate_name(client):
+    user = UserFactory()
+    client.force_login(user)
+    ProfileToolFactory(profile=user.profile, name="Docker")
+    response = client.post(
+        reverse("profiles:tool_create"),
+        data={
+            "name": "docker",
+            "category": ToolCategory.INFRA,
+            "url": "",
+            "note": "",
+            "is_featured": "",
+            "order": 0,
+        },
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert ProfileTool.objects.filter(profile__user=user).count() == 1
+
+
+def test_public_profile_shows_tools(client):
+    profile = ProfileFactory(is_public=True, primary_role="devops")
+    ProfileToolFactory(
+        profile=profile,
+        name="Terraform",
+        category=ToolCategory.INFRA,
+        note="IaC for everything",
+        is_featured=True,
+    )
+    ProfileToolFactory(
+        profile=profile,
+        name="Framework Laptop",
+        category=ToolCategory.DEVICES,
+        note="DIY 13″",
+    )
+    response = client.get(reverse("profiles:public", kwargs={"handle": profile.handle}))
+    assert response.status_code == HTTPStatus.OK
+    assert b"Terraform" in response.content
+    assert b"Framework Laptop" in response.content
+    assert b"setup" in response.content.lower()
+    assert b"tools" in response.content.lower()
+
+
+def test_tool_list_shows_device_suggestions(client):
+    user = UserFactory()
+    client.force_login(user)
+    response = client.get(reverse("profiles:tool_list"))
+    assert response.status_code == HTTPStatus.OK
+    assert b"MacBook Pro" in response.content
+    assert b"suggested devices" in response.content.lower()
+
+
 def test_social_link_create_and_owner_scoped_edit(client):
     user = UserFactory()
     client.force_login(user)
@@ -317,6 +395,28 @@ def test_project_reorder_persists_new_order(client):
 
     titles = list(profile.projects.order_by("order").values_list("title", flat=True))
     assert titles == ["C", "A", "B"]
+
+
+def test_tool_reorder_persists_new_order(client):
+    user = UserFactory()
+    client.force_login(user)
+    profile = user.profile
+    a = ProfileToolFactory(profile=profile, name="A", order=0)
+    b = ProfileToolFactory(profile=profile, name="B", order=1)
+    c = ProfileToolFactory(profile=profile, name="C", order=2)
+
+    response = client.post(
+        reverse("profiles:tool_reorder"),
+        data=json.dumps({"ids": [c.pk, a.pk, b.pk]}),
+        content_type="application/json",
+    )
+    assert response.status_code == HTTPStatus.OK
+    payload = response.json()
+    assert payload["ok"] is True
+    assert payload["updated"] == 3
+
+    names = list(profile.tools.order_by("order").values_list("name", flat=True))
+    assert names == ["C", "A", "B"]
 
 
 def test_project_reorder_ignores_foreign_ids(client):

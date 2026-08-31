@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from factory import Faker
+from factory import Sequence
 from factory import SubFactory
 from factory.django import DjangoModelFactory
 
 from devresurge.profiles.models import Profile
+from devresurge.profiles.models import ProfileTool
 from devresurge.profiles.models import ProjectLink
 from devresurge.profiles.models import ShowcaseItem
 from devresurge.profiles.models import ShowcaseKind
 from devresurge.profiles.models import SocialLink
+from devresurge.profiles.models import ToolCategory
 from devresurge.users.tests.factories import UserFactory
 
 
@@ -73,3 +76,15 @@ class SocialLinkFactory(DjangoModelFactory[SocialLink]):
 
     class Meta:
         model = SocialLink
+
+
+class ProfileToolFactory(DjangoModelFactory[ProfileTool]):
+    profile = SubFactory(ProfileFactory)
+    name = Sequence(lambda n: f"Tool {n}")
+    category = ToolCategory.OTHER
+    note = Faker("sentence", nb_words=6)
+    url = ""
+    is_featured = False
+
+    class Meta:
+        model = ProfileTool
