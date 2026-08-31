@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{{ tool_name }} — ~/tools — DevResurge{% endblock title %}
+{% block meta_description %}{% blocktranslate with name=tool_name %}Who uses {{ name }} on DevResurge — public profiles, notes, and roles.{% endblocktranslate %}{% endblock meta_description %}
+{% block og_title %}{{ tool_name }} — DevResurge{% endblock og_title %}
+{% block og_description %}{% blocktranslate count counter=user_count with name=tool_name %}{{ name }} · {{ counter }} public profile{% plural %}{{ name }} · {{ counter }} public profiles{% endblocktranslate %}{% endblock og_description %}
+
+{% block extra_head %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'profiles:tool_explore_detail' tool_slug %}" />
+{% endblock extra_head %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:tool_explore' %}">~/tools</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>{{ tool_slug }}</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div>
+        <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">which {{ tool_name }}</span></p>
+        <h1 style="margin: 0;">
+          <span class="dr-tool-card__icon" aria-hidden="true">{{ tool_icon }}</span>
+          {{ tool_name }}
+        </h1>
+        <p class="dr-helptext" style="margin: 0.35rem 0 0;">
+          {{ tool_category_label }}
+          ·
+          {% blocktranslate count counter=user_count %}
+            {{ counter }} public profile
+          {% plural %}
+            {{ counter }} public profiles
+          {% endblocktranslate %}
+          {% if is_hardware %} · {% trans "setup / device" %}{% endif %}
+        </p>
+      </div>
+      <div class="dr-btn-row dr-page__head-actions">
+        <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:tool_explore' %}?category={{ tool_category }}">{% trans "same category" %}</a>
+        {% if request.user.is_authenticated %}
+          <a class="dr-btn dr-btn--primary"
+             href="{% url 'profiles:tool_create' %}?name={{ tool_name|urlencode }}&amp;category={{ tool_category }}">
+            + {% trans "add to mine" %}
+          </a>
+        {% endif %}
+      </div>
+    </header>
+
+    <ul class="dr-tool-roster">
+      {% for entry in entries %}
+        <li class="dr-tool-roster__item">
+          <a class="dr-tool-roster__profile" href="{{ entry.profile.get_absolute_url }}">
+            <span class="dr-avatar dr-avatar--sm" aria-hidden="true">
+              {% if entry.profile.avatar %}
+                <img src="{{ entry.profile.avatar.url }}" alt="" loading="lazy" />
+              {% else %}
+                {{ entry.profile.initials }}
+              {% endif %}
+            </span>
+            <span class="dr-tool-roster__who">
+              <span class="dr-tool-roster__name">{{ entry.profile.display_name|default:entry.profile.handle }}</span>
+              <span class="dr-tool-roster__handle">@{{ entry.profile.handle }}</span>
+            </span>
+          </a>
+          <div class="dr-tool-roster__signal">
+            <span class="dr-meta">
+              {{ entry.profile.get_primary_role_display }}
+              {% if entry.profile.location %} · {{ entry.profile.location }}{% endif %}
+              {% if entry.is_featured %} · <span class="dr-star" aria-hidden="true">★</span> featured{% endif %}
+            </span>
+            {% if entry.note %}<p class="dr-tool-card__note">{{ entry.note }}</p>{% endif %}
+            <div class="dr-btn-row" style="margin-top: 0.35rem;">
+              <a class="dr-btn dr-btn--sm dr-btn--ghost"
+                 href="{% url 'profiles:public_tools' entry.profile.handle %}">{% trans "their tools" %}</a>
+              {% if entry.url %}
+                <a class="dr-btn dr-btn--sm dr-btn--ghost"
+                   href="{{ entry.url }}"
+                   rel="noopener nofollow ugc"
+                   target="_blank">{% trans "link" %}</a>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if related %}
+      <div class="dr-mb-lg" style="margin-top: 2rem;">
+        <div class="dr-learn-label">{% trans "related in category" %}</div>
+        <div class="dr-tags">
+          {% for tip in related %}
+            <a class="dr-tag" href="{{ tip.url }}">{{ tip.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

@@ -273,6 +273,44 @@ def test_public_profile_shows_tools(client):
     assert b"tools" in response.content.lower()
 
 
+def test_tool_explore_lists_public_tools(client):
+    public = ProfileFactory(is_public=True)
+    private = ProfileFactory(is_public=False)
+    ProfileToolFactory(profile=public, name="Kubernetes", category=ToolCategory.INFRA)
+    ProfileToolFactory(profile=private, name="Secret Tool", category=ToolCategory.OTHER)
+
+    response = client.get(reverse("profiles:tool_explore"))
+    assert response.status_code == HTTPStatus.OK
+    assert b"Kubernetes" in response.content
+    assert b"Secret Tool" not in response.content
+
+
+def test_tool_explore_detail_and_public_profile_tools(client):
+    profile = ProfileFactory(is_public=True, handle="ada")
+    ProfileToolFactory(
+        profile=profile,
+        name="Kubernetes",
+        category=ToolCategory.INFRA,
+        note="GitOps clusters",
+    )
+    detail = client.get(reverse("profiles:tool_explore_detail", kwargs={"slug": "kubernetes"}))
+    assert detail.status_code == HTTPStatus.OK
+    assert b"Kubernetes" in detail.content
+    assert b"@ada" in detail.content
+    assert b"GitOps clusters" in detail.content
+
+    page = client.get(reverse("profiles:public_tools", kwargs={"handle": "ada"}))
+    assert page.status_code == HTTPStatus.OK
+    assert b"Kubernetes" in page.content
+
+    private = ProfileFactory(is_public=False, handle="hidden")
+    ProfileToolFactory(profile=private, name="Kubernetes", category=ToolCategory.INFRA)
+    assert (
+        client.get(reverse("profiles:public_tools", kwargs={"handle": "hidden"})).status_code
+        == HTTPStatus.NOT_FOUND
+    )
+
+
 def test_tool_list_shows_device_suggestions(client):
     user = UserFactory()
     client.force_login(user)

@@ -157,6 +157,48 @@ peers · mutuals · hire intents
     {% endif %}
   </section>
 
+  <section class="dr-home-tools" aria-labelledby="home-tools-title">
+    <div class="dr-home-tools__head">
+      <div>
+        <h2 class="dr-section-title" id="home-tools-title">
+          <span class="dr-prompt"></span> {% trans "tools &amp; devices in the wild" %}
+        </h2>
+        <p class="dr-home-tools__lede">
+          {% trans "See what public members actually ship with — then open a tool to find peers using it." %}
+        </p>
+      </div>
+      <a class="dr-btn dr-btn--primary" href="{% url 'profiles:tool_explore' %}">
+        {% trans "explore tools" %}
+      </a>
+    </div>
+    {% if featured_tools %}
+      <div class="dr-tags">
+        {% for tip in featured_tools %}
+          <a class="dr-tag" href="{{ tip.url }}">
+            <span aria-hidden="true">{{ tip.category_icon }}</span>
+            {{ tip.name }}
+            <span class="dr-dim">· {{ tip.users }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="dr-panel">
+        <div class="dr-panel__body">
+          <p class="dr-mb-0">
+            {% trans "List your daily drivers and desk gear — they become discoverable here when your profile is public." %}
+          </p>
+          <div class="dr-btn-row dr-mt-sm">
+            {% if request.user.is_authenticated %}
+              <a class="dr-btn" href="{% url 'profiles:tool_create' %}">{% trans "add a tool" %}</a>
+            {% elif ACCOUNT_ALLOW_REGISTRATION %}
+              <a class="dr-btn" href="{% url 'account_signup' %}">{% trans "create your profile" %}</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
   <h2 class="dr-section-title"><span class="dr-prompt"></span> ls --recent profiles/</h2>
 
   {% if featured_profiles %}

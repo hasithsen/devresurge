@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}@{{ profile.handle }}/tools — DevResurge{% endblock title %}
+{% block meta_description %}{% blocktranslate with handle=profile.handle name=profile.display_name|default:profile.handle %}Tools and devices {{ name }} (@{{ handle }}) uses on DevResurge.{% endblocktranslate %}{% endblock meta_description %}
+{% block og_title %}@{{ profile.handle }} · tools — DevResurge{% endblock og_title %}
+{% block og_description %}{% blocktranslate count counter=tool_total with handle=profile.handle %}@{{ handle }} lists {{ counter }} tool / device{% plural %}@{{ handle }} lists {{ counter }} tools &amp; devices{% endblocktranslate %}{% endblock og_description %}
+
+{% block extra_head %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'profiles:public_tools' profile.handle %}" />
+{% endblock extra_head %}
+
+{% block content %}
+  <section class="dr-page">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'profiles:tool_explore' %}">~/tools</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{{ profile.get_absolute_url }}">@{{ profile.handle }}</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>tools</span>
+    </nav>
+
+    <header class="dr-page__head">
+      <div class="dr-tool-public__intro">
+        <a class="dr-tool-public__avatar" href="{{ profile.get_absolute_url }}">
+          <span class="dr-avatar" aria-hidden="true">
+            {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="" />
+            {% else %}
+              {{ profile.initials }}
+            {% endif %}
+          </span>
+        </a>
+        <div>
+          <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls @{{ profile.handle }}/tools/</span></p>
+          <h1 style="margin: 0;">
+            {% blocktranslate with name=profile.display_name|default:profile.handle %}{{ name }}’s tools{% endblocktranslate %}
+          </h1>
+          <p class="dr-helptext" style="margin: 0.35rem 0 0;">
+            {{ profile.get_primary_role_display }}
+            {% if profile.location %} · {{ profile.location }}{% endif %}
+            ·
+            {% blocktranslate count counter=tool_total %}
+              {{ counter }} listed
+            {% plural %}
+              {{ counter }} listed
+            {% endblocktranslate %}
+          </p>
+        </div>
+      </div>
+      <div class="dr-btn-row dr-page__head-actions">
+        <a class="dr-btn dr-btn--ghost" href="{{ profile.get_absolute_url }}">{% trans "profile" %}</a>
+        <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:network_map' profile.handle %}">{% trans "map" %}</a>
+        <a class="dr-btn" href="{% url 'profiles:tool_explore' %}">{% trans "explore all" %}</a>
+        {% if is_owner %}
+          <a class="dr-btn dr-btn--primary" href="{% url 'profiles:tool_list' %}">{% trans "manage" %}</a>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if software_groups %}
+      <div class="dr-mb-lg">
+        <h2 class="dr-section-title">tools · daily drivers</h2>
+        <div class="dr-tool-groups">
+          {% for group in software_groups %}
+            <div class="dr-tool-group">
+              <div class="dr-learn-label">{{ group.label }}</div>
+              <ul class="dr-tool-list">
+                {% for tool in group.tools %}
+                  <li class="dr-tool-card{% if tool.is_featured %} dr-tool-card--featured{% endif %}">
+                    <span class="dr-tool-card__icon" aria-hidden="true">{{ tool.category_icon }}</span>
+                    <div class="dr-tool-card__body">
+                      <div class="dr-tool-card__name">
+                        {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                        <a href="{{ tool.get_explore_url }}">{{ tool.name }}</a>
+                      </div>
+                      {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if device_groups %}
+      <div class="dr-mb-lg">
+        <h2 class="dr-section-title">setup · devices</h2>
+        <div class="dr-tool-groups">
+          {% for group in device_groups %}
+            <div class="dr-tool-group">
+              <div class="dr-learn-label">{{ group.label }}</div>
+              <ul class="dr-tool-list">
+                {% for tool in group.tools %}
+                  <li class="dr-tool-card{% if tool.is_featured %} dr-tool-card--featured{% endif %}">
+                    <span class="dr-tool-card__icon" aria-hidden="true">{{ tool.category_icon }}</span>
+                    <div class="dr-tool-card__body">
+                      <div class="dr-tool-card__name">
+                        {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                        <a href="{{ tool.get_explore_url }}">{{ tool.name }}</a>
+                      </div>
+                      {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if not software_groups and not device_groups %}
+      <div class="dr-empty">
+        <div class="dr-emoji">∅</div>
+        <p>{% trans "No tools listed on this profile yet." %}</p>
+        {% if is_owner %}
+          <div class="dr-btn-row">
+            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_create' %}">{% trans "add a tool" %}</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

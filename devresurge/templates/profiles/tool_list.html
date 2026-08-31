@@ -18,6 +18,10 @@
         <h1 style="margin: 0;">{% trans "tools &amp; devices" %}</h1>
         <p class="dr-helptext" style="margin: 0.35rem 0 0;">
           {% blocktranslate with role=role_label %}Daily drivers for {{ role }}, plus the PCs and gear you ship on.{% endblocktranslate %}
+          <a href="{% url 'profiles:tool_explore' %}">{% trans "Explore the public catalog" %}</a>
+          {% if profile.is_public %}
+            · <a href="{% url 'profiles:public_tools' profile.handle %}">{% trans "your public page" %}</a>
+          {% endif %}
         </p>
       </div>
       <div class="dr-btn-row dr-page__head-actions">

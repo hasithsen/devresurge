@@ -4342,6 +4342,166 @@ a.dr-achieve:hover {
   line-height: 1.35;
 }
 
+.dr-tool-card__ext {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.dr-tool-card__ext:hover {
+  color: var(--accent);
+}
+
+.dr-tool-explore {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dr-tool-explore__card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.dr-tool-explore__card:hover,
+.dr-tool-explore__card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  color: inherit;
+}
+
+.dr-tool-explore__card--hw {
+  border-style: dashed;
+}
+
+.dr-tool-explore__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dr-tool-explore__name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.dr-tool-explore__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.dr-tool-explore__go {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.dr-tool-explore__featured {
+  margin-top: 0.5rem;
+}
+
+.dr-tool-roster {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dr-tool-roster__item {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) 1fr;
+  gap: 1rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+@media (max-width: 640px) {
+  .dr-tool-roster__item {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dr-tool-roster__profile {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.dr-tool-roster__profile:hover .dr-tool-roster__name {
+  color: var(--accent);
+}
+
+.dr-tool-roster__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dr-tool-roster__name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.dr-tool-roster__handle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.dr-tool-roster__signal {
+  min-width: 0;
+}
+
+.dr-tool-public__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.dr-tool-public__avatar {
+  text-decoration: none;
+  color: inherit;
+}
+
+.dr-home-tools {
+  margin-top: 2.5rem;
+}
+
+.dr-home-tools__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dr-home-tools__lede {
+  margin: 0.35rem 0 0;
+  max-width: 36rem;
+  color: var(--text-muted);
+}
+
 .dr-skill {
   display: inline-flex;
   align-items: center;

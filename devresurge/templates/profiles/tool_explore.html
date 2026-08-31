@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}~/tools — DevResurge{% endblock title %}
+{% block meta_description %}{% trans "Explore tools and devices used by public DevResurge profiles — daily drivers, stacks, and desk setups." %}{% endblock meta_description %}
+{% block og_title %}{% trans "Tools & devices" %} — DevResurge{% endblock og_title %}
+{% block og_description %}{% trans "Browse what builders ship with — software, clouds, laptops, and gear." %}{% endblock og_description %}
+
+{% block extra_head %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'profiles:tool_explore' %}" />
+{% endblock extra_head %}
+
+{% block content %}
+  <section class="dr-page">
+    <header class="dr-stack dr-mb-lg">
+      <p class="dr-cli"><span class="dr-prompt"></span> <span class="cmd">ls tools/</span></p>
+      <h1 class="dr-page__title">
+        tools <span class="dr-dim">/ {{ tool_count }}</span>
+      </h1>
+      <p class="dr-mb-0 dr-muted">
+        {% blocktranslate count counter=user_count %}
+          Used across {{ counter }} public profile. Filter by field, category, or grep a name.
+        {% plural %}
+          Used across {{ counter }} public profiles. Filter by field, category, or grep a name.
+        {% endblocktranslate %}
+      </p>
+      {% if request.user.is_authenticated %}
+        <div class="dr-btn-row">
+          <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_list' %}">{% trans "manage yours" %}</a>
+          {% if request.user.profile.is_public and request.user.profile.tools.exists %}
+            <a class="dr-btn dr-btn--sm dr-btn--ghost"
+               href="{% url 'profiles:public_tools' request.user.profile.handle %}">{% trans "your public page" %}</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </header>
+
+    <form class="dr-search" method="get" action="" role="search">
+      <input class="dr-input dr-search__input"
+             type="search"
+             name="q"
+             value="{{ q }}"
+             placeholder="grep kubernetes · figma · macbook…"
+             aria-label="{% translate 'Search tools' %}" />
+      <details class="dr-search__filters"{% if category or role or kind %} open{% endif %}>
+        <summary>{% trans "filters" %}</summary>
+        <div class="dr-search__filters-body">
+          <select class="dr-select" name="kind" aria-label="{% translate 'Kind' %}">
+            <option value="">{% trans "software &amp; devices" %}</option>
+            <option value="software" {% if kind == "software" %}selected{% endif %}>{% trans "software only" %}</option>
+            <option value="devices" {% if kind == "devices" %}selected{% endif %}>{% trans "PCs &amp; peripherals" %}</option>
+          </select>
+          <select class="dr-select" name="category" aria-label="{% translate 'Category' %}">
+            <option value="">{% trans "all categories" %}</option>
+            {% for value, label in categories %}
+              <option value="{{ value }}" {% if value == category %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select class="dr-select" name="role" aria-label="{% translate 'Role filter' %}">
+            <option value="">{% trans "all roles" %}</option>
+            {% for value, label in roles %}
+              <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </details>
+      <button class="dr-btn dr-btn--primary" type="submit">run</button>
+      {% if q or category or role or kind %}
+        <a class="dr-btn dr-btn--ghost" href="{% url 'profiles:tool_explore' %}">reset</a>
+      {% endif %}
+    </form>
+
+    {% if featured_tools and not q and not category and not role and not kind %}
+      <div class="dr-tool-explore__featured dr-mb-lg">
+        <div class="dr-learn-label">{% trans "most used" %}</div>
+        <div class="dr-tags">
+          {% for tip in featured_tools %}
+            <a class="dr-tag" href="{{ tip.url }}">
+              <span aria-hidden="true">{{ tip.category_icon }}</span> {{ tip.name }}
+              <span class="dr-dim">· {{ tip.users }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if tools %}
+      <ul class="dr-tool-explore">
+        {% for tip in tools %}
+          <li>
+            <a class="dr-tool-explore__card{% if tip.is_hardware %} dr-tool-explore__card--hw{% endif %}"
+               href="{{ tip.url }}">
+              <span class="dr-tool-card__icon" aria-hidden="true">{{ tip.category_icon }}</span>
+              <span class="dr-tool-explore__body">
+                <span class="dr-tool-explore__name">{{ tip.name }}</span>
+                <span class="dr-tool-explore__meta">
+                  {{ tip.category_label }}
+                  ·
+                  {% blocktranslate count counter=tip.users %}
+                    {{ counter }} profile
+                  {% plural %}
+                    {{ counter }} profiles
+                  {% endblocktranslate %}
+                </span>
+              </span>
+              <span class="dr-tool-explore__go" aria-hidden="true">→</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="dr-empty">
+        <div class="dr-emoji">∅</div>
+        <p>
+          {% if q or category or role or kind %}
+            {% trans "No public tools match those filters." %}
+          {% else %}
+            {% trans "No public tools listed yet — be the first to share your stack." %}
+          {% endif %}
+        </p>
+        <div class="dr-btn-row">
+          {% if q or category or role or kind %}
+            <a class="dr-btn dr-btn--ghost dr-btn--sm" href="{% url 'profiles:tool_explore' %}">reset</a>
+          {% endif %}
+          {% if request.user.is_authenticated %}
+            <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_create' %}">{% trans "add a tool" %}</a>
+          {% elif ACCOUNT_ALLOW_REGISTRATION %}
+            <a class="dr-btn dr-btn--sm" href="{% url 'account_signup' %}">{% trans "join &amp; list yours" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

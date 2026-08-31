@@ -217,6 +217,31 @@
               </div>
             {% endif %}
           </div>
+          <div class="dr-profile-mapcta">
+            <a class="dr-profile-mapcta__main"
+               href="{% url 'profiles:public_tools' profile.handle %}">
+              <span class="dr-profile-mapcta__copy">
+                <span class="dr-profile-mapcta__kicker">{% trans "tools &amp; devices" %}</span>
+                <span class="dr-profile-mapcta__title">
+                  {% if is_owner %}
+                    {% trans "Open your public tools page" %}
+                  {% else %}
+                    {% blocktranslate with handle=profile.handle %}Browse @{{ handle }}’s tools{% endblocktranslate %}
+                  {% endif %}
+                </span>
+                <span class="dr-profile-mapcta__meta">
+                  {% blocktranslate count counter=profile.tools.count %}
+                    {{ counter }} listed
+                  {% plural %}
+                    {{ counter }} listed
+                  {% endblocktranslate %}
+                  ·
+                  {% trans "daily drivers · desk setup · explore who else uses them" %}
+                </span>
+              </span>
+              <span class="dr-profile-mapcta__go" aria-hidden="true">→</span>
+            </a>
+          </div>
         {% endif %}
 
         {% if skill_endorsements %}
@@ -283,10 +308,13 @@
                           <div class="dr-tool-card__body">
                             <div class="dr-tool-card__name">
                               {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                              <a href="{{ tool.get_explore_url }}">{{ tool.name }}</a>
                               {% if tool.url %}
-                                <a href="{{ tool.url }}" rel="noopener nofollow ugc" target="_blank">{{ tool.name }}</a>
-                              {% else %}
-                                {{ tool.name }}
+                                <a class="dr-tool-card__ext"
+                                   href="{{ tool.url }}"
+                                   rel="noopener nofollow ugc"
+                                   target="_blank"
+                                   aria-label="{% blocktranslate with name=tool.name %}External link for {{ name }}{% endblocktranslate %}">↗</a>
                               {% endif %}
                             </div>
                             {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
@@ -299,7 +327,13 @@
               </div>
               {% if is_owner %}
                 <div class="dr-btn-row" style="margin-top: 0.75rem;">
-                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_list' %}">{% trans "manage tools" %}</a>
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:public_tools' profile.handle %}">{% trans "public tools page" %}</a>
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:tool_list' %}">{% trans "manage tools" %}</a>
+                </div>
+              {% else %}
+                <div class="dr-btn-row" style="margin-top: 0.75rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:public_tools' profile.handle %}">{% trans "full tools page" %}</a>
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:tool_explore' %}">{% trans "explore all tools" %}</a>
                 </div>
               {% endif %}
             </div>
@@ -322,10 +356,13 @@
                           <div class="dr-tool-card__body">
                             <div class="dr-tool-card__name">
                               {% if tool.is_featured %}<span class="dr-star" aria-hidden="true">★</span> {% endif %}
+                              <a href="{{ tool.get_explore_url }}">{{ tool.name }}</a>
                               {% if tool.url %}
-                                <a href="{{ tool.url }}" rel="noopener nofollow ugc" target="_blank">{{ tool.name }}</a>
-                              {% else %}
-                                {{ tool.name }}
+                                <a class="dr-tool-card__ext"
+                                   href="{{ tool.url }}"
+                                   rel="noopener nofollow ugc"
+                                   target="_blank"
+                                   aria-label="{% blocktranslate with name=tool.name %}External link for {{ name }}{% endblocktranslate %}">↗</a>
                               {% endif %}
                             </div>
                             {% if tool.note %}<p class="dr-tool-card__note">{{ tool.note }}</p>{% endif %}
@@ -338,7 +375,12 @@
               </div>
               {% if is_owner %}
                 <div class="dr-btn-row" style="margin-top: 0.75rem;">
-                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_list' %}">{% trans "manage devices" %}</a>
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:public_tools' profile.handle %}">{% trans "public tools page" %}</a>
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:tool_list' %}">{% trans "manage devices" %}</a>
+                </div>
+              {% else %}
+                <div class="dr-btn-row" style="margin-top: 0.75rem;">
+                  <a class="dr-btn dr-btn--sm" href="{% url 'profiles:public_tools' profile.handle %}">{% trans "full tools page" %}</a>
                 </div>
               {% endif %}
             </div>
@@ -352,6 +394,7 @@
                 <p>{% trans "List field tools and the PCs / gear you use — IDEs, clouds, laptop, keyboard." %}</p>
                 <div class="dr-btn-row">
                   <a class="dr-btn dr-btn--sm" href="{% url 'profiles:tool_create' %}">{% trans "add a tool or device" %}</a>
+                  <a class="dr-btn dr-btn--sm dr-btn--ghost" href="{% url 'profiles:tool_explore' %}">{% trans "see what others use" %}</a>
                 </div>
               </div>
             </div>

@@ -67,6 +67,7 @@ from .models import Education
 from .models import LinkClick
 from .models import LinkKind
 from .models import DEVICE_SUGGESTIONS
+from .models import HARDWARE_CATEGORIES
 from .models import PrimaryRole
 from .models import Profile
 from .models import ProfileTool
@@ -348,6 +349,8 @@ class HomeView(TemplateView):
     template_name = "pages/home.html"
     _FEATURED_MAPS_CACHE_KEY = "home:featured_maps:v1"
     _FEATURED_MAPS_CACHE_TTL = 300
+    _FEATURED_TOOLS_CACHE_KEY = "home:featured_tools:v1"
+    _FEATURED_TOOLS_CACHE_TTL = 300
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
@@ -359,6 +362,7 @@ class HomeView(TemplateView):
         ctx["profile_count"] = Profile.objects.filter(is_public=True).count()
         ctx["project_count"] = ProjectLink.objects.count()
         ctx["featured_maps"] = self._featured_maps()
+        ctx["featured_tools"] = self._featured_tools()
         return ctx
 
     def _featured_maps(self) -> list[dict[str, Any]]:
@@ -379,6 +383,14 @@ class HomeView(TemplateView):
 
         cache.set(self._FEATURED_MAPS_CACHE_KEY, featured_maps, self._FEATURED_MAPS_CACHE_TTL)
         return featured_maps
+
+    def _featured_tools(self) -> list[dict[str, Any]]:
+        cached = cache.get(self._FEATURED_TOOLS_CACHE_KEY)
+        if cached is not None:
+            return cached
+        featured = ProfileTool.catalog()[:6]
+        cache.set(self._FEATURED_TOOLS_CACHE_KEY, featured, self._FEATURED_TOOLS_CACHE_TTL)
+        return featured
 
 
 class ProfileBrowseView(ListView):
@@ -435,6 +447,137 @@ class ProfileBrowseView(ListView):
         ctx["hire"] = self.hire_only() or self.intent() == "hire"
         ctx["intent"] = self.intent() or ("hire" if self.hire_only() else "")
         ctx["roles"] = PrimaryRole.choices
+        return ctx
+
+
+class ToolExploreView(TemplateView):
+    """Public directory of tools & devices used across listed profiles."""
+
+    template_name = "profiles/tool_explore.html"
+    _FEATURED_CACHE_KEY = "tools:explore:featured:v1"
+    _FEATURED_CACHE_TTL = 60 * 5
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        q = (self.request.GET.get("q") or "").strip()
+        category = (self.request.GET.get("category") or "").strip()
+        role = (self.request.GET.get("role") or "").strip()
+        kind = (self.request.GET.get("kind") or "").strip()
+        hardware: bool | None = None
+        if kind == "devices":
+            hardware = True
+        elif kind == "software":
+            hardware = False
+
+        catalog = ProfileTool.catalog(q=q, category=category, role=role, hardware=hardware)
+        ctx["tools"] = catalog
+        ctx["tool_count"] = len(catalog)
+        ctx["user_count"] = (
+            Profile.objects.filter(is_public=True, tools__isnull=False).distinct().count()
+        )
+        ctx["q"] = q
+        ctx["category"] = category if category in ToolCategory.values else ""
+        ctx["role"] = role if role in PrimaryRole.values else ""
+        ctx["kind"] = kind if kind in {"devices", "software"} else ""
+        ctx["categories"] = ToolCategory.choices
+        ctx["roles"] = PrimaryRole.choices
+        ctx["featured_tools"] = self._featured_tools() if not (q or category or role or kind) else []
+        return ctx
+
+    def _featured_tools(self) -> list[dict[str, Any]]:
+        cached = cache.get(self._FEATURED_CACHE_KEY)
+        if cached is not None:
+            return cached
+        featured = ProfileTool.catalog()[:8]
+        cache.set(self._FEATURED_CACHE_KEY, featured, self._FEATURED_CACHE_TTL)
+        return featured
+
+
+class ToolExploreDetailView(TemplateView):
+    """Who on DevResurge uses a given tool / device."""
+
+    template_name = "profiles/tool_explore_detail.html"
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        slug = kwargs.get("slug") or ""
+        tools = list(ProfileTool.resolve_public_slug(slug))
+        if not tools:
+            raise Http404(_("No public profiles list that tool yet."))
+        self.tools = tools
+        self.display_name = tools[0].name
+        self.slug = tools[0].public_slug
+        # Canonicalize slug if casing/punctuation drifted.
+        if slug != self.slug:
+            return redirect("profiles:tool_explore_detail", slug=self.slug, permanent=True)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        tools = self.tools
+        categories = {t.category for t in tools}
+        primary_category = tools[0].category
+        ctx["tool_name"] = self.display_name
+        ctx["tool_slug"] = self.slug
+        ctx["tool_category"] = primary_category
+        ctx["tool_category_label"] = dict(ToolCategory.choices).get(
+            primary_category,
+            primary_category,
+        )
+        ctx["tool_icon"] = tools[0].category_icon
+        ctx["is_hardware"] = primary_category in HARDWARE_CATEGORIES
+        ctx["mixed_categories"] = len(categories) > 1
+        ctx["entries"] = tools
+        ctx["user_count"] = len({t.profile_id for t in tools})
+        ctx["related"] = [
+            row
+            for row in ProfileTool.catalog(category=primary_category)[:12]
+            if row["slug"] != self.slug
+        ][:6]
+        return ctx
+
+
+class PublicProfileToolsView(DetailView):
+    """Shareable per-profile tools & devices page (ego, like /u/handle/map/)."""
+
+    model = Profile
+    template_name = "profiles/public_tools.html"
+    context_object_name = "profile"
+    slug_field = "handle"
+    slug_url_kwarg = "handle"
+
+    def get_queryset(self) -> QuerySet[Profile]:
+        return Profile.objects.filter(is_public=True).select_related("user").prefetch_related(
+            "tools",
+        )
+
+    def get_object(self, queryset: QuerySet[Profile] | None = None) -> Profile:
+        if queryset is None:
+            queryset = self.get_queryset()
+        handle = Profile.normalize_handle(self.kwargs.get(self.slug_url_kwarg, ""))
+        try:
+            return queryset.get(handle=handle)
+        except Profile.DoesNotExist as exc:
+            raise Http404(_("Profile not found.")) from exc
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        self.object = self.get_object()
+        requested = kwargs.get(self.slug_url_kwarg, "")
+        if requested != self.object.handle:
+            return redirect(
+                "profiles:public_tools",
+                handle=self.object.handle,
+                permanent=True,
+            )
+        return self.render_to_response(self.get_context_data(object=self.object))
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        profile = self.object
+        viewer = self.request.user
+        ctx["is_owner"] = viewer.is_authenticated and viewer.pk == profile.user_id
+        ctx["software_groups"] = profile.software_tools_grouped()
+        ctx["device_groups"] = profile.device_tools_grouped()
+        ctx["tool_total"] = profile.tools.count()
         return ctx
 
 
@@ -1583,6 +1726,9 @@ def recommendation_create_view(request: HttpRequest, handle: str) -> HttpRespons
 # Function aliases (cookiecutter convention)
 home_view = HomeView.as_view()
 profile_browse_view = ProfileBrowseView.as_view()
+tool_explore_view = ToolExploreView.as_view()
+tool_explore_detail_view = ToolExploreDetailView.as_view()
+public_tools_view = PublicProfileToolsView.as_view()
 profile_public_view = ProfilePublicView.as_view()
 profile_dashboard_view = ProfileDashboardView.as_view()
 profile_edit_view = ProfileEditView.as_view()

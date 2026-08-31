@@ -9,6 +9,7 @@ from django.core.validators import FileExtensionValidator
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.urls import reverse
 from django.utils import timezone
@@ -246,6 +247,9 @@ class Profile(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("profiles:public", kwargs={"handle": self.handle})
+
+    def get_tools_url(self) -> str:
+        return reverse("profiles:public_tools", kwargs={"handle": self.handle})
 
     @property
     def tech_stack_list(self) -> list[str]:
@@ -903,6 +907,13 @@ class ProfileTool(models.Model):
         return self.category in HARDWARE_CATEGORIES
 
     @property
+    def public_slug(self) -> str:
+        return slugify(self.name)[:80] or "tool"
+
+    def get_explore_url(self) -> str:
+        return reverse("profiles:tool_explore_detail", kwargs={"slug": self.public_slug})
+
+    @property
     def category_icon(self) -> str:
         return {
             ToolCategory.LANGUAGES: "</>",
@@ -922,6 +933,109 @@ class ProfileTool(models.Model):
     def save(self, *args, **kwargs) -> None:
         self.name = " ".join(self.name.split())
         super().save(*args, **kwargs)
+
+    @classmethod
+    def public_qs(cls):
+        """Tools belonging to publicly listed profiles."""
+        return cls.objects.filter(profile__is_public=True).select_related(
+            "profile",
+            "profile__user",
+        )
+
+    @classmethod
+    def catalog(
+        cls,
+        *,
+        q: str = "",
+        category: str = "",
+        role: str = "",
+        hardware: bool | None = None,
+    ) -> list[dict]:
+        """Aggregate public tools by case-insensitive name for the explore directory."""
+        from django.db.models import Count
+        from django.db.models import Max
+        from django.db.models import Min
+        from django.db.models.functions import Lower as LowerFn
+
+        qs = cls.objects.filter(profile__is_public=True)
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(note__icontains=q))
+        if category and category in ToolCategory.values:
+            qs = qs.filter(category=category)
+        if role and role in PrimaryRole.values:
+            qs = qs.filter(profile__primary_role=role)
+        if hardware is True:
+            qs = qs.filter(category__in=HARDWARE_CATEGORIES)
+        elif hardware is False:
+            qs = qs.exclude(category__in=HARDWARE_CATEGORIES)
+
+        rows = (
+            qs.annotate(name_key=LowerFn("name"))
+            .values("name_key")
+            .annotate(
+                users=Count("profile_id", distinct=True),
+                entries=Count("id"),
+                display_name=Min("name"),
+                category=Min("category"),
+                sample_note=Max("note"),
+            )
+            .order_by("-users", "name_key")
+        )
+        out: list[dict] = []
+        for row in rows:
+            name = row["display_name"] or row["name_key"]
+            cat = row["category"] or ToolCategory.OTHER
+            out.append(
+                {
+                    "name": name,
+                    "slug": slugify(name)[:80] or "tool",
+                    "category": cat,
+                    "category_label": dict(ToolCategory.choices).get(cat, cat),
+                    "category_icon": {
+                        ToolCategory.LANGUAGES: "</>",
+                        ToolCategory.FRAMEWORKS: "◇",
+                        ToolCategory.INFRA: "☁",
+                        ToolCategory.DATA: "▦",
+                        ToolCategory.OBSERVABILITY: "◎",
+                        ToolCategory.SECURITY: "⛨",
+                        ToolCategory.COLLAB: "⇄",
+                        ToolCategory.DESIGN: "✎",
+                        ToolCategory.AI: "✦",
+                        ToolCategory.DEVICES: "▣",
+                        ToolCategory.PERIPHERALS: "⌨",
+                        ToolCategory.OTHER: "·",
+                    }.get(cat, "·"),
+                    "users": row["users"],
+                    "entries": row["entries"],
+                    "is_hardware": cat in HARDWARE_CATEGORIES,
+                    "url": reverse(
+                        "profiles:tool_explore_detail",
+                        kwargs={"slug": slugify(name)[:80] or "tool"},
+                    ),
+                },
+            )
+        return out
+
+    @classmethod
+    def resolve_public_slug(cls, slug: str):
+        """Return public ProfileTool rows matching a URL slug, or empty queryset."""
+        needle = slugify(slug)
+        if not needle:
+            return cls.objects.none()
+        # Distinct names on public profiles — typically small; match via slugify.
+        names = list(
+            cls.objects.filter(profile__is_public=True)
+            .values_list("name", flat=True)
+            .distinct(),
+        )
+        matching = [n for n in names if slugify(n) == needle]
+        if not matching:
+            return cls.objects.none()
+        return cls.public_qs().filter(name__in=matching).order_by(
+            "-is_featured",
+            "profile__handle",
+            "name",
+        )
 
 
 class ShowcaseKind(models.TextChoices):

@@ -8,6 +8,8 @@ app_name = "profiles"
 
 urlpatterns = [
     path("u/", views.profile_browse_view, name="browse"),
+    path("tools/", views.tool_explore_view, name="tool_explore"),
+    path("tools/<slug:slug>/", views.tool_explore_detail_view, name="tool_explore_detail"),
     path("map/", connection_views.explore_map_view, name="explore_map"),
     path("map/data.json", connection_views.explore_map_data_view, name="explore_map_data"),
     path("u/<slug:handle>/badge.svg", views.profile_badge_view, name="badge"),
@@ -21,6 +23,7 @@ urlpatterns = [
         connection_views.public_network_map_data_view,
         name="network_map_data",
     ),
+    path("u/<slug:handle>/tools/", views.public_tools_view, name="public_tools"),
     path("u/<slug:handle>/endorse/", views.skill_endorse_view, name="endorse"),
     path("u/<slug:handle>/unendorse/", views.skill_unendorse_view, name="unendorse"),
     path("u/<slug:handle>/recommend/", views.recommendation_create_view, name="recommend"),

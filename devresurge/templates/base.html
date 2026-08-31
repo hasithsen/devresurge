@@ -95,6 +95,10 @@
                    {% if request.resolver_match.url_name == 'explore_map' or request.resolver_match.url_name == 'network_map' %}aria-current="page"{% endif %}>~/map</a>
               </li>
               <li>
+                <a href="{% url 'profiles:tool_explore' %}"
+                   {% if request.resolver_match.url_name == 'tool_explore' or request.resolver_match.url_name == 'tool_explore_detail' or request.resolver_match.url_name == 'public_tools' %}aria-current="page"{% endif %}>~/tools</a>
+              </li>
+              <li>
                 <a href="{% url 'learning:list' %}"
                    {% if request.resolver_match.namespace == 'learning' %}aria-current="page"{% endif %}>~/learn</a>
               </li>
@@ -164,6 +168,7 @@
             <a href="{% url 'about' %}">about</a> ·
             <a href="{% url 'learning:list' %}">learn</a> ·
             <a href="{% url 'profiles:explore_map' %}">map</a> ·
+            <a href="{% url 'profiles:tool_explore' %}">tools</a> ·
             <a href="{% url 'quizzes:badges' %}">badges</a> ·
             <a href="mailto:contact@devresurge.com">contact</a>
           </div>

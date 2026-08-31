@@ -12,7 +12,9 @@ from django.views.generic import TemplateView
 from config.health import health_view
 from devresurge.profiles.sitemaps import ProfileNetworkMapSitemap
 from devresurge.profiles.sitemaps import ProfileSitemap
+from devresurge.profiles.sitemaps import ProfileToolsSitemap
 from devresurge.profiles.sitemaps import StaticViewSitemap
+from devresurge.profiles.sitemaps import ToolExploreSitemap
 from devresurge.profiles.views import home_view
 
 
@@ -34,6 +36,8 @@ def robots_txt(_request):
 sitemaps = {
     "profiles": ProfileSitemap,
     "network_maps": ProfileNetworkMapSitemap,
+    "profile_tools": ProfileToolsSitemap,
+    "tools": ToolExploreSitemap,
     "static": StaticViewSitemap,
 }
 
