@@ -17,6 +17,19 @@
     return v || fallback;
   }
 
+  /** Draw `img` into a square dest like CSS `object-fit: cover` (center crop). */
+  function drawImageCover(ctx, img, dx, dy, dw, dh) {
+    var iw = img.naturalWidth || img.width;
+    var ih = img.naturalHeight || img.height;
+    if (!iw || !ih) return;
+    var scale = Math.max(dw / iw, dh / ih);
+    var sw = dw / scale;
+    var sh = dh / scale;
+    var sx = (iw - sw) / 2;
+    var sy = (ih - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
   function readEmbeddedGraph() {
     var el = document.getElementById("dr-network-graph-data");
     if (!el) return null;
@@ -659,7 +672,8 @@
         ctx.beginPath();
         ctx.arc(node.x, node.y, r - 1.5, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(node.img, node.x - r, node.y - r, r * 2, r * 2);
+        var d = (r - 1.5) * 2;
+        drawImageCover(ctx, node.img, node.x - d / 2, node.y - d / 2, d, d);
         ctx.restore();
       } else {
         ctx.fillStyle = text;
