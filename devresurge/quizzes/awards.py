@@ -176,6 +176,27 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         if got:
             awarded.append(got)
 
+    # K8s internals track: all five course quizzes.
+    k8s = {
+        "quiz_k8s_linux",
+        "quiz_k8s_runtime",
+        "quiz_k8s_control",
+        "quiz_k8s_netstore",
+        "quiz_k8s_security",
+    }
+    held_k8s = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=k8s).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_k8s.add(quiz.badge_slug)
+    if k8s.issubset(held_k8s):
+        got = award_badge(user, "quiz_k8s_internals")
+        if got:
+            awarded.append(got)
+
     # Polyglot: five or more quiz-category badges.
     quiz_slugs = set(
         UserBadge.objects.filter(user=user, badge__category="quiz").values_list(

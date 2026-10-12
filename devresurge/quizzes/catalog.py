@@ -212,6 +212,46 @@ BADGE_CATALOG: list[dict] = [
         "order": 99,
     },
     {
+        "slug": "quiz_k8s_linux",
+        "title": "K8s Linux Roots",
+        "description": "Passed the Kubernetes Linux foundations quiz.",
+        "icon": "⌘",
+        "category": BadgeCategory.QUIZ,
+        "order": 210,
+    },
+    {
+        "slug": "quiz_k8s_runtime",
+        "title": "K8s Runtime",
+        "description": "Passed the Kubernetes containers & runtime quiz.",
+        "icon": "◎",
+        "category": BadgeCategory.QUIZ,
+        "order": 211,
+    },
+    {
+        "slug": "quiz_k8s_control",
+        "title": "K8s Control Plane",
+        "description": "Passed the Kubernetes node & control plane quiz.",
+        "icon": "⎈",
+        "category": BadgeCategory.QUIZ,
+        "order": 212,
+    },
+    {
+        "slug": "quiz_k8s_netstore",
+        "title": "K8s Data Plane",
+        "description": "Passed the Kubernetes networking & storage quiz.",
+        "icon": "⇄",
+        "category": BadgeCategory.QUIZ,
+        "order": 213,
+    },
+    {
+        "slug": "quiz_k8s_security",
+        "title": "K8s Secure Ops",
+        "description": "Passed the Kubernetes security & ops quiz.",
+        "icon": "⛨",
+        "category": BadgeCategory.QUIZ,
+        "order": 214,
+    },
+    {
         "slug": "quiz_streak",
         "title": "Core Streak",
         "description": "Passed Python, Git, and Django quizzes.",
@@ -250,6 +290,14 @@ BADGE_CATALOG: list[dict] = [
         "icon": "⚙",
         "category": BadgeCategory.MILESTONE,
         "order": 116,
+    },
+    {
+        "slug": "quiz_k8s_internals",
+        "title": "Cluster Internals",
+        "description": "Passed all five Kubernetes internals quizzes.",
+        "icon": "☸",
+        "category": BadgeCategory.MILESTONE,
+        "order": 118,
     },
     {
         "slug": "quiz_polyglot",
@@ -1478,6 +1526,325 @@ QUIZ_CATALOG: list[dict] = [
                     ("Dual-write divergence between DB and message bus", True),
                     ("Image compression only", False),
                     ("Keyboard layouts", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-linux-foundations",
+        "title": "K8s: Linux foundations",
+        "tagline": "Processes, namespaces, cgroups, and kernel seatbelts.",
+        "description": (
+            "From the K8s Internals course (chs 01–04). Pass at 80% to earn "
+            "K8s Linux Roots. See courses/k8s-internals/."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_linux",
+        "order": 210,
+        "questions": [
+            {
+                "prompt": "A container is best described as…",
+                "explanation": (
+                    "Containers are processes with namespaces (view) and cgroups "
+                    "(budget), sharing the host kernel — not mini-VMs."
+                ),
+                "choices": [
+                    ("A lightweight hypervisor VM with its own kernel", False),
+                    ("A process (tree) with isolation + resource limits on a shared kernel", True),
+                    ("Only an OCI image sitting on disk", False),
+                    ("A Kubernetes Service VIP", False),
+                ],
+            },
+            {
+                "prompt": "Linux namespaces primarily control…",
+                "explanation": "Namespaces remapping visibility (pid/mnt/net/…), not CPU/memory budgets.",
+                "choices": [
+                    ("How much CPU and memory a process may use", False),
+                    ("What resources a process can see (walls of visibility)", True),
+                    ("Which Docker Hub mirror to use", False),
+                    ("etcd Raft quorum size", False),
+                ],
+            },
+            {
+                "prompt": "cgroups are the mechanism for…",
+                "explanation": "cgroups account and constrain resource use (budgets), separate from namespaces.",
+                "choices": [
+                    ("Giving each process a private kernel", False),
+                    ("Resource budgets / limits (CPU, memory, …)", True),
+                    ("TLS certificate rotation", False),
+                    ("DNS A records for Services", False),
+                ],
+            },
+            {
+                "prompt": "Hitting a container memory limit typically results in…",
+                "explanation": "memory.max / limit exhaustion triggers cgroup OOM kill (often exit 137).",
+                "choices": [
+                    ("Automatic horizontal pod autoscaling only", False),
+                    ("An OOM kill of processes in that cgroup", True),
+                    ("Silent swap with no process impact ever", False),
+                    ("API server restart", False),
+                ],
+            },
+            {
+                "prompt": "Dropping Linux capabilities on a Pod is meant to…",
+                "explanation": "Capabilities split root powers; dropping them reduces privileged operations.",
+                "choices": [
+                    ("Increase the Pod’s CPU request automatically", False),
+                    ("Reduce which privileged operations the process may perform", True),
+                    ("Replace NetworkPolicy", False),
+                    ("Pin the image digest", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-containers-runtime",
+        "title": "K8s: containers & runtime",
+        "tagline": "OCI images, CRI, and what a Pod really shares.",
+        "description": (
+            "From the K8s Internals course (chs 05–07). Pass to earn K8s Runtime."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_runtime",
+        "order": 220,
+        "questions": [
+            {
+                "prompt": "An OCI image digest (sha256:…) is…",
+                "explanation": "Digests are content-addressed and immutable; tags can move.",
+                "choices": [
+                    ("A mutable nickname like :latest", False),
+                    ("An immutable content hash of the image manifest/content", True),
+                    ("The Pod’s ClusterIP", False),
+                    ("The kubelet lease ID", False),
+                ],
+            },
+            {
+                "prompt": "Kubernetes talks to container runtimes primarily through…",
+                "explanation": "CRI is the gRPC interface kubelet uses (e.g. with containerd).",
+                "choices": [
+                    ("SSH into each container as root", False),
+                    ("The Container Runtime Interface (CRI)", True),
+                    ("Only the Docker Hub REST API", False),
+                    ("etcd watch on /registry/runc", False),
+                ],
+            },
+            {
+                "prompt": "In a typical Pod, containers share which namespace by default?",
+                "explanation": "Pods share a network namespace (one Pod IP; localhost works between containers).",
+                "choices": [
+                    ("A private kernel per container", False),
+                    ("The network namespace (one Pod IP / localhost between containers)", True),
+                    ("Nothing — Pods never share namespaces", False),
+                    ("Only the user namespace, never net", False),
+                ],
+            },
+            {
+                "prompt": "The pause container’s main job is to…",
+                "explanation": "pause holds the shared namespaces so the sandbox survives app restarts.",
+                "choices": [
+                    ("Terminate TLS for Ingress", False),
+                    ("Hold the Pod sandbox namespaces (shared fate / netns)", True),
+                    ("Run the API server", False),
+                    ("Schedule Pods onto nodes", False),
+                ],
+            },
+            {
+                "prompt": "runc’s role in the stack is closest to…",
+                "explanation": "runc is the low-level OCI runtime that sets namespaces/cgroups and starts the process.",
+                "choices": [
+                    ("Storing desired state in etcd", False),
+                    ("Creating the Linux container process from an OCI bundle", True),
+                    ("Issuing ClusterIP allocations", False),
+                    ("Rendering kubectl explain output", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-node-control-plane",
+        "title": "K8s: node & control plane",
+        "tagline": "kubelet, API/etcd, controllers, and scheduling.",
+        "description": (
+            "From the K8s Internals course (chs 08–11). Pass to earn K8s Control Plane."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_control",
+        "order": 230,
+        "questions": [
+            {
+                "prompt": "The kubelet’s core job is to…",
+                "explanation": "kubelet reconciles Pods assigned to its node with the local CRI runtime.",
+                "choices": [
+                    ("Store all cluster state in a Raft log", False),
+                    ("Make local containers match Pods assigned to its node", True),
+                    ("Allocate ClusterIPs for Services", False),
+                    ("Compile Go controllers", False),
+                ],
+            },
+            {
+                "prompt": "A failing readiness probe typically causes…",
+                "explanation": "Readiness failure removes the Pod from Service endpoints; it does not restart by itself.",
+                "choices": [
+                    ("Immediate node cordon", False),
+                    ("Removal from Service endpoints (no traffic), not a restart by itself", True),
+                    ("etcd wipe", False),
+                    ("Automatic digest retagging", False),
+                ],
+            },
+            {
+                "prompt": "Desired Kubernetes object state is persisted primarily in…",
+                "explanation": "etcd is the consistent store; clients go through the API server.",
+                "choices": [
+                    ("Only the local docker image cache", False),
+                    ("etcd (via the API server)", True),
+                    ("CoreDNS zone files alone", False),
+                    ("kubectl’s local filesystem only", False),
+                ],
+            },
+            {
+                "prompt": "A Deployment controller ultimately ensures replicas by…",
+                "explanation": "Deployments own ReplicaSets; ReplicaSets own Pods — continuous reconciliation.",
+                "choices": [
+                    ("SSHing to nodes to start binaries by hand", False),
+                    ("Reconciling ReplicaSets (which reconcile Pods) toward desired count", True),
+                    ("Writing iptables rules for ClusterIP", False),
+                    ("Binding PVCs to Ingress hosts", False),
+                ],
+            },
+            {
+                "prompt": "The scheduler assigns a node by…",
+                "explanation": "Filter → score → bind (set nodeName). It does not start containers.",
+                "choices": [
+                    ("Starting containers before writing any API object", False),
+                    ("Filtering/scoring nodes then binding the Pod (setting nodeName)", True),
+                    ("Only mutating NetworkPolicies", False),
+                    ("Replacing kube-proxy on every node", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-networking-storage",
+        "title": "K8s: networking & storage",
+        "tagline": "CNI, Services, Ingress, and volumes that outlive Pods.",
+        "description": (
+            "From the K8s Internals course (chs 12–14). Pass to earn K8s Data Plane."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_netstore",
+        "order": 240,
+        "questions": [
+            {
+                "prompt": "CNI plugins are responsible for…",
+                "explanation": "CNI wires Pod network namespaces (IP, routes, interfaces) into the cluster network.",
+                "choices": [
+                    ("Storing Secrets in etcd encryption", False),
+                    ("Attaching Pod network namespaces to the cluster network model", True),
+                    ("Compiling the kube-scheduler", False),
+                    ("Issuing OIDC tokens for humans", False),
+                ],
+            },
+            {
+                "prompt": "A ClusterIP Service provides…",
+                "explanation": "Stable virtual IP load-balancing to matching ready Pod endpoints.",
+                "choices": [
+                    ("A new Linux kernel per backend Pod", False),
+                    ("A stable virtual IP that forwards to ready Pod backends", True),
+                    ("Automatic image signing", False),
+                    ("Persistent block storage", False),
+                ],
+            },
+            {
+                "prompt": "An Ingress object without an Ingress controller…",
+                "explanation": "Ingress is declarative; a controller implements the proxy/routing.",
+                "choices": [
+                    ("Still terminates TLS by itself inside etcd", False),
+                    ("Does nothing useful until a controller implements it", True),
+                    ("Replaces kubelet probes", False),
+                    ("Allocates PVCs automatically", False),
+                ],
+            },
+            {
+                "prompt": "A PersistentVolumeClaim is best described as…",
+                "explanation": "PVC is a request for storage; bound to a PV provisioned/allocated in the cluster.",
+                "choices": [
+                    ("A request for storage that binds to a PersistentVolume", True),
+                    ("A ClusterIP for disks", False),
+                    ("A seccomp profile", False),
+                    ("A scheduler plugin name", False),
+                ],
+            },
+            {
+                "prompt": "emptyDir volume data…",
+                "explanation": "emptyDir lasts for the Pod’s lifetime on that node; it is not durable across delete/reschedule.",
+                "choices": [
+                    ("Survives Pod deletion across the cluster forever by default", False),
+                    ("Exists only as long as the Pod (on that node) does", True),
+                    ("Is replicated to every node’s etcd", False),
+                    ("Is the same as a ReadWriteMany cloud disk always", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-security-ops",
+        "title": "K8s: security & ops",
+        "tagline": "RBAC, admission, NetworkPolicy, and debug ladders.",
+        "description": (
+            "From the K8s Internals course (chs 15–16). Pass to earn K8s Secure Ops."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_security",
+        "order": 250,
+        "questions": [
+            {
+                "prompt": "A Pod’s ServiceAccount is primarily used to…",
+                "explanation": "SA identity authenticates in-cluster clients to the API server for RBAC.",
+                "choices": [
+                    ("Allocate CNI IP pools", False),
+                    ("Authenticate to the API server (identity for RBAC)", True),
+                    ("Compress OCI layers", False),
+                    ("Replace readiness probes", False),
+                ],
+            },
+            {
+                "prompt": "RBAC RoleBindings grant…",
+                "explanation": "Bindings attach Roles/ClusterRoles (verbs on resources) to users/groups/SAs.",
+                "choices": [
+                    ("Unlimited hostNetwork to every Pod automatically", False),
+                    ("Permission for subjects to perform verbs on API resources", True),
+                    ("Automatic digest pinning", False),
+                    ("CSI attach bandwidth", False),
+                ],
+            },
+            {
+                "prompt": "NetworkPolicies (with a supporting CNI) control…",
+                "explanation": "NetworkPolicy allow-lists which Pods may talk; CNI enforces.",
+                "choices": [
+                    ("Who may call which API verbs on Deployments", False),
+                    ("Which Pods may send/receive traffic to which peers", True),
+                    ("etcd compaction intervals", False),
+                    ("Image layer compression level", False),
+                ],
+            },
+            {
+                "prompt": "First place to look when a Pod is Pending…",
+                "explanation": "kubectl describe Events explain scheduling/PVC/taint failures.",
+                "choices": [
+                    ("Only dmesg on a random worker, skipping API Events", False),
+                    ("Pod Events via kubectl describe (scheduling / PVC / taints)", True),
+                    ("Deleting etcd members", False),
+                    ("Changing the ServiceAccount token skew", False),
+                ],
+            },
+            {
+                "prompt": "ImagePullBackOff most often means…",
+                "explanation": "Runtime can’t pull the image — auth, name, network, or rate limits.",
+                "choices": [
+                    ("The scheduler rejected CPU limits", False),
+                    ("The node runtime failed to pull the image (auth/name/network)", True),
+                    ("IngressClass is missing an annotation", False),
+                    ("The Pod passed readiness but failed liveness only", False),
                 ],
             },
         ],

@@ -353,6 +353,52 @@ def test_quiz_frontend_and_ops_track_badges(seeded_quizzes):
     assert UserBadge.objects.filter(user=user2, badge__slug="quiz_ops").exists()
 
 
+def test_k8s_internals_quizzes_seeded(seeded_quizzes):
+    for slug in (
+        "k8s-linux-foundations",
+        "k8s-containers-runtime",
+        "k8s-node-control-plane",
+        "k8s-networking-storage",
+        "k8s-security-ops",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        assert quiz.is_published
+        assert quiz.topic == "kubernetes"
+        assert quiz.questions.count() == 5
+        assert quiz.questions.filter(choices__is_correct=True).distinct().count() == 5
+
+
+def test_quiz_k8s_internals_track_badge(seeded_quizzes):
+    user = UserFactory()
+    for slug in (
+        "k8s-linux-foundations",
+        "k8s-containers-runtime",
+        "k8s-node-control-plane",
+        "k8s-networking-storage",
+        "k8s-security-ops",
+    ):
+        quiz = Quiz.objects.get(slug=slug)
+        attempt = QuizAttempt.objects.create(
+            user=user,
+            quiz=quiz,
+            score=5,
+            total=5,
+            percent=100,
+            passed=True,
+        )
+        evaluate_quiz_badges(user, attempt)
+
+    for badge in (
+        "quiz_k8s_linux",
+        "quiz_k8s_runtime",
+        "quiz_k8s_control",
+        "quiz_k8s_netstore",
+        "quiz_k8s_security",
+        "quiz_k8s_internals",
+    ):
+        assert UserBadge.objects.filter(user=user, badge__slug=badge).exists()
+
+
 def test_public_profile_shows_earned_badges(client, seeded_quizzes):
     user = UserFactory()
     award_badge(user, "quiz_python")
