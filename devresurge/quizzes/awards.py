@@ -197,6 +197,21 @@ def evaluate_quiz_badges(user, attempt: QuizAttempt) -> list[UserBadge]:
         if got:
             awarded.append(got)
 
+    # K8s book track: five core + deep dives.
+    k8s_book = k8s | {"quiz_k8s_deep"}
+    held_book = set(
+        UserBadge.objects.filter(user=user, badge__slug__in=k8s_book).values_list(
+            "badge__slug",
+            flat=True,
+        ),
+    )
+    if quiz.badge_slug:
+        held_book.add(quiz.badge_slug)
+    if k8s_book.issubset(held_book):
+        got = award_badge(user, "quiz_k8s_scholar")
+        if got:
+            awarded.append(got)
+
     # Polyglot: five or more quiz-category badges.
     quiz_slugs = set(
         UserBadge.objects.filter(user=user, badge__category="quiz").values_list(

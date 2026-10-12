@@ -90,6 +90,8 @@ Controllers = **continuous reconciliation** against the API. Deployments don’t
 
 Next: [11 — Scheduler](11-scheduler.md).
 
+**Book depth later:** [18 — Controllers deep dive](18-controllers-deep.md) (informers, workqueues, finalizers).
+
 ---
 
 **Quiz arc:** after chapters 08–11 → [`/quizzes/k8s-node-control-plane/`](/quizzes/k8s-node-control-plane/)

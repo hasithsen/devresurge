@@ -120,18 +120,20 @@ Use [`labs/08-crictl-inspect.sh`](labs/08-crictl-inspect.sh) when API status lag
 - **Clock / cert expiry** — Sudden auth failures across the board.
 - **API server healthy ≠ apps healthy** — Climb the full ladder.
 
-## Course wrap
+## Course wrap (core arc)
 
 You can now narrate a request end-to-end:
 
 > YAML → API/etcd → controller → Pod → scheduler bind → kubelet → CRI → namespaces/cgroups → process → CNI IP → Service VIP → (optional) Ingress → client.
 
-That story *is* Kubernetes internals.
+That story *is* the Kubernetes core arc.
+
+**Keep going for book depth:** [17 — etcd deep dive](17-etcd-deep.md) → controllers → CNI → eBPF → CSI.
 
 ---
 
 **Quiz:** [`/quizzes/k8s-security-ops/`](/quizzes/k8s-security-ops/)
 
-**Milestone:** pass all five K8s quizzes → **Cluster Internals** badge.
+**Milestone:** pass all five core K8s quizzes → **Cluster Internals**. Add deep dives → **Cluster Scholar**.
 
 Back to the [syllabus](00-README.md).

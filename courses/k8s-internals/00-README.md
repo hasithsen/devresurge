@@ -1,8 +1,8 @@
-# Kubernetes Internals — From Linux Up
+# Kubernetes Internals — From Linux Up (Book Length)
 
-A full-arc course that treats Kubernetes as **orchestration of Linux constructs**, not magic YAML.
+A book-length course that treats Kubernetes as **orchestration of Linux constructs**, not magic YAML.
 
-You will build a mental model from processes → namespaces → cgroups → containers → pods → kubelet → control plane → networking → storage → security → debugging. Every chapter starts ELI5, then gets precise.
+You will build a mental model from processes → namespaces → cgroups → containers → pods → kubelet → control plane → networking → storage → security → debugging, then go **monograph-deep** on etcd, controllers/informers, CNI, eBPF dataplanes, and CSI. Every chapter starts ELI5, then gets precise.
 
 ## Who this is for
 
@@ -20,9 +20,10 @@ You do **not** need prior Kubernetes experience. You *do* need curiosity about w
 
 ## How to take the course
 
-1. Read chapters **in order** — later chapters assume earlier mental models
-2. Run the **Lab** in each chapter (or the matching script under [`labs/`](labs/))
-3. After each arc, take the DevResurge quiz and earn the badge
+1. Read the **core arc** (01–16) in order
+2. Then the **deep dives** (17–21) — each assumes its parent chapter
+3. Run the **Lab** in each chapter (or the matching script under [`labs/`](labs/))
+4. After each arc, take the DevResurge quiz and earn the badge
 
 ```mermaid
 flowchart LR
@@ -30,9 +31,10 @@ flowchart LR
   runtime --> node[Ch 08-11 Node and control plane]
   node --> dataplane[Ch 12-14 Net and storage]
   dataplane --> ops[Ch 15-16 Security and debug]
+  ops --> deep[Ch 17-21 Deep dives]
 ```
 
-## Syllabus
+## Syllabus — core arc
 
 | # | Chapter | Core idea |
 |---|---------|-----------|
@@ -53,9 +55,19 @@ flowchart LR
 | [15](15-security-k8s.md) | Cluster security | SA, RBAC, admission, NetworkPolicy |
 | [16](16-troubleshoot.md) | Troubleshoot | Debug like an owner |
 
+## Syllabus — deep dives (book depth)
+
+| # | Chapter | Parent | Core idea |
+|---|---------|--------|-----------|
+| [17](17-etcd-deep.md) | etcd deep dive | 09 | Raft, WAL, compaction, backups |
+| [18](18-controllers-deep.md) | Controllers deep dive | 10 | Informers, workqueues, finalizers |
+| [19](19-cni-deep.md) | CNI deep dive | 12 | Plugin contract, veth, IPAM |
+| [20](20-ebpf-dataplane.md) | eBPF dataplane | 12/19 | Maps, hooks, kube-proxy replacement |
+| [21](21-csi-deep.md) | CSI deep dive | 14 | Provision → attach → stage → publish |
+
 ## Quiz track (DevResurge)
 
-Pass at 80% to earn badges. Complete all five for the **Cluster Internals** milestone.
+Pass at 80% to earn badges.
 
 | Arc | Chapters | Quiz | Badge |
 |-----|----------|------|-------|
@@ -64,6 +76,12 @@ Pass at 80% to earn badges. Complete all five for the **Cluster Internals** mile
 | Node & control plane | 08–11 | [`/quizzes/k8s-node-control-plane/`](/quizzes/k8s-node-control-plane/) | K8s Control Plane |
 | Networking & storage | 12–14 | [`/quizzes/k8s-networking-storage/`](/quizzes/k8s-networking-storage/) | K8s Data Plane |
 | Security & ops | 15–16 | [`/quizzes/k8s-security-ops/`](/quizzes/k8s-security-ops/) | K8s Secure Ops |
+| Deep dives | 17–21 | [`/quizzes/k8s-deep-dives/`](/quizzes/k8s-deep-dives/) | K8s Deep Dive |
+
+**Milestones**
+
+- Pass the five core K8s quizzes → **Cluster Internals**
+- Pass those five **plus** deep dives → **Cluster Scholar**
 
 Seed quizzes locally with:
 
@@ -86,6 +104,11 @@ sudo ./courses/k8s-internals/labs/02-namespaces-demo.sh
 | [`03-cgroups-demo.sh`](labs/03-cgroups-demo.sh) | 03 |
 | [`07-pod-netns.sh`](labs/07-pod-netns.sh) | 07 |
 | [`08-crictl-inspect.sh`](labs/08-crictl-inspect.sh) | 08 |
+| [`17-etcd-raft-lab.sh`](labs/17-etcd-raft-lab.sh) | 17 |
+| [`18-controllers-lab.sh`](labs/18-controllers-lab.sh) | 18 |
+| [`19-cni-inspect.sh`](labs/19-cni-inspect.sh) | 19 |
+| [`20-ebpf-observe.sh`](labs/20-ebpf-observe.sh) | 20 |
+| [`21-csi-inspect.sh`](labs/21-csi-inspect.sh) | 21 |
 
 ## Pedagogy contract
 
@@ -93,7 +116,7 @@ Every chapter follows the same shape:
 
 1. **ELI5 hook** — one analogy
 2. **Mental model** — the precise idea in plain words
-3. **What Linux does** — kernel / userspace reality
+3. **What Linux / the component does** — kernel / userspace reality
 4. **How Kubernetes uses it** — the bridge
 5. **Lab** — feel it with your hands
 6. **Gotchas** — the lies that bite in production
@@ -102,6 +125,6 @@ Every chapter follows the same shape:
 
 - Not a YAML cookbook or CKAD dump
 - Not vendor-specific (EKS/GKE/AKS appear only as callouts)
-- Not a monograph on etcd or eBPF — those get chapter depth, not book depth
+- Not a substitute for reading upstream design proposals — it *is* book-depth on the five deep-dive topics above
 
 Ready? Start with [01 — Linux processes](01-linux-processes.md).

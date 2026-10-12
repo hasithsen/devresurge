@@ -119,6 +119,8 @@ Volumes mount Linux filesystems into mount namespaces. PVCs/PVs/CSI make storage
 
 Next: [15 — Cluster security](15-security-k8s.md).
 
+**Book depth later:** [21 — CSI deep dive](21-csi-deep.md) (sidecars, attach/mount path).
+
 ---
 
 **Quiz:** [`/quizzes/k8s-networking-storage/`](/quizzes/k8s-networking-storage/)

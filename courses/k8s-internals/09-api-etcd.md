@@ -90,6 +90,8 @@ API server + etcd = **source of truth**. Everything else is a reconciler or a ca
 
 Next: [10 — Controllers](10-controllers.md).
 
+**Book depth later:** [17 — etcd deep dive](17-etcd-deep.md) (Raft, compaction, backups).
+
 ---
 
 **Quiz arc:** after chapters 08–11 → [`/quizzes/k8s-node-control-plane/`](/quizzes/k8s-node-control-plane/)

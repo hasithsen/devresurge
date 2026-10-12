@@ -252,6 +252,14 @@ BADGE_CATALOG: list[dict] = [
         "order": 214,
     },
     {
+        "slug": "quiz_k8s_deep",
+        "title": "K8s Deep Dive",
+        "description": "Passed the Kubernetes book-depth deep dives quiz.",
+        "icon": "◈",
+        "category": BadgeCategory.QUIZ,
+        "order": 215,
+    },
+    {
         "slug": "quiz_streak",
         "title": "Core Streak",
         "description": "Passed Python, Git, and Django quizzes.",
@@ -298,6 +306,14 @@ BADGE_CATALOG: list[dict] = [
         "icon": "☸",
         "category": BadgeCategory.MILESTONE,
         "order": 118,
+    },
+    {
+        "slug": "quiz_k8s_scholar",
+        "title": "Cluster Scholar",
+        "description": "Passed the five Kubernetes internals quizzes plus the deep dives quiz.",
+        "icon": "▣",
+        "category": BadgeCategory.MILESTONE,
+        "order": 119,
     },
     {
         "slug": "quiz_polyglot",
@@ -1845,6 +1861,70 @@ QUIZ_CATALOG: list[dict] = [
                     ("The node runtime failed to pull the image (auth/name/network)", True),
                     ("IngressClass is missing an annotation", False),
                     ("The Pod passed readiness but failed liveness only", False),
+                ],
+            },
+        ],
+    },
+    {
+        "slug": "k8s-deep-dives",
+        "title": "K8s: deep dives",
+        "tagline": "etcd, informers, CNI, eBPF, and CSI at book depth.",
+        "description": (
+            "From the K8s Internals book arc (chs 17–21). Pass to earn K8s Deep Dive. "
+            "With the five core K8s quizzes, unlocks Cluster Scholar."
+        ),
+        "topic": "kubernetes",
+        "badge_slug": "quiz_k8s_deep",
+        "order": 260,
+        "questions": [
+            {
+                "prompt": "etcd write availability requires…",
+                "explanation": "Raft needs a majority (quorum) of voting members to commit writes.",
+                "choices": [
+                    ("Only a single follower acknowledging locally", False),
+                    ("A majority quorum of voting members via Raft", True),
+                    ("CoreDNS returning NXDOMAIN", False),
+                    ("kube-proxy iptables flush", False),
+                ],
+            },
+            {
+                "prompt": "A Kubernetes controller informer primarily…",
+                "explanation": "Informers LIST+WATCH into a local cache so reconciles avoid hammering the API.",
+                "choices": [
+                    ("SSHes to every node each second", False),
+                    ("LIST/WATCH resources into a local cache for reconciles", True),
+                    ("Replaces etcd as the datastore", False),
+                    ("Compiles eBPF programs for CSI", False),
+                ],
+            },
+            {
+                "prompt": "CNI ADD is invoked with…",
+                "explanation": "Plugins receive the pod netns path and configure interfaces/IP/routes.",
+                "choices": [
+                    ("Only a Deployment name and no network namespace", False),
+                    ("A container netns path plus JSON config to set iface/IP/routes", True),
+                    ("An etcd snapshot file", False),
+                    ("A PriorityClass only", False),
+                ],
+            },
+            {
+                "prompt": "eBPF Service dataplanes typically replace long iptables chains with…",
+                "explanation": "Verified programs + maps perform lookups/rewrites in the kernel.",
+                "choices": [
+                    ("Larger iptables rule lists only", False),
+                    ("Kernel eBPF programs and maps for lookups/rewrites", True),
+                    ("Deleting all NetworkPolicies", False),
+                    ("Storing ClusterIPs only in ConfigMaps", False),
+                ],
+            },
+            {
+                "prompt": "CSI NodePublish’s role is closest to…",
+                "explanation": "NodePublish bind-mounts the staged volume into the Pod’s mount namespace.",
+                "choices": [
+                    ("Electing the etcd leader", False),
+                    ("Bind-mounting a staged volume into the Pod mount namespace", True),
+                    ("Allocating a ClusterIP", False),
+                    ("Signing OCI image digests", False),
                 ],
             },
         ],

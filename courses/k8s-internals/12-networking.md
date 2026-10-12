@@ -106,6 +106,8 @@ CNI gives Pods wires. Services give **stable virtual IPs**. DNS gives names. kub
 
 Next: [13 — Ingress & Gateway](13-ingress-gateway.md).
 
+**Book depth later:** [19 — CNI](19-cni-deep.md) · [20 — eBPF dataplane](20-ebpf-dataplane.md).
+
 ---
 
 **Quiz arc:** after chapters 12–14 → [`/quizzes/k8s-networking-storage/`](/quizzes/k8s-networking-storage/)
