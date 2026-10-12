@@ -16,6 +16,7 @@ from devresurge.profiles.sitemaps import ProfileToolsSitemap
 from devresurge.profiles.sitemaps import StaticViewSitemap
 from devresurge.profiles.sitemaps import ToolExploreSitemap
 from devresurge.profiles.views import home_view
+from devresurge.search.sitemaps import CourseSitemap
 
 
 @cache_control(max_age=60 * 60 * 24, public=True)
@@ -27,6 +28,7 @@ def robots_txt(_request):
         "Disallow: /admin/\n"
         "Disallow: /connections/\n"
         "Disallow: /users/\n"
+        "Disallow: /search/api/\n"
         "Allow: /\n"
         "Sitemap: /sitemap.xml\n"
     )
@@ -38,6 +40,7 @@ sitemaps = {
     "network_maps": ProfileNetworkMapSitemap,
     "profile_tools": ProfileToolsSitemap,
     "tools": ToolExploreSitemap,
+    "courses": CourseSitemap,
     "static": StaticViewSitemap,
 }
 
@@ -68,6 +71,9 @@ urlpatterns = [
     path("quizzes/", include("devresurge.quizzes.urls", namespace="quizzes")),
     # Roadmaps + lessons
     path("learn/", include("devresurge.learning.urls", namespace="learning")),
+    # Universal search + course viewer
+    path("search/", include("devresurge.search.urls", namespace="search")),
+    path("courses/", include("devresurge.search.course_urls", namespace="courses")),
     # Profiles app (public + private CRUD)
     path("", include("devresurge.profiles.urls", namespace="profiles")),
 ]

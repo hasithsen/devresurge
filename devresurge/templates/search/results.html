@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if q %}{{ q }} · {% endif %}{% translate "search" %} — DevResurge{% endblock title %}
+{% block og_title %}{% translate "Search" %} — DevResurge{% endblock og_title %}
+{% block meta_description %}{% translate "Search people, courses, roadmaps, quizzes, and tools on DevResurge." %}{% endblock meta_description %}
+
+{% block content %}
+  <header class="dr-pagehead">
+    <p class="dr-kicker"><span class="dr-prompt"></span> find /</p>
+    <h1>{% translate "Universal search" %}</h1>
+    <p class="dr-lede">
+      {% translate "People, courses, learn tracks, quizzes, and tools — one query." %}
+    </p>
+  </header>
+
+  <form class="dr-search dr-search--universal" method="get" action="{% url 'search:page' %}" role="search">
+    <input class="dr-input dr-search__input"
+           type="search"
+           name="q"
+           value="{{ q }}"
+           placeholder="{% translate 'kubernetes · django · @handle…' %}"
+           autocomplete="off"
+           maxlength="80"
+           autofocus />
+    <button class="dr-btn" type="submit">{% translate "run" %}</button>
+  </form>
+
+  <div class="dr-search-filters" role="group" aria-label="{% translate 'Result types' %}">
+    {% for t in all_types %}
+      <a class="dr-tag{% if t in active_types and active_types|length == 1 %} is-active{% endif %}"
+         href="{% url 'search:page' %}?q={{ q|urlencode }}&type={{ t }}">{{ t }}</a>
+    {% endfor %}
+    <a class="dr-tag{% if active_types|length != 1 %} is-active{% endif %}"
+       href="{% url 'search:page' %}?q={{ q|urlencode }}">{% translate "all" %}</a>
+  </div>
+
+  {% if q and q|length < min_len %}
+    <p class="dr-muted">{% blocktranslate with n=min_len %}Type at least {{ n }} characters.{% endblocktranslate %}</p>
+  {% elif q and payload.total == 0 %}
+    <p class="dr-muted">{% translate "No matches. Try a broader term or another type filter." %}</p>
+  {% elif payload.total %}
+    <p class="dr-muted">{{ payload.total }} {% translate "hits" %}</p>
+    {% for type_key, hits in payload.groups.items %}
+      {% if hits %}
+        <section class="dr-search-group" aria-labelledby="sg-{{ type_key }}">
+          <h2 class="dr-search-group__title" id="sg-{{ type_key }}">{{ type_key }}</h2>
+          <ul class="dr-search-hits">
+            {% for hit in hits %}
+              <li>
+                <a class="dr-search-hit" href="{{ hit.url }}">
+                  <span class="dr-search-hit__type">{{ hit.type }}</span>
+                  <span class="dr-search-hit__title">{{ hit.title }}</span>
+                  {% if hit.subtitle %}
+                    <span class="dr-search-hit__sub">{{ hit.subtitle }}</span>
+                  {% endif %}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="dr-muted">
+      {% translate "Examples:" %}
+      <a href="{% url 'search:page' %}?q=kubernetes">kubernetes</a> ·
+      <a href="{% url 'search:page' %}?q=python">python</a> ·
+      <a href="{% url 'courses:list' %}">{% translate "browse courses" %}</a>
+    </p>
+  {% endif %}
+{% endblock content %}

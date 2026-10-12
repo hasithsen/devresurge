@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} — {% translate "Courses" %} — DevResurge{% endblock title %}
+{% block meta_description %}{{ title }} · {{ course_slug }}{% endblock meta_description %}
+
+{% block content %}
+  <nav class="dr-course-nav" aria-label="{% translate 'Course chapters' %}">
+    <p class="dr-kicker">
+      <a href="{{ courses_home }}">courses</a> /
+      <a href="{{ course_home }}">{{ course_slug }}</a>
+    </p>
+    <details class="dr-course-toc">
+      <summary>{% translate "Chapters" %}</summary>
+      <ol>
+        {% for item in nav %}
+          <li>
+            <a href="{{ item.url }}" {% if item.current %}aria-current="page"{% endif %}>{{ item.title }}</a>
+          </li>
+        {% endfor %}
+      </ol>
+    </details>
+  </nav>
+
+  <article class="dr-prose dr-course-body">
+    {{ body_html }}
+  </article>
+{% endblock content %}

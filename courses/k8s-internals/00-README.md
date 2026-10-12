@@ -127,4 +127,6 @@ Every chapter follows the same shape:
 - Not vendor-specific (EKS/GKE/AKS appear only as callouts)
 - Not a substitute for reading upstream design proposals — it *is* book-depth on the five deep-dive topics above
 
+**On DevResurge:** open [/courses/k8s-internals/](/courses/k8s-internals/) (also findable via [/search/](/search/?q=kubernetes)).
+
 Ready? Start with [01 — Linux processes](01-linux-processes.md).

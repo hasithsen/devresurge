@@ -86,6 +86,7 @@ LOCAL_APPS = [
     "devresurge.connections",
     "devresurge.quizzes",
     "devresurge.learning",
+    "devresurge.search",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -307,3 +308,16 @@ SOCIALACCOUNT_FORMS = {"signup": "devresurge.users.forms.UserSocialSignupForm"}
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# Universal search
+# ------------------------------------------------------------------------------
+SEARCH_QUERY_MIN_LEN = 2
+SEARCH_QUERY_MAX_LEN = 80
+SEARCH_PER_TYPE_LIMIT = 8
+SEARCH_PER_TYPE_MAX = 25
+SEARCH_SUGGEST_PER_TYPE = 5
+SEARCH_PAGE_PER_TYPE = 12
+SEARCH_CACHE_TTL = 30  # seconds; Redis in production
+SEARCH_RATE_LIMIT = 60  # requests per window per IP (API)
+SEARCH_RATE_WINDOW = 60
+

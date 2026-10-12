@@ -43,6 +43,9 @@
     </script>
     {% block javascript %}
       <script defer src="{% static 'js/project.js' %}"></script>
+      <script defer src="{% static 'js/search.js' %}"
+              data-search-api="{% url 'search:api' %}"
+              data-search-page="{% url 'search:page' %}"></script>
     {% endblock javascript %}
   </head>
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
@@ -57,6 +60,34 @@
               <span>devresurge</span>
               <span class="dr-cursor" aria-hidden="true"></span>
             </a>
+
+            <div class="dr-nav-search" data-universal-search>
+              <form class="dr-nav-search__form"
+                    action="{% url 'search:page' %}"
+                    method="get"
+                    role="search"
+                    data-search-form>
+                <label class="sr-only" for="dr-nav-q">{% translate "Search DevResurge" %}</label>
+                <input id="dr-nav-q"
+                       class="dr-input dr-nav-search__input"
+                       type="search"
+                       name="q"
+                       placeholder="{% translate 'find…' %}"
+                       autocomplete="off"
+                       maxlength="80"
+                       data-search-input
+                       aria-autocomplete="list"
+                       aria-controls="dr-search-suggest"
+                       aria-expanded="false" />
+                <kbd class="dr-nav-search__kbd" data-search-kbd aria-hidden="true">/</kbd>
+              </form>
+              <div id="dr-search-suggest"
+                   class="dr-nav-search__panel"
+                   data-search-panel
+                   hidden
+                   role="listbox"
+                   aria-label="{% translate 'Search suggestions' %}"></div>
+            </div>
 
             <div class="dr-nav__actions">
               <button type="button"
@@ -85,6 +116,10 @@
               <li>
                 <a href="{% url 'home' %}"
                    {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>~/home</a>
+              </li>
+              <li>
+                <a href="{% url 'search:page' %}"
+                   {% if request.resolver_match.namespace == 'search' or request.resolver_match.namespace == 'courses' %}aria-current="page"{% endif %}>~/find</a>
               </li>
               <li>
                 <a href="{% url 'profiles:browse' %}"
@@ -166,6 +201,8 @@
           <div class="dr-container">
             <span class="dr-prompt"></span> exit 0 ·
             <a href="{% url 'about' %}">about</a> ·
+            <a href="{% url 'search:page' %}">find</a> ·
+            <a href="{% url 'courses:list' %}">courses</a> ·
             <a href="{% url 'learning:list' %}">learn</a> ·
             <a href="{% url 'profiles:explore_map' %}">map</a> ·
             <a href="{% url 'profiles:tool_explore' %}">tools</a> ·
