@@ -36,6 +36,30 @@
       </div>
     {% endif %}
 
+    {% if courses %}
+      <h2 class="dr-section-title dr-mt-xl">
+        <span class="dr-prompt"></span> {% trans "courses" %}/
+      </h2>
+      <p class="dr-section-lede">
+        {% trans "Book-length internals curricula — labs included." %}
+        <a href="{% url 'learning:course_list' %}">{% trans "browse all" %}</a>
+      </p>
+      <ul class="dr-search-hits">
+        {% for course in courses %}
+          <li>
+            <a class="dr-search-hit" href="{{ course.url }}">
+              <span class="dr-search-hit__type">course</span>
+              <span class="dr-search-hit__title">{{ course.title }}</span>
+              <span class="dr-search-hit__sub">
+                {{ course.chapter_count }} {% trans "chapters" %}
+                {% if course.summary %} · {{ course.summary }}{% endif %}
+              </span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     <div class="dr-learn-hero dr-panel dr-mt-lg">
       <div class="dr-panel__header">
         <span class="dr-dots"><span></span><span></span><span></span></span>

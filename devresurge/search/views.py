@@ -100,10 +100,10 @@ def course_list(request: HttpRequest) -> HttpResponse:
                 "title": readme.title if readme else slug,
                 "summary": readme.summary if readme else "",
                 "chapter_count": len(chapters),
-                "url": reverse("courses:detail", kwargs={"course_slug": slug}),
+                "url": reverse("learning:course_detail", kwargs={"course_slug": slug}),
             },
         )
-    return render(request, "search/course_list.html", {"courses": courses})
+    return render(request, "learning/course_list.html", {"courses": courses})
 
 
 def _chapter_nav(course_slug: str, current: str) -> list[dict[str, str]]:
@@ -116,7 +116,7 @@ def _chapter_nav(course_slug: str, current: str) -> list[dict[str, str]]:
                 "slug": doc.chapter_slug,
                 "title": doc.title,
                 "url": reverse(
-                    "courses:chapter",
+                    "learning:course_chapter",
                     kwargs={"course_slug": course_slug, "chapter_slug": doc.chapter_slug},
                 ),
                 "current": doc.chapter_slug == current,
@@ -137,14 +137,14 @@ def course_detail(request: HttpRequest, course_slug: str) -> HttpResponse:
 def course_chapter(request: HttpRequest, course_slug: str, chapter_slug: str) -> HttpResponse:
     # Canonicalize README aliases to course home
     if chapter_slug.lower() in {"readme", "00-readme"}:
-        return redirect("courses:detail", course_slug=course_slug, permanent=False)
+        return redirect("learning:course_detail", course_slug=course_slug, permanent=False)
     path = resolve_course_file(course_slug, chapter_slug)
     if path is None:
         raise Http404(_("Chapter not found."))
     # Redirect to canonical stem if matched via bare slug
     if path.stem != chapter_slug:
         return redirect(
-            "courses:chapter",
+            "learning:course_chapter",
             course_slug=course_slug,
             chapter_slug=path.stem,
             permanent=True,
@@ -158,27 +158,28 @@ def _render_course(request: HttpRequest, course_slug: str, path: Path) -> HttpRe
     except OSError as exc:
         raise Http404(_("Chapter not found.")) from exc
 
-    # Rewrite relative .md links to course viewer URLs
+    # Rewrite relative .md links to learn course viewer URLs
     body_html = render_markdown(_rewrite_course_links(source, course_slug), heading_ids=True)
     nav = _chapter_nav(course_slug, path.stem)
     title = next((item["title"] for item in nav if item["current"]), path.stem)
     return render(
         request,
-        "search/course_chapter.html",
+        "learning/course_chapter.html",
         {
             "course_slug": course_slug,
             "chapter_slug": path.stem,
             "title": title,
             "body_html": body_html,
             "nav": nav,
-            "courses_home": reverse("courses:list"),
-            "course_home": reverse("courses:detail", kwargs={"course_slug": course_slug}),
+            "courses_home": reverse("learning:course_list"),
+            "course_home": reverse("learning:course_detail", kwargs={"course_slug": course_slug}),
+            "learn_home": reverse("learning:list"),
         },
     )
 
 
 def _rewrite_course_links(source: str, course_slug: str) -> str:
-    """Map relative markdown links like 02-namespaces.md to /courses/... URLs."""
+    """Map relative markdown links like 02-namespaces.md to /learn/courses/... URLs."""
     import re
 
     def repl(match: re.Match[str]) -> str:
@@ -192,7 +193,7 @@ def _rewrite_course_links(source: str, course_slug: str) -> str:
         if target.endswith(".md"):
             stem = target[:-3]
             url = reverse(
-                "courses:chapter",
+                "learning:course_chapter",
                 kwargs={"course_slug": course_slug, "chapter_slug": stem},
             )
             return f"[{label}]({url})"

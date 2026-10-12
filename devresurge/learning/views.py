@@ -9,10 +9,13 @@ from django.http import HttpRequest
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from devresurge.profiles.markdown import render_markdown
 from devresurge.quizzes.models import Quiz
+from devresurge.search.courses import build_course_index
+from devresurge.search.courses import list_course_slugs
 
 from .catalog import TRACK_LABELS
 from .catalog import TRACK_ORDER
@@ -29,6 +32,27 @@ from .progress import mark_completed
 from .progress import mark_started
 from .progress import roadmap_stats
 from .toc import lesson_headings
+
+
+def _course_cards() -> list[dict[str, Any]]:
+    index = build_course_index()
+    cards: list[dict[str, Any]] = []
+    for slug in list_course_slugs():
+        chapters = [d for d in index if d.course_slug == slug]
+        readme = next(
+            (c for c in chapters if c.chapter_slug.startswith("00") or c.chapter_slug == "README"),
+            None,
+        )
+        cards.append(
+            {
+                "slug": slug,
+                "title": readme.title if readme else slug,
+                "summary": readme.summary if readme else "",
+                "chapter_count": len(chapters),
+                "url": reverse("learning:course_detail", kwargs={"course_slug": slug}),
+            },
+        )
+    return cards
 
 
 def roadmap_list_view(request: HttpRequest) -> HttpResponse:
@@ -74,6 +98,7 @@ def roadmap_list_view(request: HttpRequest) -> HttpResponse:
             "preferred_region": preferred_region,
             "preferred_elective": preferred_elective,
             "relocation_electives": relocation_electives(),
+            "courses": _course_cards(),
         },
     )
 

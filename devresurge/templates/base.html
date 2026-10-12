@@ -114,24 +114,8 @@
 
             <ul class="dr-nav__links" id="dr-nav-menu" data-nav-menu>
               <li>
-                <a href="{% url 'home' %}"
-                   {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>~/home</a>
-              </li>
-              <li>
-                <a href="{% url 'search:page' %}"
-                   {% if request.resolver_match.namespace == 'search' or request.resolver_match.namespace == 'courses' %}aria-current="page"{% endif %}>~/find</a>
-              </li>
-              <li>
                 <a href="{% url 'profiles:browse' %}"
-                   {% if 'browse' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/profiles</a>
-              </li>
-              <li>
-                <a href="{% url 'profiles:explore_map' %}"
-                   {% if request.resolver_match.url_name == 'explore_map' or request.resolver_match.url_name == 'network_map' %}aria-current="page"{% endif %}>~/map</a>
-              </li>
-              <li>
-                <a href="{% url 'profiles:tool_explore' %}"
-                   {% if request.resolver_match.url_name == 'tool_explore' or request.resolver_match.url_name == 'tool_explore_detail' or request.resolver_match.url_name == 'public_tools' %}aria-current="page"{% endif %}>~/tools</a>
+                   {% if request.resolver_match.url_name == 'browse' %}aria-current="page"{% endif %}>~/profiles</a>
               </li>
               <li>
                 <a href="{% url 'learning:list' %}"
@@ -141,8 +125,47 @@
                 <a href="{% url 'quizzes:list' %}"
                    {% if request.resolver_match.namespace == 'quizzes' %}aria-current="page"{% endif %}>~/quizzes</a>
               </li>
+              <li class="dr-nav__desk-only">
+                <details class="dr-nav-more">
+                  <summary>~/more</summary>
+                  <ul class="dr-nav-more__menu">
+                    <li>
+                      <a href="{% url 'profiles:explore_map' %}">~/map</a>
+                    </li>
+                    <li>
+                      <a href="{% url 'profiles:tool_explore' %}">~/tools</a>
+                    </li>
+                    <li>
+                      <a href="{% url 'search:page' %}">~/find</a>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                      <li>
+                        <a href="{% url 'profiles:dashboard' %}">~/me</a>
+                      </li>
+                    {% else %}
+                      {% if ACCOUNT_ALLOW_REGISTRATION %}
+                        <li>
+                          <a href="{% url 'account_signup' %}">$ signup</a>
+                        </li>
+                      {% endif %}
+                    {% endif %}
+                  </ul>
+                </details>
+              </li>
+              <li class="dr-nav__mobile-only">
+                <a href="{% url 'profiles:explore_map' %}"
+                   {% if request.resolver_match.url_name == 'explore_map' or request.resolver_match.url_name == 'network_map' %}aria-current="page"{% endif %}>~/map</a>
+              </li>
+              <li class="dr-nav__mobile-only">
+                <a href="{% url 'profiles:tool_explore' %}"
+                   {% if request.resolver_match.url_name == 'tool_explore' or request.resolver_match.url_name == 'tool_explore_detail' or request.resolver_match.url_name == 'public_tools' %}aria-current="page"{% endif %}>~/tools</a>
+              </li>
+              <li class="dr-nav__mobile-only">
+                <a href="{% url 'search:page' %}"
+                   {% if request.resolver_match.namespace == 'search' %}aria-current="page"{% endif %}>~/find</a>
+              </li>
               {% if request.user.is_authenticated %}
-                <li>
+                <li class="dr-nav__mobile-only">
                   <a href="{% url 'profiles:dashboard' %}"
                      {% if 'dashboard' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/me</a>
                 </li>
@@ -157,7 +180,7 @@
                 </li>
               {% else %}
                 {% if ACCOUNT_ALLOW_REGISTRATION %}
-                  <li>
+                  <li class="dr-nav__mobile-only">
                     <a id="sign-up-link" href="{% url 'account_signup' %}">$ signup</a>
                   </li>
                 {% endif %}
@@ -201,11 +224,9 @@
           <div class="dr-container">
             <span class="dr-prompt"></span> exit 0 ·
             <a href="{% url 'about' %}">about</a> ·
-            <a href="{% url 'search:page' %}">find</a> ·
-            <a href="{% url 'courses:list' %}">courses</a> ·
             <a href="{% url 'learning:list' %}">learn</a> ·
-            <a href="{% url 'profiles:explore_map' %}">map</a> ·
-            <a href="{% url 'profiles:tool_explore' %}">tools</a> ·
+            <a href="{% url 'learning:course_list' %}">courses</a> ·
+            <a href="{% url 'profiles:browse' %}">profiles</a> ·
             <a href="{% url 'quizzes:badges' %}">badges</a> ·
             <a href="mailto:contact@devresurge.com">contact</a>
           </div>

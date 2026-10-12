@@ -14,7 +14,7 @@ class SearchStaticSitemap(Sitemap):
     priority = 0.6
 
     def items(self):
-        return ["search:page", "courses:list"]
+        return ["search:page", "learning:course_list"]
 
     def location(self, item: str) -> str:
         return reverse(item)
@@ -37,8 +37,8 @@ class CourseSitemap(Sitemap):
     def location(self, item: tuple[str, str | None]) -> str:
         course_slug, chapter_slug = item
         if chapter_slug is None:
-            return reverse("courses:detail", kwargs={"course_slug": course_slug})
+            return reverse("learning:course_detail", kwargs={"course_slug": course_slug})
         return reverse(
-            "courses:chapter",
+            "learning:course_chapter",
             kwargs={"course_slug": course_slug, "chapter_slug": chapter_slug},
         )

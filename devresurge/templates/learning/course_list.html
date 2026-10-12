@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Courses" %} — DevResurge{% endblock title %}
-{% block meta_description %}{% translate "Book-length technical courses hosted on DevResurge." %}{% endblock meta_description %}
+{% block title %}{% translate "Courses" %} · ~/learn — DevResurge{% endblock title %}
+{% block meta_description %}{% translate "Book-length technical courses inside DevResurge learn." %}{% endblock meta_description %}
+{% block main_class %} dr-main--learn{% endblock main_class %}
 
 {% block content %}
   <header class="dr-pagehead">
-    <p class="dr-kicker"><span class="dr-prompt"></span> courses/</p>
+    <p class="dr-kicker">
+      <span class="dr-prompt"></span>
+      <a href="{% url 'learning:list' %}">learn</a> / courses/
+    </p>
     <h1>{% translate "Courses" %}</h1>
-    <p class="dr-lede">{% translate "Markdown curricula with labs — searchable from the nav." %}</p>
+    <p class="dr-lede">{% translate "Book-length curricula with labs — also findable via nav search." %}</p>
   </header>
 
   {% if courses %}

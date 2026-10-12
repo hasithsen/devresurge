@@ -119,17 +119,19 @@ def test_course_index_and_path_safety():
 
 
 @pytest.mark.django_db
-def test_course_viewer(client):
-    listing = client.get(reverse("courses:list"))
+def test_course_viewer_under_learn(client):
+    listing = client.get(reverse("learning:course_list"))
     assert listing.status_code == HTTPStatus.OK
     assert b"k8s-internals" in listing.content or b"Kubernetes" in listing.content
 
-    detail = client.get(reverse("courses:detail", kwargs={"course_slug": "k8s-internals"}))
+    detail = client.get(
+        reverse("learning:course_detail", kwargs={"course_slug": "k8s-internals"}),
+    )
     assert detail.status_code == HTTPStatus.OK
 
     chapter = client.get(
         reverse(
-            "courses:chapter",
+            "learning:course_chapter",
             kwargs={"course_slug": "k8s-internals", "chapter_slug": "01-linux-processes"},
         ),
     )
@@ -138,11 +140,29 @@ def test_course_viewer(client):
 
     missing = client.get(
         reverse(
-            "courses:chapter",
+            "learning:course_chapter",
             kwargs={"course_slug": "k8s-internals", "chapter_slug": "no-such-chapter"},
         ),
     )
     assert missing.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_legacy_courses_url_redirects(client):
+    response = client.get("/courses/k8s-internals/")
+    assert response.status_code == HTTPStatus.MOVED_PERMANENTLY
+    assert response.url == reverse(
+        "learning:course_detail",
+        kwargs={"course_slug": "k8s-internals"},
+    )
+
+
+@pytest.mark.django_db
+def test_learn_list_includes_courses(client):
+    response = client.get(reverse("learning:list"))
+    assert response.status_code == HTTPStatus.OK
+    assert b"k8s-internals" in response.content or b"Kubernetes" in response.content
+    assert reverse("learning:course_list").encode() in response.content
 
 
 @pytest.mark.django_db

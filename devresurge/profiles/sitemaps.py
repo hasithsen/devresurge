@@ -85,7 +85,7 @@ class StaticViewSitemap(Sitemap):
             "home",
             "about",
             "search:page",
-            "courses:list",
+            "learning:course_list",
             "profiles:browse",
             "profiles:explore_map",
             "profiles:tool_explore",

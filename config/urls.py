@@ -7,6 +7,7 @@ from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
 from django.views.decorators.cache import cache_control
+from django.views.generic import RedirectView
 from django.views.generic import TemplateView
 
 from config.health import health_view
@@ -69,11 +70,23 @@ urlpatterns = [
     path("connections/", include("devresurge.connections.urls", namespace="connections")),
     # Quizzes + achievement badges
     path("quizzes/", include("devresurge.quizzes.urls", namespace="quizzes")),
-    # Roadmaps + lessons
+    # Roadmaps + lessons + book courses (/learn/courses/)
     path("learn/", include("devresurge.learning.urls", namespace="learning")),
-    # Universal search + course viewer
+    # Universal search
     path("search/", include("devresurge.search.urls", namespace="search")),
-    path("courses/", include("devresurge.search.course_urls", namespace="courses")),
+    # Legacy /courses/ → /learn/courses/
+    path(
+        "courses/",
+        RedirectView.as_view(pattern_name="learning:course_list", permanent=True),
+    ),
+    path(
+        "courses/<slug:course_slug>/",
+        RedirectView.as_view(pattern_name="learning:course_detail", permanent=True),
+    ),
+    path(
+        "courses/<slug:course_slug>/<slug:chapter_slug>/",
+        RedirectView.as_view(pattern_name="learning:course_chapter", permanent=True),
+    ),
     # Profiles app (public + private CRUD)
     path("", include("devresurge.profiles.urls", namespace="profiles")),
 ]

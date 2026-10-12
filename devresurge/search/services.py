@@ -247,7 +247,7 @@ def _search_courses(query: str, limit: int) -> list[SearchHit]:
                 title=doc.title,
                 subtitle=f"{doc.course_slug} · {doc.summary}"[:160],
                 url=reverse(
-                    "courses:chapter",
+                    "learning:course_chapter",
                     kwargs={
                         "course_slug": doc.course_slug,
                         "chapter_slug": doc.chapter_slug,
