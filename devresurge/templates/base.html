@@ -43,9 +43,11 @@
     </script>
     {% block javascript %}
       <script defer src="{% static 'js/project.js' %}"></script>
-      <script defer src="{% static 'js/search.js' %}"
-              data-search-api="{% url 'search:api' %}"
-              data-search-page="{% url 'search:page' %}"></script>
+      {% if request.user.is_authenticated %}
+        <script defer src="{% static 'js/search.js' %}"
+                data-search-api="{% url 'search:api' %}"
+                data-search-page="{% url 'search:page' %}"></script>
+      {% endif %}
     {% endblock javascript %}
   </head>
   <body class="{% block bodyclass %}{% endblock bodyclass %}">
@@ -61,33 +63,35 @@
               <span class="dr-cursor" aria-hidden="true"></span>
             </a>
 
-            <div class="dr-nav-search" data-universal-search>
-              <form class="dr-nav-search__form"
-                    action="{% url 'search:page' %}"
-                    method="get"
-                    role="search"
-                    data-search-form>
-                <label class="sr-only" for="dr-nav-q">{% translate "Search DevResurge" %}</label>
-                <input id="dr-nav-q"
-                       class="dr-input dr-nav-search__input"
-                       type="search"
-                       name="q"
-                       placeholder="{% translate 'find…' %}"
-                       autocomplete="off"
-                       maxlength="80"
-                       data-search-input
-                       aria-autocomplete="list"
-                       aria-controls="dr-search-suggest"
-                       aria-expanded="false" />
-                <kbd class="dr-nav-search__kbd" data-search-kbd aria-hidden="true">/</kbd>
-              </form>
-              <div id="dr-search-suggest"
-                   class="dr-nav-search__panel"
-                   data-search-panel
-                   hidden
-                   role="listbox"
-                   aria-label="{% translate 'Search suggestions' %}"></div>
-            </div>
+            {% if request.user.is_authenticated %}
+              <div class="dr-nav-search" data-universal-search>
+                <form class="dr-nav-search__form"
+                      action="{% url 'search:page' %}"
+                      method="get"
+                      role="search"
+                      data-search-form>
+                  <label class="sr-only" for="dr-nav-q">{% translate "Search DevResurge" %}</label>
+                  <input id="dr-nav-q"
+                         class="dr-input dr-nav-search__input"
+                         type="search"
+                         name="q"
+                         placeholder="{% translate 'find…' %}"
+                         autocomplete="off"
+                         maxlength="80"
+                         data-search-input
+                         aria-autocomplete="list"
+                         aria-controls="dr-search-suggest"
+                         aria-expanded="false" />
+                  <kbd class="dr-nav-search__kbd" data-search-kbd aria-hidden="true">/</kbd>
+                </form>
+                <div id="dr-search-suggest"
+                     class="dr-nav-search__panel"
+                     data-search-panel
+                     hidden
+                     role="listbox"
+                     aria-label="{% translate 'Search suggestions' %}"></div>
+              </div>
+            {% endif %}
 
             <div class="dr-nav__actions">
               <button type="button"
@@ -135,19 +139,17 @@
                     <li>
                       <a href="{% url 'profiles:tool_explore' %}">~/tools</a>
                     </li>
-                    <li>
-                      <a href="{% url 'search:page' %}">~/find</a>
-                    </li>
                     {% if request.user.is_authenticated %}
+                      <li>
+                        <a href="{% url 'search:page' %}">~/find</a>
+                      </li>
                       <li>
                         <a href="{% url 'profiles:dashboard' %}">~/me</a>
                       </li>
-                    {% else %}
-                      {% if ACCOUNT_ALLOW_REGISTRATION %}
-                        <li>
-                          <a href="{% url 'account_signup' %}">$ signup</a>
-                        </li>
-                      {% endif %}
+                    {% elif ACCOUNT_ALLOW_REGISTRATION %}
+                      <li>
+                        <a href="{% url 'account_signup' %}">$ signup</a>
+                      </li>
                     {% endif %}
                   </ul>
                 </details>
@@ -160,11 +162,11 @@
                 <a href="{% url 'profiles:tool_explore' %}"
                    {% if request.resolver_match.url_name == 'tool_explore' or request.resolver_match.url_name == 'tool_explore_detail' or request.resolver_match.url_name == 'public_tools' %}aria-current="page"{% endif %}>~/tools</a>
               </li>
-              <li class="dr-nav__mobile-only">
-                <a href="{% url 'search:page' %}"
-                   {% if request.resolver_match.namespace == 'search' %}aria-current="page"{% endif %}>~/find</a>
-              </li>
               {% if request.user.is_authenticated %}
+                <li class="dr-nav__mobile-only">
+                  <a href="{% url 'search:page' %}"
+                     {% if request.resolver_match.namespace == 'search' %}aria-current="page"{% endif %}>~/find</a>
+                </li>
                 <li class="dr-nav__mobile-only">
                   <a href="{% url 'profiles:dashboard' %}"
                      {% if 'dashboard' in request.resolver_match.url_name|default:'' %}aria-current="page"{% endif %}>~/me</a>

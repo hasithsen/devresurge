@@ -6,13 +6,31 @@
 {% block main_class %} dr-main--learn{% endblock main_class %}
 
 {% block content %}
-  <nav class="dr-course-nav" aria-label="{% translate 'Course chapters' %}">
-    <p class="dr-kicker">
-      <a href="{{ learn_home }}">learn</a> /
-      <a href="{{ courses_home }}">courses</a> /
+  <section class="dr-page dr-page--lesson dr-page--course">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{{ learn_home }}">~/learn</a>
+      <span class="dr-crumb__sep">/</span>
+      <a href="{{ courses_home }}">courses</a>
+      <span class="dr-crumb__sep">/</span>
       <a href="{{ course_home }}">{{ course_slug }}</a>
-    </p>
-    <details class="dr-course-toc">
+      <span class="dr-crumb__sep">/</span>
+      <span>{{ title }}</span>
+    </nav>
+
+    <header class="dr-page__head dr-mt-sm">
+      <div>
+        <p class="dr-learn-kicker">
+          {% if chapter_number %}
+            {% blocktranslate with n=chapter_number total=chapter_count slug=course_slug %}{{ slug }} · chapter {{ n }} of {{ total }}{% endblocktranslate %}
+          {% else %}
+            {{ course_slug }}
+          {% endif %}
+        </p>
+        <h1 class="dr-page__title">{{ title }}</h1>
+      </div>
+    </header>
+
+    <details class="dr-course-toc dr-mt-lg">
       <summary>{% translate "Chapters" %}</summary>
       <ol>
         {% for item in nav %}
@@ -22,9 +40,29 @@
         {% endfor %}
       </ol>
     </details>
-  </nav>
 
-  <article class="dr-prose dr-course-body">
-    {{ body_html }}
-  </article>
+    <article class="dr-panel dr-lesson-body dr-course-body dr-mt-lg">
+      <div class="dr-panel__header">
+        <span class="dr-dots"><span></span><span></span><span></span></span>
+        <span class="dr-panel__title">{{ title }}</span>
+      </div>
+      <div class="dr-panel__body dr-markdown dr-lesson-doc">
+        {{ body_html }}
+      </div>
+    </article>
+
+    <nav class="dr-learn-pager" aria-label="{% translate 'Chapter navigation' %}">
+      {% if prev_chapter %}
+        <a class="dr-btn" href="{{ prev_chapter.url }}">← {{ prev_chapter.title }}</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+      <a class="dr-btn" href="{{ course_home }}">{% translate "course home" %}</a>
+      {% if next_chapter %}
+        <a class="dr-btn dr-btn--primary" href="{{ next_chapter.url }}">{{ next_chapter.title }} →</a>
+      {% else %}
+        <a class="dr-btn" href="{{ courses_home }}">{% translate "all courses" %}</a>
+      {% endif %}
+    </nav>
+  </section>
 {% endblock content %}

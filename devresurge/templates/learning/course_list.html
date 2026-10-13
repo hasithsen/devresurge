@@ -6,31 +6,45 @@
 {% block main_class %} dr-main--learn{% endblock main_class %}
 
 {% block content %}
-  <header class="dr-pagehead">
-    <p class="dr-kicker">
-      <span class="dr-prompt"></span>
-      <a href="{% url 'learning:list' %}">learn</a> / courses/
-    </p>
-    <h1>{% translate "Courses" %}</h1>
-    <p class="dr-lede">{% translate "Book-length curricula with labs — also findable via nav search." %}</p>
-  </header>
+  <section class="dr-page dr-page--learn">
+    <nav class="dr-crumb" aria-label="{% translate 'Breadcrumb' %}">
+      <a href="{% url 'learning:list' %}">~/learn</a>
+      <span class="dr-crumb__sep">/</span>
+      <span>courses</span>
+    </nav>
 
-  {% if courses %}
-    <ul class="dr-search-hits">
-      {% for course in courses %}
-        <li>
-          <a class="dr-search-hit" href="{{ course.url }}">
-            <span class="dr-search-hit__type">course</span>
-            <span class="dr-search-hit__title">{{ course.title }}</span>
-            <span class="dr-search-hit__sub">
-              {{ course.chapter_count }} {% translate "chapters" %}
-              {% if course.summary %} · {{ course.summary }}{% endif %}
-            </span>
+    <header class="dr-page__head dr-mt-sm">
+      <div>
+        <p class="dr-cli dr-mb-xs"><span class="dr-prompt"></span> <span class="cmd">learn courses --list</span></p>
+        <h1 class="dr-page__title">{% translate "Courses" %}</h1>
+        <p class="dr-page__lede">
+          {% translate "Book-length curricula with labs — also findable via nav search when signed in." %}
+        </p>
+      </div>
+    </header>
+
+    {% if courses %}
+      <div class="dr-grid dr-grid--2 dr-mt-lg">
+        {% for course in courses %}
+          <a class="dr-panel dr-course-card" href="{{ course.url }}">
+            <div class="dr-panel__header">
+              <span class="dr-dots"><span></span><span></span><span></span></span>
+              <span class="dr-panel__title">{{ course.slug }}</span>
+            </div>
+            <div class="dr-panel__body">
+              <h2 class="dr-course-card__title">{{ course.title }}</h2>
+              <p class="dr-course-card__meta">
+                {{ course.chapter_count }} {% translate "chapters" %}
+              </p>
+              {% if course.summary %}
+                <p class="dr-course-card__summary">{{ course.summary }}</p>
+              {% endif %}
+            </div>
           </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="dr-muted">{% translate "No courses found." %}</p>
-  {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="dr-muted dr-mt-lg">{% translate "No courses found." %}</p>
+    {% endif %}
+  </section>
 {% endblock content %}

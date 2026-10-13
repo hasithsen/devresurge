@@ -62,8 +62,11 @@ def roadmap_list_view(request: HttpRequest) -> HttpResponse:
             request.session["learn_region"] = region
 
     roadmaps = all_roadmaps()
+    # Craft is rendered once below via craft_domains (grouped by domain).
     track_sections: list[dict[str, Any]] = []
     for track in TRACK_ORDER:
+        if track == "craft":
+            continue
         rows = [row for row in annotate_roadmaps(request.user) if row["roadmap"].track == track]
         if rows:
             track_sections.append(

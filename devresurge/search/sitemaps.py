@@ -14,7 +14,8 @@ class SearchStaticSitemap(Sitemap):
     priority = 0.6
 
     def items(self):
-        return ["search:page", "learning:course_list"]
+        # Search page is login-gated; do not advertise it to crawlers.
+        return ["learning:course_list"]
 
     def location(self, item: str) -> str:
         return reverse(item)

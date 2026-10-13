@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.http import HttpRequest
 from django.http import HttpResponse
@@ -38,6 +39,7 @@ def _rate_limited_response() -> JsonResponse:
     return response
 
 
+@login_required
 @require_GET
 def search_page(request: HttpRequest) -> HttpResponse:
     q = normalize_query(request.GET.get("q"))
@@ -65,6 +67,14 @@ def search_page(request: HttpRequest) -> HttpResponse:
 
 @require_GET
 def search_api(request: HttpRequest) -> HttpResponse:
+    if not request.user.is_authenticated:
+        response = JsonResponse(
+            {"error": "auth_required", "detail": "Sign in to search."},
+            status=401,
+        )
+        response["Cache-Control"] = "no-store"
+        return response
+
     if is_rate_limited(
         request,
         prefix="search_rl",
@@ -152,16 +162,33 @@ def course_chapter(request: HttpRequest, course_slug: str, chapter_slug: str) ->
     return _render_course(request, course_slug, path)
 
 
+def _strip_leading_h1(source: str) -> tuple[str, str]:
+    """Return (title_from_h1_or_empty, body_without_leading_h1)."""
+    import re
+
+    text = source.replace("\r\n", "\n").replace("\r", "\n").lstrip("\n")
+    match = re.match(r"^#\s+(.+?)\s*\n+(.*)$", text, flags=re.DOTALL)
+    if not match:
+        return "", source
+    return match.group(1).strip(), match.group(2).lstrip("\n")
+
+
 def _render_course(request: HttpRequest, course_slug: str, path: Path) -> HttpResponse:
     try:
         source = path.read_text(encoding="utf-8")
     except OSError as exc:
         raise Http404(_("Chapter not found.")) from exc
 
+    h1_title, body_md = _strip_leading_h1(source)
     # Rewrite relative .md links to learn course viewer URLs
-    body_html = render_markdown(_rewrite_course_links(source, course_slug), heading_ids=True)
+    body_html = render_markdown(_rewrite_course_links(body_md, course_slug), heading_ids=True)
     nav = _chapter_nav(course_slug, path.stem)
-    title = next((item["title"] for item in nav if item["current"]), path.stem)
+    title = h1_title or next((item["title"] for item in nav if item["current"]), path.stem)
+
+    current_idx = next((i for i, item in enumerate(nav) if item["current"]), -1)
+    prev_chapter = nav[current_idx - 1] if current_idx > 0 else None
+    next_chapter = nav[current_idx + 1] if 0 <= current_idx < len(nav) - 1 else None
+
     return render(
         request,
         "learning/course_chapter.html",
@@ -171,6 +198,10 @@ def _render_course(request: HttpRequest, course_slug: str, path: Path) -> HttpRe
             "title": title,
             "body_html": body_html,
             "nav": nav,
+            "prev_chapter": prev_chapter,
+            "next_chapter": next_chapter,
+            "chapter_number": current_idx + 1 if current_idx >= 0 else 0,
+            "chapter_count": len(nav),
             "courses_home": reverse("learning:course_list"),
             "course_home": reverse("learning:course_detail", kwargs={"course_slug": course_slug}),
             "learn_home": reverse("learning:list"),

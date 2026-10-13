@@ -6347,29 +6347,104 @@ button[aria-busy="true"],
 }
 
 .dr-course-toc {
-  margin: 0.75rem 0 1.25rem;
-  border: 1px solid var(--dr-border, #2a332e);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-elev);
 }
 
 .dr-course-toc summary {
   cursor: pointer;
   font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .dr-course-toc ol {
-  margin: 0.5rem 0 0;
+  margin: 0.65rem 0 0;
   padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dr-course-toc a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.dr-course-toc a:hover {
+  color: var(--text);
 }
 
 .dr-course-toc a[aria-current="page"] {
-  color: var(--dr-accent, #7ddea8);
+  color: var(--accent-on-soft);
   font-weight: 600;
 }
 
-.dr-course-body {
-  max-width: 48rem;
+.dr-page--course .dr-course-body {
+  max-width: none;
+}
+
+.dr-page--course .dr-lesson-body .dr-markdown {
+  max-width: min(78ch, 100%);
+}
+
+/* Mermaid / diagram fences: readable sketch block, not a broken renderer */
+.dr-markdown pre:has(code.language-mermaid) {
+  border-left: 3px solid var(--accent);
+  background: color-mix(in oklab, var(--accent) 6%, var(--bg-elev));
+}
+
+.dr-markdown pre:has(code.language-mermaid)::before {
+  content: "diagram";
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-on-soft);
+  margin-bottom: 0.5rem;
+}
+
+.dr-markdown code.language-mermaid {
+  white-space: pre-wrap;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  line-height: 1.45;
+}
+
+.dr-course-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms var(--ease), transform 120ms var(--ease);
+}
+
+.dr-course-card:hover {
+  border-color: var(--accent);
+}
+
+.dr-course-card__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.dr-course-card__meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dr-course-card__summary {
+  margin: 0.55rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 720px) {

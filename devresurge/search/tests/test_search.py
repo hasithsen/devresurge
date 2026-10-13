@@ -14,6 +14,7 @@ from devresurge.search.courses import clear_course_index_cache
 from devresurge.search.courses import resolve_course_file
 from devresurge.search.services import normalize_query
 from devresurge.search.services import search
+from devresurge.users.tests.factories import UserFactory
 
 
 @pytest.fixture
@@ -68,7 +69,20 @@ def test_search_finds_people_quizzes_courses_learn(seeded_quizzes):
 
 
 @pytest.mark.django_db
+def test_search_requires_login(client):
+    page = client.get(reverse("search:page"), {"q": "linux"})
+    assert page.status_code == HTTPStatus.FOUND
+    assert "/accounts/login/" in page.url
+
+    api = client.get(reverse("search:api"), {"q": "linux"})
+    assert api.status_code == HTTPStatus.UNAUTHORIZED
+    assert api.json()["error"] == "auth_required"
+
+
+@pytest.mark.django_db
 def test_search_api_and_page(client, seeded_quizzes):
+    user = UserFactory()
+    client.force_login(user)
     profile = ProfileFactory()
     profile.handle = "linus-search"
     profile.display_name = "Linus"
@@ -90,6 +104,7 @@ def test_search_api_and_page(client, seeded_quizzes):
 
 @pytest.mark.django_db
 def test_search_api_rate_limit(client, settings):
+    client.force_login(UserFactory())
     settings.SEARCH_RATE_LIMIT = 2
     settings.SEARCH_RATE_WINDOW = 60
     url = reverse("search:api")
@@ -102,6 +117,7 @@ def test_search_api_rate_limit(client, settings):
 
 @pytest.mark.django_db
 def test_search_rejects_short_query(client):
+    client.force_login(UserFactory())
     response = client.get(reverse("search:api"), {"q": "a"})
     assert response.status_code == HTTPStatus.OK
     assert response.json()["total"] == 0
@@ -163,6 +179,25 @@ def test_learn_list_includes_courses(client):
     assert response.status_code == HTTPStatus.OK
     assert b"k8s-internals" in response.content or b"Kubernetes" in response.content
     assert reverse("learning:course_list").encode() in response.content
+    # Core craft is domain-grouped once — not also listed via track_sections.
+    tracks = [section["track"] for section in response.context["track_sections"]]
+    assert "craft" not in tracks
+    assert response.context["craft_domains"]
+
+
+@pytest.mark.django_db
+def test_course_chapter_uses_markdown_styles(client):
+    response = client.get(
+        reverse(
+            "learning:course_chapter",
+            kwargs={"course_slug": "k8s-internals", "chapter_slug": "01-linux-processes"},
+        ),
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert b"dr-markdown" in response.content
+    assert b"dr-lesson-body" in response.content
+    # Leading H1 is promoted to page title, not duplicated in the article body.
+    assert response.content.count(b"Linux processes") >= 1
 
 
 @pytest.mark.django_db
