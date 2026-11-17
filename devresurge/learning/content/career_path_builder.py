@@ -661,11 +661,6 @@ def build_core_roadmap(role_key: str) -> dict[str, Any]:
     role = ROLES[role_key]
     short = role["slug_short"]
     core = _role_core_content(role_key)
-    elective_links = "\n".join(
-        f"- [{RELOCATION_REGIONS[r]['flag']} {RELOCATION_REGIONS[r]['title']}](/learn/{RELOCATION_REGIONS[r]['slug']}/)"
-        for r in ("sweden", "australia", "new-zealand", "usa", "uk")
-    )
-
     lessons: list[dict[str, Any]] = [
         _lesson(
             f"{short}-battle-plan",
@@ -675,12 +670,9 @@ def build_core_roadmap(role_key: str) -> dict[str, Any]:
 
 **Core sprint (this map)** — technical and behavioral skills every market tests.
 
-**Regional elective (pick one)** — visa routes, local employers, culture, relocation admin.
-Run your core sprint in parallel; add the elective if you target sponsored roles abroad.
-
-### Select your regional elective
-
-{elective_links}
+**Optional add-ons** — if you need visa or employer deep-dives, pick one **regional elective**
+and/or a **migration sponsor path** from the Interview preparation links at the bottom of this
+lesson. Run the elective in parallel with this sprint when sponsorship is part of your search.
 {_extra_battle_plan_notes(role_key)}
 
 ## Four-week schedule (~1 hr/day)
@@ -982,9 +974,6 @@ def build_relocation_roadmap(region_key: str) -> dict[str, Any]:
             "interview stacks, application tactics, checklists"
         )
 
-    core_links = "\n".join(
-        f"- [{s.replace('-', ' ').title()}](/learn/{s}/)" for s in INTERVIEW_CORE_SLUGS
-    )
     related = list(INTERVIEW_CORE_SLUGS)
     if sponsor_slug:
         related.insert(0, sponsor_slug)
@@ -993,11 +982,9 @@ def build_relocation_roadmap(region_key: str) -> dict[str, Any]:
         f"## You chose: {region['title']}",
         "",
         "This elective is **optional** and **shared across disciplines**. "
-        "Complete it once alongside any core interview sprint(s) you are running.",
-        "",
-        "### Compatible core sprints",
-        "",
-        core_links,
+        "Complete it once alongside any core interview sprint(s) you are running. "
+        "Compatible sprints and sponsor deep-dives are listed under **Interview preparation** "
+        "at the bottom of this lesson.",
     ]
     if sponsor_block:
         intro_parts.extend(["", sponsor_block])

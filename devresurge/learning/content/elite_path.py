@@ -26,7 +26,7 @@ ROADMAP = {
     "lessons": [
         {
             "slug": "north-star",
-            "title": "North star: what 'elite' means",
+            "title": "North star: what elite means",
             "summary": "Not leetcode alone — ownership, judgment, communication, proof.",
             "minutes": 10,
             "outcomes": ("Define personal excellence metrics",),
@@ -46,8 +46,6 @@ Top companies hire for:
 
 LeetCode is the **filter**. It is not the **job**. Treat it like gym cardio —
 necessary, not the sport.
-
-## Your DevResurge advantage
 
 ## Your DevResurge advantage
 

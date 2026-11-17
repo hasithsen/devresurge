@@ -1,3 +1,4 @@
+from collections import Counter
 from http import HTTPStatus
 import re
 
@@ -40,12 +41,25 @@ def test_lesson_appends_official_reference_links():
     assert "relocation-sweden" in devops.related_roadmap_slugs
 
 
+def _body_without_ref_footer(body: str) -> str:
+    """Drop shared nav/reference footers for content asserts."""
+    for marker in (
+        "## Interview preparation",
+        "## Career sprint master index",
+        "## Master reference index",
+    ):
+        idx = body.find(marker)
+        if idx != -1:
+            body = body[:idx]
+    return body
+
+
 def test_devops_interview_sprint_is_faang_bar():
     devops = get_roadmap("devops-interview")
     assert devops is not None
     assert devops.lesson_count >= 20
     technical = " ".join(
-        lesson.body.lower()
+        _body_without_ref_footer(lesson.body).lower()
         for lesson in devops.lessons
         if lesson.slug not in ("30-day-battle-plan", "sprint-complete-resources")
     )
@@ -55,6 +69,28 @@ def test_devops_interview_sprint_is_faang_bar():
     assert devops.get_lesson("cicd-release-engineering") is not None
     assert devops.get_lesson("cloud-platform-engineering") is not None
     assert "system-design-basics" in devops.related_quiz_slugs
+
+
+def test_lessons_do_not_duplicate_nav_footers():
+    both: list[str] = []
+    dup_h2: list[str] = []
+    for roadmap in all_roadmaps():
+        for lesson in roadmap.lessons:
+            headings = [
+                line.strip()[3:].strip().lower()
+                for line in lesson.body.splitlines()
+                if line.strip().startswith("## ") and not line.strip().startswith("###")
+            ]
+            if (
+                "interview preparation" in headings
+                and "career sprint master index" in headings
+            ):
+                both.append(f"{roadmap.slug}/{lesson.slug}")
+            for heading, count in Counter(headings).items():
+                if count > 1:
+                    dup_h2.append(f"{roadmap.slug}/{lesson.slug}:{heading}")
+    assert both == []
+    assert dup_h2 == []
 
 
 def test_slug_aliases_resolve():
@@ -170,7 +206,7 @@ def test_roadmap_list_ok(client):
     assert response.status_code == HTTPStatus.OK
     assert b"learn" in response.content.lower()
     assert b"elite" in response.content.lower()
-    assert b"sign in to start" in response.content.lower()
+    assert b"sign in to save progress" in response.content.lower()
 
 
 def test_lesson_requires_login(client):

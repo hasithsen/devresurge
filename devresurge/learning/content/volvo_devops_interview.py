@@ -56,22 +56,7 @@ ROADMAP = {
 
 **This map** — universal DevOps/SRE technical prep at the bar used by top product companies.
 
-**Regional elective (optional)** — visa routes, local employers, relocation admin:
-
-- [🇸🇪 Sweden](/learn/relocation-sweden/) · [🇦🇺 Australia](/learn/relocation-australia/)
-- [🇳🇿 New Zealand](/learn/relocation-new-zealand/) · [🇺🇸 USA](/learn/relocation-usa/) · [🇬🇧 UK](/learn/relocation-uk/)
-
-Add one elective in parallel if sponsorship is part of your search.
-
-### Enterprise & migration sponsors (Volvo, IFS, peers)
-
-If you target **visa-sponsored industrial or enterprise SaaS** roles, add the regional migration sponsor path:
-
-- [🇸🇪 Sweden — Volvo, IFS & industrial](/learn/sponsor-employers-sweden/)
-- [🇦🇺 Australia — IFS, banks & product](/learn/sponsor-employers-australia/)
-- [🇺🇸 USA — IFS, enterprise & Tier-1](/learn/sponsor-employers-usa/)
-
-Pair with the matching [regional relocation elective](/learn/relocation-sweden/) for visa mechanics.
+**Optional add-ons** — if you need visa or employer deep-dives, pick one **regional elective** and/or a **migration sponsor path** from the Interview preparation links at the bottom of this lesson. Do not duplicate every country list in your notes; open the maps you need.
 
 ## What hyperscale loops test
 

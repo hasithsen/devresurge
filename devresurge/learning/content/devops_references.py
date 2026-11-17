@@ -116,7 +116,7 @@ REF_CICD = """## CI/CD & delivery
 - [GitHub Actions docs](https://docs.github.com/en/actions)
 """
 
-REF_TERRAFORM = """## Infrastructure as code
+REF_TERRAFORM = """## Terraform references
 
 - [Terraform documentation](https://developer.hashicorp.com/terraform/docs)
 - [Terraform Azure backend](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm)
@@ -378,7 +378,7 @@ REF_MASTER_INDEX = """## Master reference index
 
 ### DevResurge questlines (pair with this sprint)
 - [Interview sprints & regional electives](/learn/relocation-sweden/) — pick your visa region on ~/learn
-- [Migration sponsor paths](/learn/sponsor-employers-sweden/) — Volvo, IFS, enterprise (SE · AU · US)
+- [Migration sponsor paths](/learn/sponsor-employers-sweden/) — industrial & enterprise (SE · AU · US)
 - [DevOps & SRE craft](/learn/devops-sre/)
 - [System design](/learn/system-design/)
 - [Distributed systems](/learn/distributed-systems/)

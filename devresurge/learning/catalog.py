@@ -140,18 +140,43 @@ def normalize_lesson_markdown(body: str) -> str:
     return "\n".join(out).strip()
 
 
+def _first_h2(markdown: str) -> str:
+    for line in markdown.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## ") and not stripped.startswith("###"):
+            return stripped[3:].strip().lower()
+    return ""
+
+
+def _h2_headings(markdown: str) -> set[str]:
+    return {
+        line.strip()[3:].strip().lower()
+        for line in markdown.splitlines()
+        if line.strip().startswith("## ") and not line.strip().startswith("###")
+    }
+
+
 def _append_reference_blocks(body: str, ref_keys: tuple[str, ...]) -> str:
+    """Append reference blocks once; skip a block if its H2 already exists in body."""
     if not ref_keys:
         return normalize_lesson_markdown(body)
     blocks: list[str] = [body]
-    seen: set[str] = set()
+    seen_keys: set[str] = set()
+    present_headings = _h2_headings(body)
     for key in ref_keys:
-        if key in seen:
+        if key in seen_keys:
             continue
+        seen_keys.add(key)
         block = REF_BY_KEY.get(key)
-        if block:
-            blocks.append(block.strip())
-            seen.add(key)
+        if not block:
+            continue
+        cleaned = block.strip()
+        heading = _first_h2(cleaned)
+        if heading and heading in present_headings:
+            continue
+        if heading:
+            present_headings.add(heading)
+        blocks.append(cleaned)
     return normalize_lesson_markdown("\n\n".join(blocks))
 
 

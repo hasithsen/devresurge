@@ -25,7 +25,8 @@ LESSON_REF_KEYS: dict[str, tuple[str, ...]] = {
     "behavioral-devops-interview": ("interview", "questions_behavioral"),
     "technical-mock-drills": ("interview", "cicd", "kubernetes", "questions_cicd", "questions_k8s"),
     "final-checklist-interview-day": ("master", "interview"),
-    "sprint-complete-resources": ("master", "aws", "interview", "career_master"),
+    # master index only — avoid stacking twin nav catalogs
+    "sprint-complete-resources": ("master", "aws"),
     # --- DevOps & SRE core roadmap ---
     "cicd-pipeline": ("cicd", "questions_cicd"),
     "containers-runtime": ("docker", "kubernetes"),
@@ -62,8 +63,19 @@ _SPONSOR_REGION_REFS: dict[str, tuple[str, ...]] = {
 
 
 def _dedupe_keys(keys: list[str]) -> tuple[str, ...]:
+    """Dedupe keys and drop nav twins (interview ⊃ career_master)."""
     seen: set[str] = set()
-    return tuple(k for k in keys if not (k in seen or seen.add(k)))
+    out: list[str] = []
+    for key in keys:
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    # Prefer interview (includes quizzes + behavioral) over the near-identical
+    # career_master catalog — appending both duplicated Shared electives / craft.
+    if "interview" in seen and "career_master" in seen:
+        out = [k for k in out if k != "career_master"]
+    return tuple(out)
 
 
 def _sponsor_ref_keys(slug: str) -> tuple[str, ...] | None:
@@ -76,7 +88,7 @@ def _sponsor_ref_keys(slug: str) -> tuple[str, ...] | None:
     region_refs = _SPONSOR_REGION_REFS.get(code)
     if region_refs is None:
         return None
-    keys: list[str] = ["interview", "career_master", *region_refs]
+    keys: list[str] = ["interview", *region_refs]
     tail = "-".join(parts[2:])
     if "volvo" in tail:
         keys.append("employer_volvo")
@@ -86,8 +98,6 @@ def _sponsor_ref_keys(slug: str) -> tuple[str, ...] | None:
         keys.extend(["questions_cicd", "questions_k8s", "questions_enterprise"])
     if tail.endswith("banks") or "regulated" in tail:
         keys.append("compliance_au")
-    if tail == "checklist" or tail == "intro":
-        keys.append("career_master")
     return _dedupe_keys(keys)
 
 
@@ -101,7 +111,7 @@ def _relocation_ref_keys(slug: str) -> tuple[str, ...] | None:
     region_refs = _CAREER_REGION_REFS.get(code)
     if region_refs is None:
         return None
-    keys: list[str] = ["interview", "career_master", region_refs[0]]
+    keys: list[str] = ["interview", region_refs[0]]
     tail = "-".join(parts[2:])
     if tail == "employers":
         keys.append(region_refs[1])
@@ -136,8 +146,6 @@ def _career_ref_keys(slug: str) -> tuple[str, ...] | None:
                 keys.extend(refs)
                 break
 
-        if "battle-plan" in slug or "complete-resources" in slug or slug.endswith("-checklist"):
-            keys.append("career_master")
         if tail == "visa-landscape" and region_refs:
             keys.append(region_refs[0])
         if tail == "employers-stacks" and region_refs:
@@ -161,8 +169,6 @@ def _career_ref_keys(slug: str) -> tuple[str, ...] | None:
             keys.append("cicd")
         if short == "df":
             keys.append("data_shared")
-            if slug.endswith("-intro") or slug.endswith("-checklist"):
-                keys.append("career_master")
 
         return _dedupe_keys(keys)
     return None
@@ -170,9 +176,9 @@ def _career_ref_keys(slug: str) -> tuple[str, ...] | None:
 
 def ref_keys_for_lesson(slug: str, inline: tuple[str, ...] | None = None) -> tuple[str, ...]:
     if inline:
-        return inline
+        return _dedupe_keys(list(inline))
     if slug in LESSON_REF_KEYS:
-        return LESSON_REF_KEYS[slug]
+        return _dedupe_keys(list(LESSON_REF_KEYS[slug]))
     career = _career_ref_keys(slug)
     if career:
         return career

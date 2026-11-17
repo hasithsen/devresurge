@@ -4,18 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-INTERVIEW_CORE_LINKS = """- [DevOps interview sprint](/learn/devops-interview/) · [DevSecOps](/learn/devsecops-interview/)
-- [Data engineering](/learn/data-eng-interview/) · [Data science](/learn/data-science-interview/)
-- [QA / SDET](/learn/qa-interview/) · [Backend](/learn/backend-interview/) · [Cloud](/learn/cloud-interview/)
-"""
-
-REGIONAL_LINKS = {
-    "sweden": "[🇸🇪 Sweden relocation elective](/learn/relocation-sweden/)",
-    "australia": "[🇦🇺 Australia relocation elective](/learn/relocation-australia/)",
-    "usa": "[🇺🇸 USA relocation elective](/learn/relocation-usa/)",
-}
-
-
 def _lesson(
     slug: str,
     title: str,
@@ -78,13 +66,13 @@ def build_sponsor_path_sweden() -> dict[str, Any]:
                 "sp-se-intro",
                 "How to use this sponsor path",
                 "Volvo, IFS, and peers — paired with regional + core sprints.",
-                f"""## Three layers (run in parallel)
+                """## Three layers (run in parallel)
 
 1. **Core interview sprint** — technical depth ([DevOps](/learn/devops-interview/) recommended)
 2. **[Sweden relocation elective](/learn/relocation-sweden/)** — visa rules, culture, settling
 3. **This sponsor path** — employer-specific stacks, loops, and application tactics
 
-{INTERVIEW_CORE_LINKS}
+Other role sprints are listed under **Interview preparation** at the bottom of this lesson.
 
 > Not legal advice. Confirm sponsorship in writing before relocating.
 """,
@@ -292,13 +280,13 @@ def build_sponsor_path_australia() -> dict[str, Any]:
                 "sp-au-intro",
                 "How to use this sponsor path",
                 "IFS, product cos, and banks — with 482/186 context.",
-                f"""## Parallel study plan
+                """## Parallel study plan
 
 1. Core sprint — [DevOps interview](/learn/devops-interview/) or your discipline
 2. [Australia relocation elective](/learn/relocation-australia/) — 482/186, ACS, culture
 3. **This path** — sponsor employers and AU-specific interview bars
 
-{INTERVIEW_CORE_LINKS}
+Other role sprints are listed under **Interview preparation** at the bottom of this lesson.
 
 Confirm **Skilled Occupation List** alignment and ACS assessment timing early for ICT roles.
 """,
@@ -456,7 +444,7 @@ def build_sponsor_path_usa() -> dict[str, Any]:
                 "sp-us-intro",
                 "How to use this sponsor path",
                 "Visa tiers, IFS, enterprise, and when to run the hyperscale sprint.",
-                f"""## Two prep tracks (pick primary + backup)
+                """## Two prep tracks (pick primary + backup)
 
 | Target | Prep emphasis |
 |--------|----------------|
@@ -465,8 +453,7 @@ def build_sponsor_path_usa() -> dict[str, Any]:
 | **Industrial US arms** (Volvo Group NA, Ericsson US) | Enterprise Azure + this path |
 
 Always run [USA relocation elective](/learn/relocation-usa/) for H-1B/O-1 mechanics.
-
-{INTERVIEW_CORE_LINKS}
+Other role sprints are listed under **Interview preparation** at the bottom of this lesson.
 """,
                 outcomes=("Pick primary visa strategy and prep track",),
             ),
